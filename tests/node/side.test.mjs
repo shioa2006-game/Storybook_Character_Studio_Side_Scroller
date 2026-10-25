@@ -52,7 +52,8 @@ test('side walk speed keeps the planted foot fixed on the ground', () => {
 test('catalog and side caches use the two side directions', () => {
   for (const entry of catalog) {
     assert.deepEqual(entry.directions, entry.definition.directional === false ? [] : ['R', 'L'], entry.id);
-    if (entry.directions.length) assert.equal(entry.preview.direction, 'R', entry.id);
+    // Previews face right, except EMBERBOUND enemies, which face left as in the game.
+    if (entry.directions.length) assert.equal(entry.preview.direction, entry.definition.emberbound?.facing ?? 'R', entry.id);
   }
   assert.deepEqual(createFrameCacheStore().directions, ['R', 'L']);
 });

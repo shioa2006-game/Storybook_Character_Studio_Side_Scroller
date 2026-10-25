@@ -16,15 +16,17 @@ export function normalizeEntry(entry) {
   const preview = { direction: directions.includes('R') ? 'R' : directions[0] || null, phase: 0, ...meta.preview };
   if ((directions.length && !directions.includes(preview.direction)) || (!directions.length && preview.direction !== null)) fail('preview.direction が対応方向にありません');
   if (!Number.isFinite(preview.phase) || preview.phase < 0 || preview.phase >= 1) fail('preview.phase は0以上1未満です');
-  return Object.freeze({ ...entry, id: def.id, name: meta.name, category: meta.category, description: meta.description,
+  if (meta.order !== undefined && !Number.isFinite(meta.order)) fail('studio.order は数値にしてください');
+  return Object.freeze({ ...entry, id: def.id, name: meta.name, category: meta.category, description: meta.description, order: meta.order ?? Infinity,
     directions: Object.freeze([...directions]), actions: Object.freeze(Object.keys(def.actions)), preview: Object.freeze(preview) });
 }
 
 export function buildCatalog(entries) {
   const seen = new Map();
+  // Entries with studio.order come first in that order; the rest keep their registration order after them.
   return Object.freeze(entries.map(entry => {
     const item = normalizeEntry(entry);
     if (seen.has(item.id)) throw new Error(`ID重複「${item.id}」: ${seen.get(item.id)} と ${item.source}`);
     seen.set(item.id, item.source); return item;
-  }));
+  }).sort((a, b) => a.order === b.order ? 0 : a.order - b.order));
 }

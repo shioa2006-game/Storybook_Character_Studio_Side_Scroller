@@ -450,4 +450,4 @@ export const ebGuardian=Object.freeze({
 });
 
 export { ebGuardian as character };
-export const studio = Object.freeze({ name: 'Guardian（盾の守護者）', category: 'EMBERBOUND 味方', description: '灰燼の衛士をもとにした、EMBERBOUND EXPEDITION の盾役。ゲームの長さに合わせた短い攻撃、盾打ち（Shield Bash）、被弾、戦闘不能の動きを持つ。', preview: { direction: 'R', phase: 0 } });
+export const studio = Object.freeze({ order: 1, name: 'Guardian（盾の守護者）', category: 'EMBERBOUND 味方', description: '灰燼の衛士をもとにした、EMBERBOUND EXPEDITION の盾役。ゲームの長さに合わせた短い攻撃、盾打ち（Shield Bash）、被弾、戦闘不能の動きを持つ。', preview: { direction: 'R', phase: 0 } });

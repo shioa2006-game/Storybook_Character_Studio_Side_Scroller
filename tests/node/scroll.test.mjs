@@ -72,7 +72,8 @@ test('attacks play in place for their own period, then walking resumes if still 
     advance(game, spec.period - .02);
     assert.equal(game.unit.action, 'attack', entry.id); assert.equal(game.unit.x, x, entry.id);
     advance(game, .1);
-    assert.equal(game.unit.action, 'walk', entry.id); assert.ok(game.unit.x > x, entry.id);
+    // Characters without a walk (EMBERBOUND enemies) move in their idle pose.
+    assert.equal(game.unit.action, entry.definition.actions.walk ? 'walk' : 'idle', entry.id); assert.ok(game.unit.x > x, entry.id);
   }
 });
 

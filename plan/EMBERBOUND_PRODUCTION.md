@@ -61,13 +61,13 @@
 | 2 | ranger | A | archer | 不要 | **作成済み** (`eb-ranger`。攻撃の始まりに矢を放つ短い射撃、上空への矢の雨) |
 | 3 | arcanist | A | mage | 受領 (紫の帽子とローブ、白い三つ編み、残り火の杖、炎の紋章の本) | **作成済み** (`eb-arcanist`。杖を突き出す短い魔法、杖を掲げる隕石) |
 | 4 | oracle | B大 | mage の体 (eb-arcanist から) | 受領 (光輪、波打つ金髪、白い法衣と肩掛け、青い前掛け、三日月の杖) | **作成済み** (`eb-oracle`。聖撃、回復・聖域、被弾、戦闘不能) |
-| 5 | ash_brute | B中 | goblin | 必要 | |
-| 6 | ash_crawler | C | 新規 (甲虫) | 必要 | |
-| 7 | ember_wisp | C | 新規 (火球) | 必要 | |
-| 8 | char_wolf | C | 新規 (四足獣) | 必要 | |
-| 9 | cinder_sapling | C | 新規 (樹木) | 必要 | |
-| 10 | thornback | C | char_wolf の四足 | 必要 | |
-| 11 | gnarlwood | C | cinder_sapling の樹皮 | 必要 | |
+| 5 | ash_brute | B中 | goblin | 受領 (灰色の肌、角のこぶ、破れたベスト、鋲の棍棒) | **作成済み** (`eb-ash-brute`。棍棒の短い振り下ろし、溜め=棍棒を振りかぶって震えるループ) |
+| 6 | ash_crawler | C | 新規 (甲虫) | 受領 (割れた甲羅と赤熱の斑点、白い頭、6本脚) | **作成済み** (`eb-ash-crawler`。体当たり) |
+| 7 | ember_wisp | C | 新規 (火球) | 受領 (炎の体、明るい芯、小さな顔) | **作成済み** (`eb-ember-wisp`。体当たり、魔法=火の玉を吐く) |
+| 8 | char_wolf | C | 新規 (四足獣) | 受領 (灰色の毛、白い胸、尖った耳、背中の炎) | **作成済み** (`eb-char-wolf`。飛びかかる噛みつき。四足の共通部品は `characters/shared/emberbound/creature.js`) |
+| 9 | cinder_sapling | C | 新規 (樹木) | 受領 (焦げた切り株、頭頂の炎、小枝の腕、根の脚) | **作成済み** (`eb-cinder-sapling`。小枝の腕で払う) |
+| 10 | thornback | C | char_wolf の四足 | 受領 (茶色の毛、背中の棘、白い牙、桃色の鼻) | **作成済み** (`eb-thornback`。突き上げる突進、溜め=頭を下げて蹄で地面をかくループ) |
+| 11 | gnarlwood | C | cinder_sapling の樹皮 | 受領 (顔のある大木、燃える枝先、枝の腕と根の手) | **作成済み** (`eb-gnarlwood`。腕の振り下ろし、溜め=両腕を掲げて震えるループ。樹皮の色は共通の `TREE`) |
 | 12〜 | 第2〜第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
 | 〜40 | 非人型の系統 (C) | C | 流用計画の系統順 | 必要 | |
 | 41〜44 | shadow_* | D | 完成した味方4人 | 不要 | |

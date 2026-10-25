@@ -27,8 +27,9 @@ await copyFile(source, target);
 
 const raw = await readFile(target, 'utf8'), crlf = raw.includes('\r\n');
 let s = raw.replace(/\r\n/g, '\n');
-// Every occurrence of the base id (definition id, seeds, render prefixes) becomes the new id.
-s = s.split(fromId).join(id);
+// The base id inside strings (definition id, seeds such as 'goblin-…', render prefixes) becomes the new id.
+// Code names that contain it (goblinPose) are left alone.
+s = s.replace(new RegExp(`(['"\`])${fromId}(?=['"\`-])`, 'g'), `$1${id}`);
 s = s.replace(/label:\s*(['"])[^'"]*\1/, `label:'${args.game} — EMBERBOUND'`);
 const meta = `emberbound:{gameId:'${args.game}',heightPx:${Number(args.height)},facing:'${facing}'}`;
 s = /emberbound:\s*\{[^}]*\}/.test(s) ? s.replace(/emberbound:\s*\{[^}]*\}/, meta) : s.replace(/(equipment:\s*\{[^}]*\},?)/, `$1\n  ${meta},`);

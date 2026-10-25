@@ -86,7 +86,7 @@ function render() {
   const dpr = devicePixelRatio || 1, k = Number(q.get('k') || 3), cols = only ? n : n * dirs.length, rowsPerAction = only ? dirs.length : 1;
   const avail = Math.min(1180, innerWidth - 24), cellW = Math.floor(avail / cols);
   // Size by height; frameBox is wide for the fall, so cells clip instead of shrinking every figure.
-  const s0 = (only ? 170 : 92) / (box.y1 - box.y0) * Number(q.get('scale') || 1);
+  const s0 = Math.min((only ? 170 : 92) / (box.y1 - box.y0), cellW / ((box.x1 - box.x0) * .8)) * Number(q.get('scale') || 1);
   const cellH = Math.ceil((box.y1 - box.y0) * s0) + 16;
   const gameH = meta.heightPx || 28, sh = studioHeight(), gs = gameH / sh * k;   // local px → device px at game size
   // One pose per action at game size: idle / walk at rest, the impact of attack / cast / hurt, the end of the fall.

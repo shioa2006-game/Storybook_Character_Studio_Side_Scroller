@@ -225,4 +225,4 @@ export const ebRanger = Object.freeze({
 });
 
 export { ebRanger as character };
-export const studio = Object.freeze({ name: 'Ranger（疾風の射手）', category: 'EMBERBOUND 味方', description: '金髪エルフの弓使いをもとにした、EMBERBOUND EXPEDITION の射手。攻撃の始まりと同時に矢を放つ短い射撃、上空へ射る矢の雨（Arrow Rain）、被弾、戦闘不能の動きを持つ。', preview: { direction: 'R', phase: 0 } });
+export const studio = Object.freeze({ order: 2, name: 'Ranger（疾風の射手）', category: 'EMBERBOUND 味方', description: '金髪エルフの弓使いをもとにした、EMBERBOUND EXPEDITION の射手。攻撃の始まりと同時に矢を放つ短い射撃、上空へ射る矢の雨（Arrow Rain）、被弾、戦闘不能の動きを持つ。', preview: { direction: 'R', phase: 0 } });

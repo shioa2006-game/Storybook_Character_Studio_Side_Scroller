@@ -244,6 +244,6 @@ export const character=Object.freeze({
   equipment:{leftHand:'staff',rightHand:'open hand'},
   emberbound:{gameId:'oracle',heightPx:25,facing:'R'},
 });
-export const studio=Object.freeze({name:"Oracle（暁の巫女）",category:"EMBERBOUND 味方",
+export const studio=Object.freeze({order:4,name:"Oracle（暁の巫女）",category:"EMBERBOUND 味方",
   description:"EMBERBOUND EXPEDITION の回復役。金色の光輪、波打つ金髪、白い法衣に青い前掛け、三日月と光の珠を頂く杖。聖撃、回復と聖域（Sanctuary）、被弾、戦闘不能の動きを持つ。",
   preview:{direction:'R',phase:0}});

@@ -263,6 +263,6 @@ export const character=Object.freeze({
   equipment:{leftHand:'staff',rightHand:'spellbook'},
   emberbound:{gameId:'arcanist',heightPx:28,facing:'R'},
 });
-export const studio={name:'Arcanist（残り火の魔導士）',category:'EMBERBOUND 味方',
+export const studio={order:3,name:'Arcanist（残り火の魔導士）',category:'EMBERBOUND 味方',
   description:'魔法使いをもとにした、EMBERBOUND EXPEDITION の魔導士。紫の帽子とローブ、白い三つ編み、残り火の結晶を灯したねじれた杖と炎の紋章の魔導書。杖を突き出す短い魔法、杖を掲げる隕石（Meteor）、被弾、戦闘不能の動きを持つ。',
   preview:{direction:'R',phase:0}};
