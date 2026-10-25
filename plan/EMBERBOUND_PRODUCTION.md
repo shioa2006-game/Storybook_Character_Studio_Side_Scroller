@@ -80,7 +80,13 @@
 | 21 | geomancer | B中 | dark-mage | 受領 (紫のフード、水色の目、結晶の杖、ローブの縁取り) | **作成済み** (`eb-geomancer`。杖を振りかぶって前へ振り、杖の結晶から魔法の光がはじける攻撃、溜め=Crystal Ward で結晶が周りを回るループ) |
 | 22 | prism_sentinel | C | 新規 (結晶構造物) | 受領 (光る核、上下の水色と前後の紫の結晶、石の留め具) | **作成済み** (`eb-prism-sentinel`。前の結晶から破片を撃つ攻撃、溜め=Prism Beam で結晶が開き核が光るループ) |
 | 23 | geode_colossus | C | 新規 (ゴーレム) | 受領 (岩の巨人、胸の晶洞の核、頭と肩の結晶) | **作成済み** (`eb-geode-colossus`。拳の振り下ろし、溜め=Shard Storm で両拳を掲げるループ) |
-| 24〜 | 第4〜第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
+| 24 | frost_revenant | B大 | warrior の体 (eb-coral-knight から) | 受領 (霜の鎧、氷の角の兜、光る目、青いマント、氷の剣) | **作成済み** (`eb-frost-revenant`。剣の振り下ろし) |
+| 25 | rime_archer | B中 | archer (eb-ranger から) | 受領 (毛皮の縁の青いフード、影の顔に水色の目、氷の弓) | **作成済み** (`eb-rime-archer`。攻撃の始まりに矢を放つ短い射撃) |
+| 26 | ice_wraith | B大 → 新規 | 新規 (浮遊する布の亡霊) | 受領 (氷色の布、白い仮面、裂けた裾) | **作成済み** (`eb-ice-wraith`。袖で引き裂く攻撃、溜め=Blizzard で雪が回るループ) |
+| 27 | frost_hound | C | char_wolf の四足 | 受領 (白い毛、青い影、背中の氷の棘、大きな尾) | **作成済み** (`eb-frost-hound`。飛びかかる噛みつき) |
+| 28 | glacial_warden | B大 | warrior の体 (eb-frost-revenant から) | 受領 (氷の鎧、毛皮の襟、氷の冠の兜、氷のハンマー) | **作成済み** (`eb-glacial-warden`。両手のハンマーの振り下ろし Frost Bash、溜め=Avalanche でハンマーを掲げるループ) |
+| 29 | rimequeen | B大 | Oracle の体 | 受領 (白銀の髪、氷の冠、裾の広いドレス、雪の結晶の杖) | **作成済み** (`eb-rimequeen`。杖の突きと氷の槍、溜め=Frozen Tomb / Absolute Zero で杖を掲げ雪が回るループ) |
+| 30〜 | 第5〜第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
 | 〜40 | 非人型の系統 (C) | C | 流用計画の系統順 | 必要 | |
 | 41〜44 | shadow_* | D | 完成した味方4人 | 不要 | |
 

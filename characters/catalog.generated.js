@@ -22,14 +22,20 @@ import { character as c19, studio as m19 } from "./eb-crystal-mite/character.js"
 import { character as c20, studio as m20 } from "./eb-geomancer/character.js";
 import { character as c21, studio as m21 } from "./eb-prism-sentinel/character.js";
 import { character as c22, studio as m22 } from "./eb-geode-colossus/character.js";
-import { character as c23, studio as m23 } from "./dark-mage/character.js";
-import { character as c24, studio as m24 } from "./demon-king/character.js";
-import { character as c25, studio as m25 } from "./goblin/character.js";
-import { character as c26, studio as m26 } from "./king/character.js";
-import { character as c27, studio as m27 } from "./mage/character.js";
-import { character as c28, studio as m28 } from "./skeleton-archer/character.js";
-import { character as c29, studio as m29 } from "./slime/character.js";
-import { character as c30, studio as m30 } from "./warrior/character.js";
+import { character as c23, studio as m23 } from "./eb-frost-revenant/character.js";
+import { character as c24, studio as m24 } from "./eb-rime-archer/character.js";
+import { character as c25, studio as m25 } from "./eb-ice-wraith/character.js";
+import { character as c26, studio as m26 } from "./eb-frost-hound/character.js";
+import { character as c27, studio as m27 } from "./eb-glacial-warden/character.js";
+import { character as c28, studio as m28 } from "./eb-rimequeen/character.js";
+import { character as c29, studio as m29 } from "./dark-mage/character.js";
+import { character as c30, studio as m30 } from "./demon-king/character.js";
+import { character as c31, studio as m31 } from "./goblin/character.js";
+import { character as c32, studio as m32 } from "./king/character.js";
+import { character as c33, studio as m33 } from "./mage/character.js";
+import { character as c34, studio as m34 } from "./skeleton-archer/character.js";
+import { character as c35, studio as m35 } from "./slime/character.js";
+import { character as c36, studio as m36 } from "./warrior/character.js";
 export const additions = [
   { definition: c0, studio: m0, source: "characters/eb-guardian/character.js", exportName: 'character', builtin: false },
   { definition: c1, studio: m1, source: "characters/eb-ranger/character.js", exportName: 'character', builtin: false },
@@ -54,12 +60,18 @@ export const additions = [
   { definition: c20, studio: m20, source: "characters/eb-geomancer/character.js", exportName: 'character', builtin: false },
   { definition: c21, studio: m21, source: "characters/eb-prism-sentinel/character.js", exportName: 'character', builtin: false },
   { definition: c22, studio: m22, source: "characters/eb-geode-colossus/character.js", exportName: 'character', builtin: false },
-  { definition: c23, studio: m23, source: "characters/dark-mage/character.js", exportName: 'character', builtin: false },
-  { definition: c24, studio: m24, source: "characters/demon-king/character.js", exportName: 'character', builtin: false },
-  { definition: c25, studio: m25, source: "characters/goblin/character.js", exportName: 'character', builtin: false },
-  { definition: c26, studio: m26, source: "characters/king/character.js", exportName: 'character', builtin: false },
-  { definition: c27, studio: m27, source: "characters/mage/character.js", exportName: 'character', builtin: false },
-  { definition: c28, studio: m28, source: "characters/skeleton-archer/character.js", exportName: 'character', builtin: false },
-  { definition: c29, studio: m29, source: "characters/slime/character.js", exportName: 'character', builtin: false },
-  { definition: c30, studio: m30, source: "characters/warrior/character.js", exportName: 'character', builtin: false },
+  { definition: c23, studio: m23, source: "characters/eb-frost-revenant/character.js", exportName: 'character', builtin: false },
+  { definition: c24, studio: m24, source: "characters/eb-rime-archer/character.js", exportName: 'character', builtin: false },
+  { definition: c25, studio: m25, source: "characters/eb-ice-wraith/character.js", exportName: 'character', builtin: false },
+  { definition: c26, studio: m26, source: "characters/eb-frost-hound/character.js", exportName: 'character', builtin: false },
+  { definition: c27, studio: m27, source: "characters/eb-glacial-warden/character.js", exportName: 'character', builtin: false },
+  { definition: c28, studio: m28, source: "characters/eb-rimequeen/character.js", exportName: 'character', builtin: false },
+  { definition: c29, studio: m29, source: "characters/dark-mage/character.js", exportName: 'character', builtin: false },
+  { definition: c30, studio: m30, source: "characters/demon-king/character.js", exportName: 'character', builtin: false },
+  { definition: c31, studio: m31, source: "characters/goblin/character.js", exportName: 'character', builtin: false },
+  { definition: c32, studio: m32, source: "characters/king/character.js", exportName: 'character', builtin: false },
+  { definition: c33, studio: m33, source: "characters/mage/character.js", exportName: 'character', builtin: false },
+  { definition: c34, studio: m34, source: "characters/skeleton-archer/character.js", exportName: 'character', builtin: false },
+  { definition: c35, studio: m35, source: "characters/slime/character.js", exportName: 'character', builtin: false },
+  { definition: c36, studio: m36, source: "characters/warrior/character.js", exportName: 'character', builtin: false },
 ];
