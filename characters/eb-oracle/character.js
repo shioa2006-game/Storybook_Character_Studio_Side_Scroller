@@ -183,12 +183,16 @@ function staff(ctx,rf,P) {
   for(const z of [27,30]) { const p=at(z);strokePath(ctx,[{x:p.x-2.6,y:p.y+1.3},{x:p.x+2.6,y:p.y-1.3}],2.2,false,C.gold);cLine(ctx,[[p.x-2.6,p.y+1.3],[p.x+2.6,p.y-1.3]],.5); }
   const base=at(33),tip=at(55),dx=tip.x-base.x,dy=tip.y-base.y,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L;
   const q=(s,w)=>({x:base.x+dx*s+nx*w,y:base.y+dy*s+ny*w});
-  // Gold crescent open toward the front, cradling a glowing orb.
-  const glow=P.glow,orb=q(.55,1.5);
+  // Gold crescent cradling a glowing orb. Its thick, closed bottom (a = −π/2, s ≈ 0) sits on the end of the
+  // shaft and it opens upward; the inner edge is set higher, so the horns taper toward the opening.
+  const glow=P.glow,orb=q(.6,0);
   if(glow>0) { ctx.save();ctx.globalAlpha=glow*.35;oval(ctx,orb.x,orb.y,9+glow*5,9+glow*5,C.glow,{w:0,depth:0,speck:0});ctx.restore(); }
   const outer=[],inner=[];
-  for(let i=0;i<=12;i++){const a=-.35*Math.PI+i/12*1.55*Math.PI;outer.push(q(.55+.5*Math.sin(a),-8*Math.cos(a)));inner.push(q(.55+.34*Math.sin(a),-4.5*Math.cos(a)-1.6));}
+  for(let i=0;i<=14;i++){const a=-1.2*Math.PI+i/14*1.4*Math.PI;outer.push(q(.55+.5*Math.sin(a),-8*Math.cos(a)));inner.push(q(.66+.36*Math.sin(a),-5.2*Math.cos(a)));}
   paint(ctx,[...outer,...inner.reverse()],{fill:C.gold,w:1.2,depth:1.2,speck:.25,amp:.15});
+  // A gold collar joins the crescent to the shaft.
+  const c0=at(31.5),c1=at(34.5);
+  strokePath(ctx,[c0,c1],5*DRAW.lw,false,C.ink);strokePath(ctx,[c0,c1],3.4,false,C.gold);
   oval(ctx,orb.x,orb.y,3.6,3.6,C.orb,{w:1,depth:.4,speck:0});
   oval(ctx,orb.x-1,orb.y-1,1.2,1.2,'#ffffff',{w:0,depth:0,speck:0});
   if(glow>.5) for(let i=0;i<6;i++){const a=i*TAU/6+.3;cLine(ctx,[[orb.x+Math.cos(a)*6,orb.y+Math.sin(a)*6],[orb.x+Math.cos(a)*9,orb.y+Math.sin(a)*9]],.55);}
