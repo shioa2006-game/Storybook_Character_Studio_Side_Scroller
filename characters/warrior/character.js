@@ -37,8 +37,8 @@ const SWING = [
   [.72, [15, 16, 28, .63, .18, -.76]],
   [1, SWORD_IDLE],
 ];
-// Right-facing only: how far the resting sword grip moves forward (local a).
-const SIDE_GRIP_FORWARD = 9;
+// Side views only: ready stance [hand a, b, z, blade direction] — elbow bent, tip forward and up. Facing left the sword hand is the near one, so its grip sits nearer the centre line and a little higher, letting the blade clear the shield's top edge.
+const SIDE_SWORD_READY = { R: [12, 12, 33, .55, .1, .83], L: [16, 6, 37, .62, -.12, .78] };
 // Side views only: how much of the swing's twist away from the camera is kept.
 const SIDE_TWIST_AWAY = .3;
 const sample = (keys, u) => keyframes(keys, u)[0];
@@ -380,12 +380,29 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const toward=direction==='R'?1:-1;
     if(P.yaw*toward<0) P.yaw*=SIDE_TWIST_AWAY;
   }
-  if(direction==='R') {
-    // Facing right, the near shield hides the far sword hand and the blade
-    // seems to grow out of the rim. Carry the resting grip forward past the
-    // rim; the attack eases out of and back into the same rest offset.
-    const rest=action==='attack'?sample([[0,[1]],[.12,[0]],[.8,[0]],[1,[1]]],phase(t,WARRIOR_ATTACK_T)):1;
-    P.sword.hand=[P.sword.hand[0]+SIDE_GRIP_FORWARD*rest,P.sword.hand[1],P.sword.hand[2]];
+  if(direction==='R'||direction==='L') {
+    // Both facings hold the same ready stance: elbow bent, grip in front of
+    // the body, blade tilted forward and up. Idle breathing and walk sway stay
+    // as offsets on top of it.
+    const ready=SIDE_SWORD_READY[direction];
+    if(action==='attack') {
+      // The side swing has its own path. Chibi arms cannot lift the grip over
+      // the helmet, so the sword travels around the body instead of through
+      // it: grip out beside the shoulder with the blade upright, a draw-back
+      // behind the back, up over the shoulder again, then SWING's chop, a
+      // follow-through that stops the tip just above the floor (SWING's own
+      // dips it below), and back to the stance. Chest (UY) coordinates.
+      const keys=[[0,ready],[.1,[3,22,50,.2,.05,.98]],[.2,[-10,18,50,-.6,.03,.8]],
+        [.3,[-18,10,47,-.9,0,.45]],[.45,[-17,11,49,-.82,0,.57]],[.49,[2,21,56,.45,.05,.89]],
+        [.55,SWING.find(([q])=>q===.55)[1]],[.62,[17,15,29,.8,-.12,-.58]],[.72,[15,16,30,.7,.15,-.68]],[1,ready]];
+      const at=q=>{const k=keyframes(keys,q);return {hand:k.slice(0,3),dir:nrm3(k.slice(3))};};
+      Object.assign(P.sword,at(phase(t,WARRIOR_ATTACK_T)));
+      for(const sw of P.trail?.samples??[])Object.assign(sw,at(sw.u));
+    } else {
+      const idleDir=nrm3(SWORD_IDLE.slice(3)),readyDir=nrm3(ready.slice(3));
+      P.sword.hand=P.sword.hand.map((v,i)=>v+ready[i]-SWORD_IDLE[i]);
+      P.sword.dir=nrm3(P.sword.dir.map((v,i)=>v+readyDir[i]-idleDir[i]));
+    }
   }
   if(action==='attack') {
     const u=phase(t,WARRIOR_ATTACK_T);
@@ -397,18 +414,6 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
         const w=sample([[0,[0]],[.1,[0]],[.2,[.7]],[.3,[1]],[.45,[1]],[.49,[.65]],[.55,[0]],[1,[0]]],q);
         sw.hand=vlerp(sw.hand,[12,29,sw.hand[2]],w);
         sw.dir=nrm3(vlerp(sw.dir,nrm3([-.06,.92,.74]),w));
-      }
-      if(direction==='R') {
-        // Facing right, the left sword hand is on the far side: the overhead
-        // wind-up sits entirely behind the helmet and shield. Draw it back past
-        // the shoulders instead, below the rearward plume, so the blade reads
-        // behind the back before the chop sweeps over the head.
-        const w=sample([[0,[0]],[.1,[0]],[.2,[.8]],[.3,[1]],[.45,[1]],[.48,[.3]],[.51,[0]],[1,[0]]],q);
-        // Chest coordinates: the rig turns the chest toward the camera, which
-        // swings the far (+b) side forward on screen. Keep the grip close to
-        // the body's centre line so the blade clears the back, not the chest.
-        sw.hand=vlerp(sw.hand,[-20,8,46],w);
-        sw.dir=nrm3(vlerp(sw.dir,nrm3([-.9,0,.45]),w));
       }
       if(direction==='NE') {
         const w=sample([[0,[0]],[.48,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],q);
