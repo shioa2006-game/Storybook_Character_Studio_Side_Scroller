@@ -180,6 +180,7 @@ export function drawSkeletonArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
       draw:()=>drawArrowShape(ctx,nock,{x:d[0],y:d[1]},len,DRAW.lw)});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'skeleton-archer',boil:0,shadow:opts.shadow});
+  return {pose:P,order:parts.map(p=>p.id)};
 }
 
 export const character=Object.freeze({

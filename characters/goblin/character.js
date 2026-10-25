@@ -222,7 +222,7 @@ export function drawGoblin(ctx,x,y,direction,action,t,scale=1,opts={}) {
     }});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'goblin',boil:0,shadow:opts.shadow});
-  return {pose:P};
+  return {pose:P,order:parts.map(p=>p.id)};
 }
 
 export const character=Object.freeze({

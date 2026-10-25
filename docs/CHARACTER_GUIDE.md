@@ -22,6 +22,8 @@ Studioとカタログは横スクロール用の右向き (R)・左向き (L) �
 
 InkstoneのCharacterDefinitionを `character`、表示情報を `studio` としてnamed exportします。登録形式のテンプレートは [STUDIO_GUIDE.md の単一の追加方法](STUDIO_GUIDE.md#単一の追加方法)、APIの契約は [API_REFERENCE.md](API_REFERENCE.md) を参照してください。以下では姿勢・描画の実装に必要な点を説明します。
 
+- **`draw` の戻り値**: `renderRig` のあとで `{ pose: P, order: parts.map(p => p.id) }` を返します (`renderRig` が `parts` を描画順に並べ替えるので、`order` がそのまま描画順になる)。ほかの情報 (手の画面座標など) を足してもかまいません。`pose` は体を通り抜けない自動検査 (`tests/node/lib/clearance.mjs`) が、`order` は「装備が消えた」ときの描画順の確認が使います。横向き専用の補正で姿勢を変えた場合は、変えたあとの `P` を返します。
+
 ## 2. 共通リグの使い方
 
 - **体の座標系**: `a` = 前、`b` = 左、`z` = 上 (ローカル px、足元が原点)。向きの違いは「前ベクトル」(と横向きの上半身のひねり) だけなので、姿勢は1つ書けば右向き・左向きにも4方向にも使えます。
@@ -30,6 +32,9 @@ InkstoneのCharacterDefinitionを `character`、表示情報を `studio` とし�
   - `U(a, b, z)`: 上半身の揺れ `body = [da, db, dz]` を加えたもの
   - `UY(a, b, z)`: さらに上半身のひねり `yaw` を加えたもの (弓の構えで左肩を前へ出すのに使った)
   - `sx` (+1 / −1): 画面上で右を向いているか (横顔の部品を左右反転するときに使う)。`front`: 正面系 (右向き・左向きと4方向の ↙↘) か背面系 (4方向の ↖↗) か
+- **横向き用の道具** (`src/authoring.js` から import。使い方は [SIDE_VIEW_GUIDE.md](SIDE_VIEW_GUIDE.md) の1章・2.3):
+  - `travelDir(rf, 向き, k)`: 上半身の座標の武器の向きを、進行方向へ k の割合だけ戻す。振り下ろし・詠唱が手前を向いて短く見えるのを防ぐ
+  - `chestToLegs(rf.turn, a, b)`: 上半身の点を脚の座標に戻す。`bodyToWorld(rf.dir, …)` や独自の投影へ上半身の点を渡すときに使い、手と装備の位置をそろえる
   - `turn`: 横向きの上半身のひねり (右向きは正、左向きは負、4方向では 0)
 - **横向き (R / L)**: 脚と足運び (`W`・`footProj`) は真横から手前へ 25°、上半身 (`U` / `UY`) はさらに 20° カメラ側へひねって 45° で描きます。上半身は `U` / `UY`、脚は `W` で描いてください。理由と、装備の向き・武器の振り方の注意は [SIDE_VIEW_GUIDE.md](SIDE_VIEW_GUIDE.md) の1章・2章を参照してください。
 - 脚は `legParts2(ctx, rf, P, { pants, boot, cuff, bootH, footR, soleR })` を使うと、太さのある脚とブーツ・**足の接地補正** (滑り防止) が付きます。歩行の足運びは `walkFeet(t)` (足の位置 `footL` / `footR` と上下の揺れ `bob`)。

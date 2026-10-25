@@ -239,7 +239,7 @@ export function drawDemonKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
       mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.9,C.iron,{thumbSide:side*rf.sx})});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'demon-king',boil:0,shadow:opts.shadow});
-  return {pose:P};
+  return {pose:P,order:parts.map(p=>p.id)};
 }
 
 export const character=Object.freeze({

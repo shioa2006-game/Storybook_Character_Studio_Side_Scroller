@@ -66,6 +66,8 @@ npm test
 npm run catalog:check
 ```
 
+`src/` を意図して変更したときは `npm run baseline:update` で `tests/fixtures/src-baseline.json` を作り直してから `npm test` を実行します。
+
 サーバー起動後、次のページで検証できます。
 
 - [全キャラクターの描画範囲とLive/Cached](tests/browser/check.html)
@@ -81,4 +83,6 @@ npm run catalog:check
 
 相対URLとハッシュルーティングを使用します。静的配信時は生成済みカタログを含めてください。日常のアプリには `index.html`、`src/`、`characters/`、`studio/`、`game/` と参照するガイドが必要です。テスト・過去資料・ゲーム用キットを配信する必要はありません。
 
-制作コードの原本に出力先のファイルを逆コピーしないでください。共通ライブラリを意図して更新するときは全体を同じ版にそろえ、テストと `tests/fixtures/src-baseline.json` の基準を確認してください。
+制作コードの原本に出力先のファイルを逆コピーしないでください。共通ライブラリを意図して更新するときは全体を同じ版にそろえ、`npm run baseline:update` で `tests/fixtures/src-baseline.json` の基準を作り直し、テストを確認してください。
+
+**改行コードを保ってください。** ファイルごとに CRLF と LF が混在しています (`README.md`・`docs/STUDIO_GUIDE.md` などは CRLF、`docs/CHARACTER_GUIDE.md`・多くの `.js` は LF、`src/characters/skeleton.js`・`index.html`・`tests/browser/check.html` などは1行だけ CRLF が混ざっている)。スクリプトで書き換えると、ファイル全体の改行が変わることがあります (Windows の Python はテキストモードで書くと LF を CRLF に変える)。編集後は `git diff --stat` で、変更した行数よりはるかに多い差分が出ていないかを確かめてください。`src/` の改行が変わるとハッシュ基準のテストも失敗します。

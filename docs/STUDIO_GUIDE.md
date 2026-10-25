@@ -60,7 +60,7 @@ export const studio = {
 ## 標準作業
 
 1. 依頼の確認範囲を踏まえ、`ARCHITECTURE.md`、`API_REFERENCE.md`、`CHARACTER_GUIDE.md`、`SIDE_VIEW_GUIDE.md`、関連する実装を読みます。
-2. キャラクターを上記の配置・exportsで制作します。原則 `src/` を変更しません。
+2. キャラクターを上記の配置・exportsで制作します。原則 `src/` を変更しません。共通リグなどを意図して変更した場合は `npm run baseline:update` で基準を作り直し、全キャラクターを [SIDE_VIEW_GUIDE.md の6章](SIDE_VIEW_GUIDE.md#6-全キャラクターを点検する進め方と落とし穴) の手順で点検し直します。ファイルの改行コード (CRLF / LF) は元のまま保ちます。
 3. 共通リグ、接地補正、IK、描画層を使い、必要な方向・動作を実装します。
 4. `node tools/sync-catalog.mjs`。重複・不足はファイル名付きで修正します。失敗時は既存カタログを置き換えません。
 5. ギャラリーを再読込し、カード→詳細→拡大→通常サイズ→方向・動作→「左右・全動作を見る」を確認します。

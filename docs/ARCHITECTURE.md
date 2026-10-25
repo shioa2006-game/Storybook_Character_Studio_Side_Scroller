@@ -19,13 +19,13 @@ src/
 │  ├─ props.js             宝箱・木箱・樽・石柱・石の山・金貨・瓦礫、占有範囲、小物の種類の表 PROP_TYPES
 │  └─ room.js              部屋データの正規化 (normalizeRoom)、背景の描画、前後関係に参加する物体の一覧
 ├─ characters/           キャラクター
-│  ├─ rig.js               共通人体リグ: 4方向の体の座標・rigFrame・walkFeet・ik2・bodyLayerKey・renderRig・接地補正
+│  ├─ rig.js               共通人体リグ: 向き (4方向・横向き R / L と上半身のひねり)・rigFrame・walkFeet・ik2・bodyLayerKey・renderRig・接地補正・横向き用の travelDir / chestToLegs
 │  ├─ painting.js          人物の立体部品: ミトン形の手・太さのある脚とブーツ
 │  ├─ swordsman.js         剣士 (姿勢・顔・フード・剣・盾・組み立て・定義)
 │  ├─ archer-pose.js       弓使いの姿勢・弓と弦の幾何・矢の形
 │  ├─ archer-parts.js      弓使いの部品 (髪・顔・胴着・ケープ・矢筒・弓)
 │  ├─ archer.js            弓使いの組み立て (描画順の補正) と定義
-│  ├─ skeleton.js          骸骨 (専用骨格寸法・共通投影による4方向の待機・歩行・攻撃) と定義
+│  ├─ skeleton.js          骸骨 (専用骨格寸法・共通投影による4方向と左右の待機・歩行・攻撃。上半身用の投影 JU / WU) と定義
 │  └─ registry.js          キャラクター登録簿 (検査・登録・取得)・コマ割り
 └─ rendering/            描画とキャッシュ
    ├─ camera.js            カメラ (倍率・平行移動・DPR)・部屋に合わせる・座標変換

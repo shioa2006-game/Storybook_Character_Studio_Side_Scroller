@@ -18,7 +18,8 @@ import { createRenderer, createCharacterView, /* … */ } from './src/index.js';
 | `frameKeysOf(actionSpec)` | 関数 | 動作のコマ割り (各コマの開始位相) |
 | `walkSecondsPerTile(scale)` | 関数 | 1マス歩く間に進めるアニメ時間 (秒)。足を滑らせないため |
 | `sideWalkSecondsPerPixel(scale)` | 関数 | 横向き (R / L) で画面上を1px歩く間に進めるアニメ時間 (秒)。横スクロール用 |
-| `SIDE_VIEW_ANGLE` | 定数 | 横向きの視点の角度 (真横から手前へ 25°、ラジアン) |
+| `SIDE_VIEW_ANGLE` | 定数 | 横向きの視点の角度 (真横から手前へ 25°、ラジアン)。脚と足運びはこの角度で描く |
+| `SIDE_CHEST_TURN` | 定数 | 横向きで上半身だけをさらにカメラ側へひねる角度 (20°、ラジアン)。胴を4方向と同じ 45° の幅で見せる |
 | `normalizeRoom(roomData)` | 関数 | 部屋データを内部形式へ (検査を含む。通常は直接使わない) |
 | `ROOM_DEFAULTS` | 定数 | 部屋データの既定値 |
 | `PROP_TYPES` | 表 | 小物の種類 (描画関数・既定の寸法・高さ・表示名) |
@@ -173,7 +174,7 @@ const info = renderer.render({
 {
   id: 'archer', label: '弓使い', kind: 'humanoid',       // kind は説明用 ('humanoid' | 'sprite')
   directional: true,                                     // false = 向きなし (mirror だけ)
-  draw(ctx, x, y, direction, action, time, scale, opts), // (x, y) = 足元。opts.shadow === false なら影を描かない
+  draw(ctx, x, y, direction, action, time, scale, opts), // (x, y) = 足元。opts.shadow === false なら影を描かない。戻り値は { pose, order } を推奨 (CHARACTER_GUIDE.md §1)
   actions: {
     idle:   { period: 2.856, frames: 16 },               // 等間隔のコマ数
     walk:   { period: 0.714, frames: 10 },
