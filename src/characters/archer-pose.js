@@ -5,7 +5,7 @@
 import { TAU } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { inkShape, strokePath } from '../core/ink.js';
-import { DIRS, KX, bodyToWorld, keyframes, nrm3, orth3, smooth, vlerp, walkFeet } from './rig.js';
+import { DIRS, KX, bodyToWorld, chestToLegs, keyframes, nrm3, orth3, smooth, vlerp, walkFeet } from './rig.js';
 
 export const ARC = {
   skin: '#f4dfb9', hair: '#e8cb89', hairLight: '#fff0bd', hairDark: '#bba06a',
@@ -105,8 +105,8 @@ export const _cantCache = {};
 
 export function bowCantSign(dirKey) {
   if (_cantCache[dirKey]) return _cantCache[dirKey];
-  const dir = DIRS[dirKey], sx = b => { const w = bodyToWorld(dir, AIM_GRIP[0] + AIM_UP[0] * 31, b); return (w.X - w.Y) * KX; };
-  const head = (() => { const w = bodyToWorld(dir, 1.5, 0); return (w.X - w.Y) * KX; })();
+  const dir = DIRS[dirKey], sx = b => { const w = bodyToWorld(dir, ...chestToLegs(dir.turn, AIM_GRIP[0] + AIM_UP[0] * 31, b)); return (w.X - w.Y) * KX; };
+  const head = (() => { const w = bodyToWorld(dir, ...chestToLegs(dir.turn, 1.5, 0)); return (w.X - w.Y) * KX; })();
   const top = AIM_GRIP[1] + AIM_UP[1] * 31;   // [E] 弓の長さに合わせる
   return (_cantCache[dirKey] = Math.abs(sx(top + 8) - head) >= Math.abs(sx(top - 8) - head) ? 1 : -1);
 }

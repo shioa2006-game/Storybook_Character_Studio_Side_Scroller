@@ -16,7 +16,7 @@ export { paint, paintA, taperPts, shadeOf, lightOf, mixHex, LW } from './core/pa
 // 共通人体リグ
 export {
   cShape, cEllipse, cLine, shadeSide, limb, capsulePts, KX, KY, proj, footProj, DIRS, DIR_ORDER, SIDE_DIR_ORDER, SIDE_VIEW_ANGLE, SIDE_CHEST_TURN, bodyToWorld,
-  WALK_HZ, smooth, nrm3, keyframes, vlerp, dot3, orth3, walkFeet, rigFrame, yawToBody, renderRig, ik2, BODY_SHAPE, LAYER, bodyLayerKey, groundDirScreen,
+  WALK_HZ, smooth, nrm3, keyframes, vlerp, dot3, orth3, walkFeet, rigFrame, yawToBody, chestToLegs, travelDir, renderRig, ik2, BODY_SHAPE, LAYER, bodyLayerKey, groundDirScreen,
 } from './characters/rig.js';
 export { mittenHand, legParts2 } from './characters/painting.js';
 // 石材・小物

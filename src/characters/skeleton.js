@@ -8,7 +8,7 @@ import { TAU, V, ellipsePts } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { clipPath, roughen, strokePath } from '../core/ink.js';
 import { paint, paintA, taperPts } from '../core/paint.js';
-import { cLine, footProj, rigFrame, renderRig, walkFeet, WALK_HZ, ik2, keyframes, nrm3 } from './rig.js';
+import { DIRS, cLine, chestToLegs, footProj, rigFrame, renderRig, travelDir, vlerp, walkFeet, WALK_HZ, ik2, keyframes, nrm3 } from './rig.js';
 
 const C = { bone: '#f5e7cd', light: '#fff1d3', hollow: '#29241d', steel: '#99988e',
   edge: '#c3beb0', rust: '#80684e', wood: '#94704d', leather: '#765039', cloth: '#9a6749' };
@@ -25,7 +25,10 @@ const WAIST_Z = statureZ(40);
 function skeletonFrame(direction, P) {
   const base=rigFrame(direction,[0,0,0]);
   const J=(a,b,z)=>{const p=base.W(a+(P.lean??0),b,z);return {...p,y:p.y+P.bob};};
-  return {...base,J,W:(a,b,z)=>J(a,b,statureZ(z))};
+  // Upper body (ribs, skull, arms, shield): side views turn it toward the camera by
+  // base.turn like the shared U; pelvis and legs keep J / W. Identical when turn = 0.
+  const JU=(a,b,z)=>{const p=base.W(...chestToLegs(base.turn,a+(P.lean??0),b),z);return {...p,y:p.y+P.bob};};
+  return {...base,J,W:(a,b,z)=>J(a,b,statureZ(z)),JU,WU:(a,b,z)=>JU(a,b,statureZ(z))};
 }
 
 /** Preserve the previous helper signatures for direct module users. */
@@ -96,6 +99,26 @@ const rotatePitch = ([a,b,z],angle) => [a*Math.cos(angle)+z*Math.sin(angle),b,-a
 const plus = (a,b) => a.map((v,i)=>v+b[i]);
 const minus = (a,b) => a.map((v,i)=>v-b[i]);
 const actual = ([a,b,z]) => [a,b,statureZ(z)];
+// Side views (R / L) only, physical z: a forward ready guard in front of the chest, with the
+// blade tilted forward and up in both facings (docs/SIDE_VIEW_GUIDE.md 2.9). At its side the
+// right hand projects behind the body facing right, where the resting blade pointed backward.
+const SIDE_READY = [16,-12,33.5,.8,0,.6];
+const sideView = direction => direction==='R'||direction==='L';
+/** Side views: the attack eases out of and back into SIDE_READY, draws back behind the
+ * shoulders facing left (far sword hand), and keeps the blade on the travel direction. */
+function sideSlash(P,direction) {
+  const A=P.attack,readyDir=nrm3(SIDE_READY.slice(3));
+  const rest=keyframes([[0,[1]],[.28,[0]],[.66,[0]],[1,[1]]],A.u)[0];
+  A.hand=vlerp(A.hand,SIDE_READY.slice(0,3),rest);A.dir=nrm3(vlerp(A.dir,readyDir,rest));
+  if(direction==='L') {
+    const w=keyframes([[0,[0]],[.12,[0]],[.24,[1]],[.36,[1]],[.44,[0]],[1,[0]]],A.u)[0];
+    A.hand=vlerp(A.hand,[-16,-24,40],w);A.dir=nrm3(vlerp(A.dir,[-.95,0,.3],w));
+  }
+  // Facing right the travel turn swings this right-hand blade inward, toward the skull:
+  // pause it while the sword passes overhead so the blade goes beside the skull, not through it.
+  const k=direction==='R'?keyframes([[0,[1]],[.3,[1]],[.38,[0]],[.48,[0]],[.54,[1]],[1,[1]]],A.u)[0]:1;
+  A.dir=travelDir({turn:DIRS[direction].turn,yaw:0},A.dir,k);
+}
 
 /** Existing one-argument idle entry remains valid; articulated actions are opt-in. */
 export function skeletonPose(t=0,action='idle') {
@@ -195,7 +218,7 @@ function pelvis(ctx,rf) {
 }
 
 function torso(ctx,rf) {
-  const W=rf.W;
+  const W=rf.WU;
   // Back arch of ribs first. Foreground ribs then join the sternum or spine.
   for(let i=0;i<4;i++){
     const z=61-i*4.8,b=12-i*.8;
@@ -221,7 +244,7 @@ function torso(ctx,rf) {
 }
 
 function skull(ctx,rf,jaw) {
-  const h=rf.W(0,0,88);
+  const h=rf.WU(0,0,88);
   ctx.save();ctx.translate(h.x,h.y);
   // Only the symmetric skull/face view uses sx. Limbs and equipment are projected independently.
   ctx.scale(rf.sx*SKULL_SCALE,SKULL_SCALE);
@@ -265,6 +288,12 @@ function armPose(P,side,direction) {
     const E=ik2(S,H,length(minus(restE,S)),length(minus(restH,restE)),minus(restE,S));
     return {S,E,H,tip:plus(H,P.attack.dir.map(v=>v*length([3,-29,40])))};
   }
+  if(sideView(direction)&&side==='R') {
+    const H=plus(SIDE_READY.slice(0,3),[P.pitchR*6,0,0]),length=v=>Math.hypot(...v);
+    const E=ik2(S,H,length(minus(restE,S)),length(minus(restH,restE)),minus(restE,S));
+    const dir=travelDir({turn:DIRS[direction].turn,yaw:0},nrm3(SIDE_READY.slice(3)));
+    return {S,E,H,tip:plus(H,dir.map(v=>v*length([3,-29,40])))};
+  }
   const pitch=P['pitch'+side],E=plus(S,rotatePitch(minus(restE,S),pitch));
   const H=plus(E,rotatePitch(minus(restH,restE),side==='R'?P.elbowPitchR:pitch));
   let blade=rotatePitch(minus(actual([12,-58,97]),actual(P.handR)),P.bladePitch);
@@ -279,13 +308,13 @@ function armPose(P,side,direction) {
 }
 function shieldAtHand(ctx,rf,H) {
   // Fixed body plane, following the same grip as the left arm.
-  const v=rf.W(-.12,1,0),o=rf.W(0,0,0),tangent={x:v.x-o.x,y:v.y-o.y},k=Math.hypot(tangent.x,tangent.y);
+  const v=rf.WU(-.12,1,0),o=rf.WU(0,0,0),tangent={x:v.x-o.x,y:v.y-o.y},k=Math.hypot(tangent.x,tangent.y);
   ctx.save();ctx.translate(H.x,H.y+1);
   ctx.transform(tangent.x/k,tangent.y/k,0,1,0,0);
   drawRoundShield(ctx,0,0,15.5,21.5,rf.front);ctx.restore();
 }
 function arm(ctx,rf,P,side,part='all') {
-  const joints=armPose(P,side,rf.dir.key),S=rf.J(...joints.S),E=rf.J(...joints.E),H=rf.J(...joints.H);
+  const joints=armPose(P,side,rf.dir.key),S=rf.JU(...joints.S),E=rf.JU(...joints.E),H=rf.JU(...joints.H);
   if(part==='all'||part==='upper')bone(ctx,...xy(S),...xy(E),2.3);
   if(part==='all'||part==='fore') {
     bone(ctx,...xy(E),...xy(H),2);
@@ -300,12 +329,12 @@ function arm(ctx,rf,P,side,part='all') {
   const cuff={x:H.x*.75+E.x*.25,y:H.y*.75+E.y*.25};
   oval(ctx,cuff.x,cuff.y,3.5,3.3,C.leather,{w:1.2,speck:.2});
   if(side==='R'){
-    const tip=rf.J(...joints.tip);
+    const tip=rf.JU(...joints.tip);
     drawSword(ctx,H.x,H.y,tip.x-H.x,tip.y-H.y,Math.hypot(tip.x-H.x,tip.y-H.y)-5);
   }
   if(P.attack&&side==='R') {
     ctx.save();ctx.translate(H.x,H.y);
-    const tip=rf.J(...joints.tip);
+    const tip=rf.JU(...joints.tip);
     let angle=Math.atan2(tip.y-H.y,tip.x-H.x)+Math.PI/2;
     if(angle>Math.PI)angle-=TAU;
     ctx.rotate(angle*P.attack.weight);
@@ -321,6 +350,7 @@ function arm(ctx,rf,P,side,part='all') {
 
 export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1,opts={}) {
   const P=skeletonPose(t,action),rf=skeletonFrame(direction,P),parts=[];
+  if(P.attack&&sideView(direction)) sideSlash(P,direction);
   if(action==='walk'||(P.attack&&P.attack.weight>0))walkingLegs(rf,P);
   const pivot=WAIST_Z-P.bob;
   const rotateUpper=()=>{ctx.translate(0,-pivot);ctx.rotate(P.rock);ctx.translate(0,pivot);};
@@ -333,7 +363,7 @@ export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1
   }});
   if(!rf.front)parts.push({id:'shield',d:-900,draw:()=>{
     ctx.save();rotateUpper();
-    shieldAtHand(ctx,rf,rf.J(...armPose(P,'L',direction).H));ctx.restore();
+    shieldAtHand(ctx,rf,rf.JU(...armPose(P,'L',direction).H));ctx.restore();
   }});
   for(const side of ['L','R'])parts.push({id:'leg'+side,d:rf.W(...P['hip'+side]).d,draw:()=>leg(ctx,rf,P,side)});
   parts.push({id:'pelvis',d:40,draw:()=>pelvis(ctx,rf)});
@@ -347,7 +377,7 @@ export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1
       // when its elbow is farther away. Keep the left arm in one assembly;
       // front views include its shield, rear views draw the shield separately.
       const layer=p=>{
-        const q=rf.J(...p),center=rf.J(0,0,66),depth=q.d-center.d;
+        const q=rf.JU(...p),center=rf.JU(0,0,66),depth=q.d-center.d;
         const dz=Math.max(0,Math.abs(p[2]-66)-3),dx=q.x-center.x;
         const headSurface=Math.SQRT2*Math.sqrt(Math.max(0,24*24-dx*dx-dz*dz));
         return (depth>headSurface?110:depth>0?10:-10)+depth*.01;
@@ -356,14 +386,14 @@ export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1
       if(side==='L') upper.push({id:'armL',d:layer(joints.H),draw:()=>arm(ctx,rf,P,'L')});
       else for(const [part,point] of [['upper',mid(joints.S,joints.E)],['fore',mid(joints.E,joints.H)],['gear',joints.H]])
         upper.push({id:part+side,d:layer(point),draw:()=>arm(ctx,rf,P,side,part)});
-    } else upper.push({id:'arm'+side,d:rf.J(...joints.E).d,draw:()=>arm(ctx,rf,P,side)});
+    } else upper.push({id:'arm'+side,d:rf.JU(...joints.E).d,draw:()=>arm(ctx,rf,P,side)});
   }
   // A rigid upper assembly rotates around the seated lumbar joint. No scaling or
   // changing bone lengths, no independently floating shield, no time-based seeds.
   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);rotateUpper();
   renderRig(ctx,0,0,1,upper,{prefix:'skeleton-upper',boil:0,shadow:false});ctx.restore();
   const screen=p=>({x:x+p.x*scale,y:y+p.y*scale});
-  const upperPoint=p=>{const q=rf.J(...p),c=Math.cos(P.rock),s=Math.sin(P.rock);return screen({x:q.x*c-(q.y+pivot)*s,y:q.x*s+(q.y+pivot)*c-pivot});};
+  const upperPoint=p=>{const q=rf.JU(...p),c=Math.cos(P.rock),s=Math.sin(P.rock);return screen({x:q.x*c-(q.y+pivot)*s,y:q.x*s+(q.y+pivot)*c-pivot});};
   const right=armPose(P,'R',direction),left=armPose(P,'L',direction);
   return {pose:P,front:rf.front,rightHand:upperPoint(right.H),leftHand:upperPoint(left.H),
     swordGrip:upperPoint(right.H),shieldGrip:upperPoint(left.H),

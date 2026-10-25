@@ -1,6 +1,6 @@
 /** White-haired storybook mage. Anatomical +b is LEFT (staff), -b RIGHT (book). */
 import {
-  TAU, WALK_HZ, rigFrame, renderRig, walkFeet, ik2, keyframes, nrm3,
+  TAU, WALK_HZ, rigFrame, renderRig, walkFeet, ik2, keyframes, nrm3, travelDir,
   paint, paintA, ellipsePts, taperPts, cLine, mittenHand, legParts2,
   strokePath, DRAW, PAL,
 } from '../../src/authoring.js';
@@ -130,7 +130,7 @@ function sleeve(ctx,rf,j) {
 
 function staff(ctx,rf,P) {
   // Slight anatomical outward cant keeps the crystal clear of the broad brim.
-  const axis=nrm3([P.pitch,.35,1]),at=z=>rf.U(...P.staff.map((v,i)=>v+axis[i]*z));
+  const axis=P.staffAxis,at=z=>rf.U(...P.staff.map((v,i)=>v+axis[i]*z));
   const shaft=[-38,-28,-17,-9,0,12,22,33].map((z,i)=>{
     const q=at(z);return{x:q.x+(i%2?.8:-.8),y:q.y};});
   strokePath(ctx,shaft,4.7*DRAW.lw,false,C.ink);strokePath(ctx,shaft,2.8,false,C.wood);
@@ -172,6 +172,12 @@ function book(ctx,rf,P) {
 
 export function drawMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=magePose(action,t),rf=rigFrame(direction,P.body),U=rf.U;
+  // Facing left (staff hand near) the cast points the staff at the viewer: turn it back
+  // to the travel direction while it casts (SIDE_VIEW_GUIDE.md 2.3). Facing right it
+  // already points ahead, and the same turn would swing its butt through the robe.
+  P.staffAxis=nrm3([P.pitch,.35,1]);
+  if(direction==='L'&&action==='attack') P.staffAxis=travelDir(rf,P.staffAxis,
+    keyframes([[0,[0]],[.48,[0]],[.6,[1]],[.7,[1]],[.82,[0]],[1,[0]]],phase(t,CAST_T))[0]);
   const parts=legParts2(ctx,rf,P,{pants:C.dark,boot:C.leather,cuff:C.book,footR:3.7,soleR:3.3});
   const headCenter=U(1.5,0,71);
   // Near-side left arm and staff pass in front of the chest-held right-hand book.
@@ -184,7 +190,8 @@ export function drawMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const d=side===-1?(rf.front?25:-25):layer(mid(S,H));
     // SW's left-hand staff is nearest: crystal and its wooden setting cover
     // the hat brim. Keep the sleeve below the head and the grip over the shaft.
-    const staffInFront=side===1&&direction==='SW';
+    // Facing left the staff hand is near as well, so the same rule applies.
+    const staffInFront=side===1&&(direction==='SW'||direction==='L');
     parts.push({id:'sleeve'+side,d,draw:()=>sleeve(ctx,rf,j)});
     parts.push({id:'equipment'+side,d:staffInFront?101:d+1,draw:()=>side===1?staff(ctx,rf,P):book(ctx,rf,P)});
     // Book occludes the upper palm; its lower half remains visible under the edge.
@@ -194,6 +201,7 @@ export function drawMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
     }});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'mage',boil:0,shadow:opts.shadow});
+  return {pose:P};
 }
 
 export const character=Object.freeze({

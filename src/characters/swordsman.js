@@ -7,7 +7,7 @@ import { TAU, ellipsePts, lerp } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { clipPath, inkLine, inkShape, fillPath, strokePath } from '../core/ink.js';
 import { LW, paint, paintA, taperPts } from '../core/paint.js';
-import { KX, KY, WALK_HZ, bodyToWorld, cLine, keyframes, nrm3, renderRig, rigFrame, walkFeet, ik2 } from './rig.js';
+import { KX, KY, WALK_HZ, bodyToWorld, chestToLegs, cLine, keyframes, nrm3, renderRig, rigFrame, travelDir, vlerp, walkFeet, ik2 } from './rig.js';
 import { legParts2, mittenHand } from './painting.js';
 
 export const ATTACK_T = 1.15;
@@ -19,6 +19,10 @@ export const SWING = [
   [.4,[10,-22,66,.45,-.05,.9]],[.5,[17,-8,30,.85,.25,-.45]],
   [.64,[15,-6,29,.6,.45,-.65]],[1,REST],
 ];
+// Side views (R / L) only: a forward ready guard in front of the chest. Facing right
+// the right hand is the near one and sits on the far side of the body at its side,
+// where the upright REST blade would point backward (docs/SIDE_VIEW_GUIDE.md 2.9).
+const SIDE_READY=[14,-10,33,.8,0,.6];
 export function computePose(action,t) {
   const P={body:[0,0,0],footL:[0,6,0],footR:[0,-6,0],
     sword:{hand:REST.slice(0,3),dir:nrm3(REST.slice(3))},
@@ -199,6 +203,33 @@ export function drawArmE(ctx,s,h,fill,cuff) {
   if(cuff)oval(ctx,h.x,h.y,3.5,2,cuff,{w:1});
   return {ux:h.x-s.x,uy:h.y-s.y};
 }
+/** Side views: ready guard, far-hand draw-back facing left, strike along the travel direction. */
+function sideSword(P,rf,dirKey,action,t) {
+  const readyDir=nrm3(SIDE_READY.slice(3)),restDir=nrm3(REST.slice(3));
+  const toReady=(sw,rest)=>{
+    sw.hand=sw.hand.map((v,i)=>v+(SIDE_READY[i]-REST[i])*rest);
+    sw.dir=nrm3(sw.dir.map((v,i)=>v+(readyDir[i]-restDir[i])*rest));
+  };
+  // The guard and the whole swing point along the travel direction, not toward the camera.
+  if(action!=='attack') { toReady(P.sword,1); P.sword.dir=travelDir(rf,P.sword.dir); return; }
+  const adjust=(sw,q)=>{
+    // SWING leaves REST by .28 and rejoins it from .64.
+    toReady(sw,keyframes([[0,[1]],[.28,[0]],[.64,[0]],[1,[1]]],q)[0]);
+    if(dirKey==='L') {
+      // Facing left the sword hand is far: the overhead wind-up hides behind the
+      // head. Draw it back behind the shoulders so the blade shows past the back.
+      const w=keyframes([[0,[0]],[.12,[0]],[.24,[1]],[.34,[1]],[.4,[0]],[1,[0]]],q)[0];
+      sw.hand=vlerp(sw.hand,[-20,-17,46],w);sw.dir=nrm3(vlerp(sw.dir,[-.95,0,.3],w));
+    }
+    sw.dir=travelDir(rf,sw.dir);
+  };
+  const u=((t%ATTACK_T)+ATTACK_T)%ATTACK_T/ATTACK_T;
+  adjust(P.sword,u);
+  if(P.trail) {
+    const start=Math.max(.4,u-.1),end=Math.min(u,.64);
+    P.trail.pts.forEach((q,i)=>adjust(q,lerp(start,end,i/8)));
+  }
+}
 function armJoints(P,right) {
   const S=[0,right?-13:13,48],H=right?P.sword.hand:P.shield.hand;
   // Let the sword elbow hang below the shoulder instead of flaring sideways.
@@ -224,6 +255,7 @@ function clothedArm(ctx,rf,j,part) {
 }
 export function drawHeroRig(ctx,x,y,dirKey,action,t,scale=1,opts={}) {
   const P=computePose(action,t),rf=rigFrame(dirKey,P.body),{dir,U,sx,front}=rf;
+  if(dirKey==='R'||dirKey==='L') sideSword(P,rf,dirKey,action,t);
   const parts=[],R=armJoints(P,true),L=armJoints(P,false);
   const hand=U(...R.H),sHand=U(...L.H),hc=U(1.5,0,67);
   const tipOf=(h,d,len)=>U(...h.map((v,i)=>v+d[i]*len));
@@ -255,11 +287,14 @@ export function drawHeroRig(ctx,x,y,dirKey,action,t,scale=1,opts={}) {
     mittenHand(ctx,hand,tip.x-hand.x,tip.y-hand.y,3.3,SW.leather,{thumbSide:-sx});
   }});
   // A constant shield plane and fixed body clearance avoid view-dependent swaps.
-  const normal=bodyToWorld(dir,1,.12),tan=bodyToWorld(dir,-.12,1);
+  // The shield turns with the chest in side views (rf.turn; 0 in the four isometric views).
+  const normal=bodyToWorld(dir,...chestToLegs(rf.turn,1,.12)),tan=bodyToWorld(dir,...chestToLegs(rf.turn,-.12,1));
   const hAxis={x:(tan.X-tan.Y)*KX,y:(tan.X+tan.Y)*KY};
   const thick={x:-(normal.X-normal.Y)*KX*2,y:-(normal.X+normal.Y)*KY*2};
-  const shieldDepth=dirKey==='NW'?-50:dirKey==='NE'?-60:dirKey==='SW'?30:-40;
-  const leftDepth=dirKey==='NW'?20:dirKey==='NE'?-30:dirKey==='SW'?20:-41;
+  // Facing left the shield arm is near, as in SW; facing right it is far, as in SE (the default).
+  const nearShield=dirKey==='SW'||dirKey==='L';
+  const shieldDepth=dirKey==='NW'?-50:dirKey==='NE'?-60:nearShield?30:-40;
+  const leftDepth=dirKey==='NW'?20:dirKey==='NE'?-30:nearShield?20:-41;
   parts.push({id:'shield',d:shieldDepth,draw:()=>drawShield2(ctx,sHand,hAxis,front,thick,20)});
   parts.push({id:'shieldArm',d:leftDepth,draw:()=>{
     clothedArm(ctx,rf,L,'upper');clothedArm(ctx,rf,L,'fore');
@@ -272,7 +307,7 @@ export function drawHeroRig(ctx,x,y,dirKey,action,t,scale=1,opts={}) {
   }});
   renderRig(ctx,x,y,scale,parts,{prefix:'hero',boil:0,shadow:opts.shadow});
   const screen=p=>({x:x+p.x*scale,y:y+p.y*scale});
-  return {swordHand:screen(hand),shieldHand:screen(sHand),order:parts.map(p=>p.id)};
+  return {swordHand:screen(hand),shieldHand:screen(sHand),order:parts.map(p=>p.id),pose:P};
 }
 export const swordsman=Object.freeze({
   id:'swordsman',label:'剣士',kind:'humanoid',draw:drawHeroRig,

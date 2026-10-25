@@ -1,6 +1,6 @@
 /** Armoured monster monarch. Anatomical +b is left; -b holds the greatsword. */
 import {
-  TAU, LW, LAYER, WALK_HZ, rigFrame, renderRig, walkFeet, footProj,
+  TAU, LW, LAYER, WALK_HZ, rigFrame, renderRig, walkFeet, footProj, travelDir, vlerp,
   legParts2, ik2, keyframes, nrm3, bodyLayerKey, taperPts,
   paint, paintA, ellipsePts, cLine, mittenHand,
 } from '../../src/authoring.js';
@@ -192,6 +192,15 @@ function sword(ctx,hand,tip) {
 
 export function drawDemonKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=demonPose(action,t),rf=rigFrame(direction,P.body),U=rf.U;
+  // Side views: the chest faces the camera, but the blade keeps the travel direction
+  // so the cut reaches forward instead of toward the viewer (SIDE_VIEW_GUIDE.md 2.3).
+  if(direction==='L'&&action==='attack') {
+    // Facing left the sword hand is far: the overhead wind-up hides behind the
+    // big head. Draw it back below the chin so the blade shows past the back.
+    const w=keyframes([[0,[0]],[.16,[0]],[.3,[1]],[.47,[1]],[.53,[0]],[1,[0]]],Math.max(0,Math.min(1,t/ATTACK_T)))[0];
+    P.right=vlerp(P.right,[-16,-22,41],w);P.blade=nrm3(vlerp(P.blade,[-.95,0,.3],w));
+  }
+  if(rf.turn) P.blade=travelDir(rf,P.blade);
   const key=p=>bodyLayerKey(rf,...p),parts=legs(ctx,rf,P);
   parts.push({id:'cape',d:rf.front?-200:LAYER.cape,draw:()=>cape(ctx,rf,P)});
   parts.push({id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf)});
@@ -230,6 +239,7 @@ export function drawDemonKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
       mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.9,C.iron,{thumbSide:side*rf.sx})});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'demon-king',boil:0,shadow:opts.shadow});
+  return {pose:P};
 }
 
 export const character=Object.freeze({

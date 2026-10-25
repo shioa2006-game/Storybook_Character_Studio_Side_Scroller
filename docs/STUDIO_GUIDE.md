@@ -65,7 +65,7 @@ export const studio = {
 4. `node tools/sync-catalog.mjs`。重複・不足はファイル名付きで修正します。失敗時は既存カタログを置き換えません。
 5. ギャラリーを再読込し、カード→詳細→拡大→通常サイズ→方向・動作→「左右・全動作を見る」を確認します。
 6. Live/Cachedを比較し、攻撃の重要な位相、装備の左右、頭身、接地、背中側の装備を目視します。`tests/browser/side-sheet.html?id=［id］&act=attack&dirs=R,L` で左右の全コマを並べ、[SIDE_VIEW_GUIDE.md のチェックリスト](SIDE_VIEW_GUIDE.md#4-確認方法とチェックリスト)を確認します。
-7. 武器を持つキャラクターは、`tests/node/warrior-side.test.mjs` を参考に、手・刃が胴や頭を通り抜けず刃先が床に潜らないことを全位相で検査するテストを用意し、`npm test` を通します。
+7. 武器を持つキャラクターは、`tests/node/lib/clearance.mjs` の `ARMED` に頭の位置と武器の読み方を1行追加し、手・刃が胴や頭を通り抜けず刃先が床に潜らないことを `tests/node/side-clearance.test.mjs` で全位相検査します。`npm test` を通します。
 8. `tests/browser/check.html` で全登録キャラクターの `frameBox` を全cache keyと中間位相で確認します。既存戦士の部屋・遮蔽検査（4方向）は `tests/browser/warrior.html` です。登録時の形式検査だけでは画素のはみ出しを検出しません。
 9. エクスポートを含む依頼では、小さいキットを出力し、別フォルダから起動して確認します。
 10. 定義・生成カタログを保存し、依頼された形式で検証結果を伝えます。仮キャラクターは残しません。
@@ -93,7 +93,7 @@ export const studio = {
 >
 > characters/［slug］/character.jsにInkstone CharacterDefinitionをcharacterとしてnamed exportし、studioメタデータを追加してください。共通リグ、接地補正、手描き描画、登録・キャッシュを再利用し、別の描画エンジンは作らないでください。方向ありなら共通リグの投影で右・左の両方が描けるように、対応動作のみを実装してください。上半身はU／UY、脚はWで描き、奥側・手前側になる手の装備は向きごとに見え方を確認してください。補助モジュールは静的な相対importにしてください。
 >
-> 武器を振る動作は、手と刃が胴や頭を通り抜けず、刃先が床に潜らない軌道にしてください。腕が頭上まで届かない場合は、手を肩の外側へ出して刃を頭の横に通してください。tests/node/warrior-side.test.mjsを参考に全位相の検査を追加し、tests/browser/side-sheet.htmlで左右の全コマを確認してください。
+> 武器を振る動作は、手と刃が胴や頭を通り抜けず、刃先が床に潜らない軌道にしてください。腕が頭上まで届かない場合は、手を肩の外側へ出して刃を頭の横に通してください。tests/node/lib/clearance.mjsのARMEDに新しいキャラクターを追加して全位相の検査（tests/node/side-clearance.test.mjs）を通し、tests/browser/side-sheet.htmlで左右の全コマを確認してください。
 >
 > 人間型なら灰燼の衛士を基準に約2.2頭身（2.1〜2.3）とし、頭の高さ約42〜45px・接地原点から頭頂まで約90〜94px（倍率1）を目安にしてください。羽飾り・武器・影は頭身の計測から除き、同倍率で衛士と並べて確認してください。
 >

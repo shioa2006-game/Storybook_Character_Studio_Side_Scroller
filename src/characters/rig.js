@@ -160,6 +160,28 @@ export function rigFrame(dirKey, body, yaw = 0) {
   return { dir, W, U, UY, yaw, turn, fU, LU, sx: W(1, 0, 0).x >= 0 ? 1 : -1, front: fx + fy > 0, vs: fx + fy, vt: fy - fx };
 }
 
+/**
+ * 上半身の座標 (a, b) → 脚の座標 (a, b)。横向きの上半身のひねり turn (rf.turn / DIRS[key].turn) を戻す。
+ * bodyToWorld(dir, …) や独自の投影 (弓使いの UG など) へ上半身の点を渡すときに使い、U で描く手と位置をそろえる。
+ */
+export function chestToLegs(turn, a, b) {
+  if (!turn) return [a, b];
+  const c = Math.cos(turn), s = Math.sin(turn);
+  return [a * c + b * s, -a * s + b * c];
+}
+
+/**
+ * 横向きで上半身の座標の向き v = [a, b, z] を、進行方向へ k の割合だけ戻す (横向きガイド 2.3)。
+ * 胸がカメラを向いた分 (rf.turn) と上半身のひねり (yaw) だけ逆に回す。4方向では rf.turn = 0 で yaw だけ戻すので、
+ * 横向きだけに使う。振り下ろし・詠唱の間だけ k を上げると、手の位置は動かさずに横方向の届きを保てる。
+ */
+export function travelDir(rf, v, k = 1, yaw = rf.yaw) {
+  const angle = (rf.turn + yaw) * k;
+  if (!angle) return v;
+  const c = Math.cos(angle), s = Math.sin(angle), [a, b, z] = v;
+  return [a * c - b * s, a * s + b * c, z];
+}
+
 /** ひねった上半身の座標 (a,b) → ひねっていない体の座標 (a,b) */
 export const yawToBody = (rf, a, b) => [a * Math.cos(rf.yaw) + b * Math.sin(rf.yaw), -a * Math.sin(rf.yaw) + b * Math.cos(rf.yaw)];
 

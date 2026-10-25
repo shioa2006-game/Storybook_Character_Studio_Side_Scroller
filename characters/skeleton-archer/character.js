@@ -1,6 +1,6 @@
 /** Bare-skulled archer. Left holds the bow; right handles the string and arrow. */
 import {
-  WALK_HZ, LW, LAYER, DRAW, PAL, KX, rigFrame, renderRig, bodyToWorld,
+  WALK_HZ, LW, LAYER, DRAW, PAL, KX, rigFrame, renderRig, bodyToWorld, chestToLegs,
   groundDirScreen, footProj, ik2, nrm3, vlerp, yawToBody, bodyLayerKey,
   paint, paintA, ellipsePts, taperPts, cLine, mittenHand,
 } from '../../src/authoring.js';
@@ -124,7 +124,8 @@ export function drawSkeletonArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=pose(action,t),rf=rigFrame(direction,P.body,P.yaw),U=rf.U;
   // Match the existing archer's ground-plane projection for both hands, bow and arrow.
   const groundY=groundDirScreen(1,0).y;
-  const UG=(a,b,z)=>{const w=bodyToWorld(rf.dir,a+P.body[0],b+P.body[1]);
+  // Same upper-body frame as U (side views turn the chest by rf.turn), so the bow stays in the hand.
+  const UG=(a,b,z)=>{const w=bodyToWorld(rf.dir,...chestToLegs(rf.turn,a+P.body[0],b+P.body[1]));
     return {x:(w.X-w.Y)*KX,y:(w.X+w.Y)*groundY-z-P.body[2],d:w.X+w.Y};};
   const key=p=>bodyLayerKey(rf,...p);
   P.bowUp=nrm3([P.bowUp[0],P.bowUp[1]+bowCantSign(direction)*(.12+.62*P.yaw/AIM_YAW),P.bowUp[2]]);
@@ -133,7 +134,8 @@ export function drawSkeletonArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const a=yawToBody(rf,0,side==='L'?14:-14),S=[...a,47],H=side==='L'?P.grip:P.rHand;
     return [side,{S,H,E:ik2(S,H,13.5,13.5,side==='L'?P.elbowL:P.elbowR)}];
   }));
-  const nearBow=direction==='SW'&&geo.nocked;
+  // Facing left the bow hand is near as in SW.
+  const nearBow=(direction==='SW'||direction==='L')&&geo.nocked;
   const nockedDepth=Math.min(key(joints.L.E),key(geo.G)-.02)-.04;
   const armDepth=(side,d)=>nearBow&&side==='R'?Math.min(d,nockedDepth-.02):d;
   parts.push({id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf)});

@@ -8,7 +8,7 @@ import { lerp } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { strokePath } from '../core/ink.js';
 import { LW, paint, taperPts } from '../core/paint.js';
-import { DIRS, KX, KY_G, LAYER, WALK_HZ, bodyLayerKey, bodyToWorld, groundDirScreen, ik2, nrm3, renderRig, rigFrame, vlerp, yawToBody } from './rig.js';
+import { DIRS, KX, KY_G, LAYER, WALK_HZ, bodyLayerKey, bodyToWorld, chestToLegs, groundDirScreen, ik2, nrm3, renderRig, rigFrame, vlerp, yawToBody } from './rig.js';
 import { legParts2, mittenHand } from './painting.js';
 import { AIM_YAW, ARC, QUIVER_TOP, ARCHER_ATTACK_T, ARCHER_IDLE_PERIOD, ARCHER_RELEASE_U, ARROW_LEN, archerPose, bowCantSign, bowGeometry, drawArrowShape } from './archer-pose.js';
 import { ARCHER_LEGS, bandAcross, drawArcherCape, drawArcherMantle, drawArcherHead, drawArcherTorso, drawBow, drawQuiver, polyStroke } from './archer-parts.js';
@@ -21,7 +21,8 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
   const P = archerPose(action, t);
   const boil = 0; // Stable cloth and hair texture across animation frames.
   const rf = rigFrame(dirKey, P.body, P.yaw), { dir, U, sx, front } = rf;
-  const UG = (a, b, z) => { const w = bodyToWorld(dir, a + P.body[0], b + P.body[1]); return { x: (w.X - w.Y) * KX, y: (w.X + w.Y) * KY_G() - (z + P.body[2]), d: w.X + w.Y }; };
+  // Same upper-body frame as U (side views turn the chest by rf.turn), so the bow stays in the hand.
+  const UG = (a, b, z) => { const w = bodyToWorld(dir, ...chestToLegs(rf.turn, a + P.body[0], b + P.body[1])); return { x: (w.X - w.Y) * KX, y: (w.X + w.Y) * KY_G() - (z + P.body[2]), d: w.X + w.Y }; };
   const key = (p, eps = 0) => bodyLayerKey(rf, p[0], p[1], p[2]) + eps;
   // [方向ごとの補正] 弓の上端を頭から離す傾き。[E] 弓が大きくなったので傾きを増やす (D: 0.1 + 0.24·k)
   P.bowUp = nrm3([P.bowUp[0], P.bowUp[1] + bowCantSign(dirKey) * (0.12 + 0.62 * (P.yaw / AIM_YAW)), P.bowUp[2]]);
@@ -33,7 +34,8 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
   }));
   // In SW the left bow arm is nearest. Keep the nocked arrow and drawing
   // arm behind that whole assembly, including while the hands meet to nock.
-  const nearBowArm = dirKey === 'SW' && geo.nocked;
+  // Facing left the bow arm is nearest as well.
+  const nearBowArm = (dirKey === 'SW' || dirKey === 'L') && geo.nocked;
   const nockedDepth = Math.min(key(joints.L.E), key(geo.G, -0.02)) - 0.04;
   const armDepth = (side, depth) => nearBowArm && side === 'R' ? Math.min(depth, nockedDepth - 0.02) : depth;
   // The drawing hand may sit at the chin, but its sleeve is behind the head.
@@ -138,7 +140,7 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
 /** 放つ瞬間の矢筈の位置 (足元からの画面オフセット、ローカルpx) と向き (実験Dと同じ) */
 export function archerReleaseInfo(dirKey) {
   const P = archerPose('attack', ARCHER_RELEASE_U * ARCHER_ATTACK_T - 1e-4), dir = DIRS[dirKey];
-  const w = bodyToWorld(dir, P.rHand[0] + P.body[0], P.rHand[1] + P.body[1]);
+  const w = bodyToWorld(dir, ...chestToLegs(dir.turn, P.rHand[0] + P.body[0], P.rHand[1] + P.body[1]));
   return { nock: { x: (w.X - w.Y) * KX, y: (w.X + w.Y) * KY_G() - (P.rHand[2] + P.body[2]) }, f: dir.f };
 }
 

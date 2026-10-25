@@ -1,7 +1,7 @@
 /** Storybook king. Body coordinates: +b is left, -b is the sword-bearing right. */
 import {
   TAU, WALK_HZ, PAL, LW, LAYER, rigFrame, renderRig, walkFeet, footProj,
-  legParts2, ik2, keyframes, nrm3, bodyLayerKey, yawToBody,
+  legParts2, ik2, keyframes, nrm3, vlerp, bodyLayerKey, yawToBody, travelDir,
   paint, paintA, taperPts, ellipsePts, cLine, mittenHand,
 } from '../../src/authoring.js';
 
@@ -180,6 +180,15 @@ function sword(ctx, hand, tip) {
 
 export function drawKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=kingPose(action,t),rf=rigFrame(direction,P.body,P.yaw),U=rf.UY;
+  // Side views: the chest faces the camera, but the blade keeps the travel direction
+  // so the cut reaches forward instead of toward the viewer (SIDE_VIEW_GUIDE.md 2.3).
+  if(direction==='L'&&action==='attack') {
+    // Facing left the sword hand is far: the overhead wind-up hides behind the
+    // big head. Draw it back below the chin so the blade shows past the back.
+    const w=keyframes([[0,[0]],[.12,[0]],[.22,[1]],[.38,[1]],[.46,[0]],[1,[0]]],Math.max(0,Math.min(1,t/ATTACK_T)))[0];
+    P.right=vlerp(P.right,[-16,-22,40],w);P.blade=nrm3(vlerp(P.blade,[-.95,0,.3],w));
+  }
+  if(rf.turn) P.blade=travelDir(rf,P.blade);
   const key=p=>bodyLayerKey(rf,...yawToBody(rf,p[0],p[1]),p[2]);
   const parts=legs(ctx,rf,P);
   parts.push({ id:'cape',d:rf.front?-200:LAYER.cape,draw:()=>cape(ctx,rf,P) });
@@ -216,6 +225,7 @@ export function drawKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
       mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.6,C.silver,{ thumbSide:side*rf.sx }) });
   }
   renderRig(ctx,x,y,scale,parts,{ prefix:'king',boil:0,shadow:opts.shadow });
+  return { pose:P };
 }
 
 export const character=Object.freeze({

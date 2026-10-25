@@ -1,7 +1,7 @@
 /** Goblin-specific crouched proportions. +b = anatomical left (club). */
 import {
   TAU, TH, TW, KX, KY, WALK_HZ, rigFrame, renderRig, walkFeet, footProj,
-  bodyToWorld, ik2, keyframes, nrm3, paint, paintA, ellipsePts, taperPts,
+  bodyToWorld, ik2, keyframes, nrm3, travelDir, paint, paintA, ellipsePts, taperPts,
   capsulePts, mittenHand, cLine, PAL,
 } from '../../src/authoring.js';
 
@@ -194,6 +194,9 @@ function club(ctx,rf,P) {
 
 export function drawGoblin(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=goblinPose(action,t),rf=rigFrame(direction,P.body),U=rf.U;
+  // Side views: the chest faces the camera, but the club keeps the travel direction
+  // so the swing reaches forward instead of toward the viewer (SIDE_VIEW_GUIDE.md 2.3).
+  if(rf.turn) P.axis=travelDir(rf,P.axis);
   const parts=legs(ctx,rf,P);
   parts.push({id:'torso',d:0,draw:()=>torso(ctx,rf,P)});
   parts.push({id:'sideCloth',d:rf.front?.5:1,draw:()=>loincloth(ctx,rf,P)});
@@ -219,6 +222,7 @@ export function drawGoblin(ctx,x,y,direction,action,t,scale=1,opts={}) {
     }});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'goblin',boil:0,shadow:opts.shadow});
+  return {pose:P};
 }
 
 export const character=Object.freeze({

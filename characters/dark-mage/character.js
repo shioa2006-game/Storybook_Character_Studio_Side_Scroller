@@ -1,7 +1,7 @@
 /** Hooded monster caster. Anatomical +b is left (staff); -b holds the spellbook. */
 import {
   TAU, WALK_HZ, LW, LAYER, DRAW, PAL, rigFrame, renderRig, walkFeet,
-  ik2, keyframes, nrm3, bodyLayerKey, legParts2, mittenHand,
+  ik2, keyframes, nrm3, travelDir, bodyLayerKey, legParts2, mittenHand,
   paint, paintA, ellipsePts, taperPts, cLine, strokePath,
 } from '../../src/authoring.js';
 
@@ -122,7 +122,7 @@ function sleeve(ctx,rf,S,E,H) {
 }
 
 function staff(ctx,rf,P) {
-  const axis=nrm3([P.pitch,.32,1]),at=z=>rf.U(...P.staff.map((v,i)=>v+axis[i]*z));
+  const axis=P.staffAxis,at=z=>rf.U(...P.staff.map((v,i)=>v+axis[i]*z));
   // Shaft passes through the left grip; bends never offset the grip anchor.
   const shaft=[-36,-26,-17,-8,0,10,20,29].map((z,i)=>{
     const q=at(z);return{x:q.x+(z===0?0:(i%2?1.2:-1.2)),y:q.y};});
@@ -176,6 +176,14 @@ function spellbook(ctx,rf,P) {
 
 export function drawDarkMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=darkMagePose(action,t),rf=rigFrame(direction,P.body);
+  // Side views turn the forward-pointing staff back to the travel direction while it
+  // casts (SIDE_VIEW_GUIDE.md 2.3); only then, so its butt never swings through the robe.
+  P.staffAxis=nrm3([P.pitch,.32,1]);
+  if(rf.turn&&action==='attack') P.staffAxis=travelDir(rf,P.staffAxis,
+    keyframes([[0,[0]],[.46,[0]],[.59,[1]],[.72,[1]],[.84,[0]],[1,[0]]],((t%CAST_T)+CAST_T)%CAST_T/CAST_T)[0]);
+  // Facing left the staff hand is near: the raised staff passes beside the hood on
+  // the camera side, so draw staff and grip over the hood (as the mage does in SW).
+  const nearStaff=direction==='L';
   const key=p=>bodyLayerKey(rf,...p);
   const parts=legParts2(ctx,rf,P,{pants:C.dark,boot:C.leather,sole:C.dark,footR:3.8,soleR:3.4});
   parts.push({id:'robe',d:LAYER.torso,draw:()=>robe(ctx,rf,P)});
@@ -187,14 +195,15 @@ export function drawDarkMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
     // equipment on their own depth keys so a raised book/staff can pass in front.
     const d=Math.min(key(mid(S,H)),LAYER.cape-1);
     parts.push({id:'sleeve'+side,d,draw:()=>sleeve(ctx,rf,S,E,H)});
-    if(side===1)parts.push({id:'staff',d:key(H)+.01,draw:()=>staff(ctx,rf,P)});
+    if(side===1)parts.push({id:'staff',d:nearStaff?LAYER.head+1:key(H)+.01,draw:()=>staff(ctx,rf,P)});
     else parts.push({id:'spellbook',d:key(H)+.03,draw:()=>spellbook(ctx,rf,P)});
-    parts.push({id:'hand'+side,d:key(H)+.02,draw:()=>{
+    parts.push({id:'hand'+side,d:nearStaff&&side===1?LAYER.head+2:key(H)+.02,draw:()=>{
       const h=rf.U(...H),e=rf.U(...E);
       mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.2,C.hand,{thumbSide:side*rf.sx});
     }});
   }
   renderRig(ctx,x,y,scale,parts,{prefix:'dark-mage',boil:0,shadow:opts.shadow});
+  return {pose:P};
 }
 
 export const character=Object.freeze({
