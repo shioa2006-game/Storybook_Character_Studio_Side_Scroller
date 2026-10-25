@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>横向きのコマ一覧</title>
+<style>body{margin:0;background:#f6f3ec;color:#282e27;font:14px/1.6 system-ui}header{padding:10px 14px}h1{font-size:18px;margin:0}details{font-size:13px}code{background:#ebe5d6;padding:0 3px}canvas{display:block}#error{color:#a03a2a}</style></head>
+<body><header><h1>横向きのコマ一覧</h1>
+<details><summary>URL の指定</summary>
+<p>例: <code>?id=warrior&amp;act=attack&amp;dirs=R,L</code></p>
+<ul>
+<li><code>id</code> キャラクターの ID (既定 warrior)</li>
+<li><code>act</code> 動作 idle / walk / attack (既定 idle)</li>
+<li><code>dirs</code> 向き。R,L の既定に加えて SE などの4方向も指定可</li>
+<li><code>p</code> 位相の一覧 (例 <code>p=.2,.38,.45</code>)。<code>n=8</code> で等間隔8コマ。省略時は Cached Frames のコマ割り</li>
+<li><code>s</code> 倍率 (既定 2)、<code>cols</code> 1行のコマ数</li>
+<li><code>turns</code> 上半身のひねりの比較 (例 <code>turns=0,20</code>。度。省略時は SIDE_CHEST_TURN)</li>
+</ul></details><p id="error"></p></header>
+<canvas id="c"></canvas>
+<script type="module">
+import { DRAW } from '../../src/core/settings.js';
+import { DIRS, SIDE_CHEST_TURN } from '../../src/characters/rig.js';
+import { catalog } from '../../characters/catalog.js';
+import { frameKeysOf } from '../../src/index.js';
+const q = new URL(location.href).searchParams, id = q.get('id') || 'warrior';
+const entry = catalog.find(e => e.id === id);
+if (!entry) document.getElementById('error').textContent = `未登録のキャラクター "${id}" (登録済み: ${catalog.map(e => e.id).join(', ')})`;
+else {
+  const def = entry.definition, act = def.actions[q.get('act')] ? q.get('act') : 'idle', S = Number(q.get('s') || 2);
+  const turns = q.get('turns') ? q.get('turns').split(',').map(Number) : [null];
+  const rows = (q.get('dirs') || 'R,L').split(',').flatMap(d => turns.map(tn => ({ d, tn })));
+  const phases = q.get('p') ? q.get('p').split(',').map(Number)
+    : q.get('n') ? Array.from({ length: Number(q.get('n')) }, (_, i) => i / Number(q.get('n'))) : frameKeysOf(def.actions[act]);
+  const box = def.frameBox, cw = (box.x1 - box.x0) * S, ch = (box.y1 - box.y0) * S;
+  const cols = Number(q.get('cols') || Math.min(phases.length, Math.max(1, Math.floor(1500 / cw))));
+  const rowsPer = Math.ceil(phases.length / cols);
+  const cv = document.getElementById('c'); cv.width = cols * cw; cv.height = rows.length * rowsPer * (ch + 16);
+  const g = cv.getContext('2d'); g.fillStyle = '#f6f3ec'; g.fillRect(0, 0, cv.width, cv.height);
+  Object.assign(DRAW, { lw: 1, boil: false, footGround: true, linearStance: true });
+  rows.forEach(({ d, tn }, ri) => phases.forEach((u, i) => {
+    // turns compares chest turns side by side; this page owns its module copy of DIRS.
+    const rad = tn === null ? SIDE_CHEST_TURN : tn * Math.PI / 180; DIRS.R.turn = rad; DIRS.L.turn = -rad;
+    const col = i % cols, row = ri * rowsPer + Math.floor(i / cols);
+    const ox = col * cw - box.x0 * S, oy = row * (ch + 16) + 16 - box.y0 * S;
+    g.strokeStyle = '#d9d2c3'; g.strokeRect(col * cw + .5, row * (ch + 16) + 16.5, cw - 1, ch - 1);   // frameBox
+    g.fillStyle = '#555'; g.fillText(`${d} ${tn === null ? '' : tn + '° '}${act} ${u.toFixed(3)}`, col * cw + 4, row * (ch + 16) + 12);
+    g.save(); def.draw(g, ox, oy, def.directional === false ? null : d, act, u * def.actions[act].period, S, { shadow: true }); g.restore();
+  }));
+  DIRS.R.turn = SIDE_CHEST_TURN; DIRS.L.turn = -SIDE_CHEST_TURN;
+}
+document.title = '横向きのコマ一覧';
+</script></body></html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>全キャラクターの左右</title>
+<style>body{margin:0;background:#f6f3ec;color:#282e27;font:14px/1.6 system-ui}header{padding:10px 14px}h1{font-size:18px;margin:0}details{font-size:13px}code{background:#ebe5d6;padding:0 3px}canvas{display:block}</style></head>
+<body><header><h1>全キャラクターの左右</h1>
+<details><summary>URL の指定</summary>
+<ul>
+<li><code>cells</code> 列の一覧 <code>向き:動作:位相</code> (既定 <code>R:idle:0,L:idle:0,R:attack:.5,L:attack:.5</code>)</li>
+<li><code>ids</code> キャラクターの ID (既定 全員)、<code>s</code> 倍率 (既定 0.55)</li>
+</ul></details></header>
+<canvas id="c"></canvas>
+<script type="module">
+import { DRAW } from '../../src/core/settings.js';
+import { catalog } from '../../characters/catalog.js';
+const q = new URL(location.href).searchParams, S = Number(q.get('s') || .55);
+const cells = (q.get('cells') || 'R:idle:0,L:idle:0,R:attack:.5,L:attack:.5').split(',').map(c => c.split(':'));
+const entries = q.get('ids') ? q.get('ids').split(',').map(id => catalog.find(e => e.id === id)).filter(Boolean) : catalog;
+const CW = 190 * S, RH = 175 * S + 14;
+const cv = document.getElementById('c'); cv.width = CW * cells.length; cv.height = RH * entries.length;
+const g = cv.getContext('2d'); g.fillStyle = '#f6f3ec'; g.fillRect(0, 0, cv.width, cv.height);
+Object.assign(DRAW, { lw: 1, boil: false, footGround: true, linearStance: true });
+entries.forEach((entry, r) => cells.forEach(([d, a, p], i) => {
+  const def = entry.definition, act = def.actions[a] ? a : 'idle';
+  g.fillStyle = '#555'; g.fillText(`${entry.id} ${d} ${a} ${p}`, i * CW + 3, r * RH + 11);
+  g.save(); def.draw(g, i * CW + CW / 2, r * RH + RH - 10 * S, def.directional === false ? null : d, act, Number(p) * def.actions[act].period, S, {}); g.restore();
+}));
+</script></body></html>

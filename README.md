@@ -21,7 +21,7 @@ Node.js 18以上。パッケージのインストールは不要です。
 3. ギャラリー・ダンジョン・描画検証ページで確認します。
 4. 定義と `characters/catalog.generated.js` を一緒に保存します。
 
-UIコードを編集する必要はありません。[制作手順とAIへの指示テンプレート](docs/STUDIO_GUIDE.md)を参照してください。
+UIコードを編集する必要はありません。[制作手順とAIへの指示テンプレート](docs/STUDIO_GUIDE.md)、描き方の基本は[キャラクター追加ガイド](docs/CHARACTER_GUIDE.md)、右向き・左向きで仕上げるコツと確認方法は[横向きキャラクター制作ガイド](docs/SIDE_VIEW_GUIDE.md)を参照してください。
 
 人間型は「灰燼の衛士」を基準に約2.2頭身で制作します。羽飾り・武器・影を除く寸法と比較方法は制作ガイドに記載しています。
 
@@ -69,6 +69,8 @@ npm run catalog:check
 サーバー起動後、次のページで検証できます。
 
 - [全キャラクターの描画範囲とLive/Cached](tests/browser/check.html)
+- [1体の左右の全コマを並べる](tests/browser/side-sheet.html)（例: `?id=warrior&act=attack`）
+- [全キャラクターの左右を一覧にする](tests/browser/side-overview.html)
 - [戦士の装備・関節・部屋の遮蔽](tests/browser/warrior.html)
 - [画面幅・拡大相当の再配置](tests/browser/responsive.html)
 - [40カード時の遅延描画](tests/browser/performance.html)
