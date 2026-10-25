@@ -13,17 +13,14 @@ import {
   paint, paintA, taperPts, ellipsePts, cLine, mittenHand, bbox,
   clipPath, fillPath, fillPoly, strokePath, roughen, stipplePoly, rimWeight, seed,
 } from '../../src/authoring.js';
+import { hurtAction, deadAction, phase, sample, hurtAmount, deadPhase, fallTilt, withTilt } from '../shared/emberbound/actions.js';
 
 // Game timing (seconds). The game shows an attack pose for 0.2 s and applies the hit 0.12 s in.
 export const GUARDIAN_ATTACK_T = .3;    // impact at u = .42 (0.126 s)
 export const GUARDIAN_BASH_T = .3;      // Shield Bash impact at u = .33 (0.1 s)
-export const GUARDIAN_HURT_T = .3;      // the game shows hurt for 0.14 s; stun / freeze hold its first frame
-export const GUARDIAN_DEAD_T = .6;      // the fall; the game holds the last frame
 const KEYS = Object.freeze({
   attack: [0, .1, .2, .28, .34, .38, .42, .46, .52, .6, .7, .85],
   cast: [0, .1, .18, .26, .33, .42, .55, .75],
-  hurt: [0, .15, .3, .6],
-  dead: [0, .15, .3, .45, .6, .75, .99],
 });
 
 const C = Object.freeze({
@@ -43,11 +40,6 @@ const attackKeys = ready => [[0, ready], [.22, [3, 22, 50, .2, .05, .98]], [.34,
   [.42, CHOP], [.55, [17, 15, 29, .8, -.12, -.58]], [.72, [15, 16, 30, .7, .15, -.68]], [1, ready]];
 // How much of the swing's twist away from the camera is kept.
 const SIDE_TWIST_AWAY = .3;
-// Whole-body tilt (local px): backward about a pivot behind the heels (a small recoil for hurt, a fall onto
-// the back for dead), forward about the toes (the Shield Bash lunge).
-const FALL = { pivot: 20, toe: 8, shift: 66 };
-const sample = (keys, u) => keyframes(keys, u)[0];
-const phase = (t, period) => ((t % period) + period) % period / period;
 const metal = (ctx, points, o = {}) => {
   const shape = paint(ctx, points, {
     fill: C.steel, w: LW.part, depth: 2, light: .48, speck: 1.15, amp: .3, ...o,
@@ -118,7 +110,7 @@ export function guardianPose(action, t) {
     P.scarf = -lean * .55; P.exert = u > .25 && u < .6;
   } else if (action === 'hurt') {
     // A hit: the body snaps back, the shield comes up, the eyes shut.
-    const u = phase(t, GUARDIAN_HURT_T), k = sample([[0,[0]],[.15,[1]],[.6,[1]],[1,[.4]]],u);
+    const k = hurtAmount(t);
     P.body = [-2.5 * k, 0, -1.2 * k];
     P.yaw = .12 * k;
     P.shield.hand = [8 - 2 * k, -23, 31 + 4 * k];
@@ -126,7 +118,7 @@ export function guardianPose(action, t) {
     P.plume = 4 * k; P.scarf = 1.5 * k; P.blink = k > .5; P.exert = k > .5;
   } else if (action === 'dead') {
     // Knocked down: a short stagger, then a fall onto the back (the tilt is applied in drawGuardianRig).
-    const u = phase(t, GUARDIAN_DEAD_T);
+    const u = deadPhase(t);
     P.body = [sample([[0,[0]],[.15,[-2]],[1,[-2]]],u), 0, sample([[0,[0]],[.15,[-1.5]],[1,[-1]]],u)];
     P.shield.hand = keyframes([[0,[8,-24,31]],[.2,[6,-23,35]],[.7,[4,-26,27]],[1,[4,-26,27]]],u);
     P.sword.hand = [5, 24, 29 + sample([[0,[0]],[.2,[3]],[.7,[-3]],[1,[-3]]],u)];
@@ -368,16 +360,10 @@ function armParts(ctx,rf,P,side) {
   return {parts,S,E,H,hand:h,key:key(H),gauntlet};
 }
 
-/** Whole-body tilt (radians, + = backward, − = forward) for Shield Bash, hurt and dead. */
+/** Whole-body tilt (radians, + = backward, − = forward): the Shield Bash lunge, then the shared hurt / dead tilt. */
 function bodyTilt(action,t) {
   if(action==='cast') return -.12*sample([[0,[0]],[.18,[-.3]],[.33,[1]],[.55,[.8]],[1,[0]]],phase(t,GUARDIAN_BASH_T));
-  if(action==='hurt') return .14*sample([[0,[0]],[.15,[1]],[.6,[1]],[1,[.4]]],phase(t,GUARDIAN_HURT_T));
-  if(action==='dead') {
-    const u=phase(t,GUARDIAN_DEAD_T);
-    // Stagger, fall faster as it tips, a small bounce, then rest on the back.
-    return Math.PI/2*sample([[0,[0]],[.15,[.08]],[.62,[1.04]],[.72,[.97]],[.82,[1]],[1,[1]]],u);
-  }
-  return 0;
+  return fallTilt(action,t);
 }
 
 export function drawGuardianRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
@@ -445,15 +431,8 @@ export function drawGuardianRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
     fillPath(ctx,roughen(outer.concat(inner),true,.2,4),C.light);
     strokePath(ctx,outer,.65*DRAW.lw,false,C.dark,.5);ctx.restore();
   };
-  const tilt=bodyTilt(action,t);
-  if(tilt) {
-    // Tipping back turns about a point behind the heels (so the back stays above the floor), and a
-    // fallen Guardian slides forward to lie about where it stood. Leaning forward turns about the toes.
-    const px=x-rf.sx*(tilt>0?FALL.pivot:-FALL.toe)*scale, shift=action==='dead'?rf.sx*FALL.shift*scale*Math.min(1,tilt/(Math.PI/2)):0;
-    ctx.save();ctx.translate(px+shift,y);ctx.rotate(-rf.sx*tilt);ctx.translate(-px,-y);
-  }
-  renderRig(ctx,x,y,scale,parts,{prefix:'eb-guardian',boil:DRAW.boil?Math.floor(t*5)%3:0,shadow:opts.shadow,after:trail});
-  if(tilt) ctx.restore();
+  withTilt(ctx,x,y,scale,rf.sx,bodyTilt(action,t),action==='dead',
+    ()=>renderRig(ctx,x,y,scale,parts,{prefix:'eb-guardian',boil:DRAW.boil?Math.floor(t*5)%3:0,shadow:opts.shadow,after:trail}));
   const screen=p=>({x:x+p.x*scale,y:y+p.y*scale});
   return {leftHand:screen(left.hand),rightHand:screen(right.hand),swordTip:screen(swordTip),head:screen(head),
     shieldFront:shield.front,pose:P,arms:{L:{S:left.S,E:left.E,H:left.H},R:{S:right.S,E:right.E,H:right.H}},order:parts.map(p=>p.id)};
@@ -464,8 +443,7 @@ export const ebGuardian=Object.freeze({
   actions:{idle:{period:TAU/2,frames:20},walk:{period:1/WALK_HZ,frames:16},
     attack:{period:GUARDIAN_ATTACK_T,keys:KEYS.attack,once:true},
     cast:{period:GUARDIAN_BASH_T,keys:KEYS.cast,once:true},
-    hurt:{period:GUARDIAN_HURT_T,keys:KEYS.hurt,once:true},
-    dead:{period:GUARDIAN_DEAD_T,keys:KEYS.dead,once:true,hold:true}},
+    hurt:hurtAction,dead:deadAction},
   frameBox:{x0:-100,x1:100,y0:-130,y1:29},
   equipment:{leftHand:'sword',rightHand:'shield'},
   emberbound:{gameId:'guardian',heightPx:30,facing:'R'},

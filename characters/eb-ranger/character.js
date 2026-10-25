@@ -11,17 +11,16 @@ import { lerp } from '../../src/core/geometry.js';
 import { PAL } from '../../src/core/palette.js';
 import { strokePath } from '../../src/core/ink.js';
 import { LW, paint, taperPts } from '../../src/core/paint.js';
-import { KX, KY_G, LAYER, WALK_HZ, bodyLayerKey, bodyToWorld, chestToLegs, groundDirScreen, ik2, keyframes, nrm3, renderRig, rigFrame, vlerp, yawToBody } from '../../src/characters/rig.js';
+import { KX, KY_G, LAYER, WALK_HZ, bodyLayerKey, bodyToWorld, chestToLegs, groundDirScreen, ik2, nrm3, renderRig, rigFrame, vlerp, yawToBody } from '../../src/characters/rig.js';
 import { legParts2, mittenHand } from '../../src/characters/painting.js';
 import { AIM_YAW, ARC, QUIVER_TOP, ARCHER_ATTACK_T, ARCHER_IDLE_PERIOD, ARCHER_RELEASE_U, ARROW_LEN, archerPose, bowCantSign, bowGeometry, drawArrowShape } from '../../src/characters/archer-pose.js';
 import { ARCHER_LEGS, bandAcross, drawArcherCape, drawArcherMantle, drawArcherHead, drawArcherTorso, drawBow, drawQuiver, polyStroke } from '../../src/characters/archer-parts.js';
 import { archerReleaseInfo } from '../../src/characters/archer.js';
+import { hurtAction, deadAction, phase, sample, hurtAmount, deadPhase, fallTilt, withTilt } from '../shared/emberbound/actions.js';
 
 // Game timing (seconds).
 export const RANGER_ATTACK_T = .3;   // the archer's shot from full draw: release at 0.032 s, then lower the bow
 export const RANGER_RAIN_T = .4;     // Arrow Rain: release at 0.137 s (the game's first rain arrow is at 0.15 s)
-export const RANGER_HURT_T = .3;
-export const RANGER_DEAD_T = .6;
 const SHOT_FROM = .72, RAIN_FROM = .62;   // where on the archer's 1.7 s shot each action starts
 export const RANGER_RELEASE_U = (ARCHER_RELEASE_U - SHOT_FROM) / (1 - SHOT_FROM);
 const RAIN_RELEASE_U = (ARCHER_RELEASE_U - RAIN_FROM) / (1 - RAIN_FROM);
@@ -33,12 +32,7 @@ const RAIN_PITCH = 35 * Math.PI / 180, RAIN_LEAN = .35;
 const KEYS = Object.freeze({
   attack: [0, .05, RANGER_RELEASE_U, .15, .22, .3, .4, .55, .7, .85],
   cast: [0, .1, .2, .3, RAIN_RELEASE_U, .4, .5, .65, .8],
-  hurt: [0, .15, .3, .6],
-  dead: [0, .15, .3, .45, .6, .75, .99],
 });
-const FALL = { pivot: 20, shift: 66 };   // whole-body tilt about a point behind the heels (local px), as the Guardian
-const phase = (t, period) => ((t % period) + period) % period / period;
-const sample = (keys, u) => keyframes(keys, u)[0];
 
 /** Rotate a chest-frame point or direction about the shoulder line so that forward turns upward. */
 const pitchUp = (p, angle, pivotZ = 45) => {
@@ -61,13 +55,13 @@ export function rangerPose(action, t) {
     return P;
   }
   if (action === 'hurt') {
-    const P = archerPose('idle', 0), k = sample([[0,[0]],[.15,[1]],[.6,[1]],[1,[.4]]], phase(t, RANGER_HURT_T));
+    const P = archerPose('idle', 0), k = hurtAmount(t);
     P.body = [-2.5 * k, 0, -1.2 * k]; P.grip = [P.grip[0] - 2 * k, P.grip[1], P.grip[2] + 3 * k];
     P.capeSway = 2.5 * k; P.blink = k > .5; P.mouth = k > .5 ? 1 : 0; P.look = 0;
     return P;
   }
   if (action === 'dead') {
-    const u = phase(t, RANGER_DEAD_T), P = archerPose('idle', 0);
+    const u = deadPhase(t), P = archerPose('idle', 0);
     P.body = [sample([[0,[0]],[.15,[-2]],[1,[-2]]], u), 0, sample([[0,[0]],[.15,[-1.5]],[1,[-1]]], u)];
     P.grip = [P.grip[0] - 3, P.grip[1], P.grip[2] - 4 * sample([[0,[0]],[.7,[1]],[1,[1]]], u)];
     P.capeSway = sample([[0,[0]],[.2,[2]],[.7,[-2.5]],[1,[0]]], u);
@@ -77,12 +71,10 @@ export function rangerPose(action, t) {
   return archerPose(action, t);
 }
 
-/** Whole-body tilt (radians, + = backward) for Arrow Rain, hurt and dead. */
+/** Whole-body tilt (radians, + = backward): the Arrow Rain lean back, then the shared hurt / dead tilt. */
 function bodyTilt(action, t) {
   if (action === 'cast') return RAIN_LEAN * sample([[0,[0]],[.15,[1]],[.6,[1]],[.9,[0]],[1,[0]]], phase(t, RANGER_RAIN_T));
-  if (action === 'hurt') return .14 * sample([[0,[0]],[.15,[1]],[.6,[1]],[1,[.4]]], phase(t, RANGER_HURT_T));
-  if (action === 'dead') return Math.PI / 2 * sample([[0,[0]],[.15,[.08]],[.62,[1.04]],[.72,[.97]],[.82,[1]],[1,[1]]], phase(t, RANGER_DEAD_T));
-  return 0;
+  return fallTilt(action, t);
 }
 
 /**
@@ -202,14 +194,8 @@ export function drawRangerRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
     const ha = P.rHand[0] > -2 ? [P.rHand[0] + 10, P.rHand[1], P.rHand[2]] : P.rHand;
     parts.push({ id: 'arrow', d: nearBowArm ? nockedDepth : (P.arrow.mode === 'nock' ? key(geo.G) : key(ha)) + 0.02, draw: () => drawArrowShape(ctx, nock, d, len, DRAW.lw) });
   }
-  const tilt = bodyTilt(action, t);
-  if (tilt) {
-    // Tip back about a point behind the heels; a fallen Ranger slides forward to lie about where it stood.
-    const px = x - sx * FALL.pivot * scale, shift = action === 'dead' ? sx * FALL.shift * scale * Math.min(1, tilt / (Math.PI / 2)) : 0;
-    ctx.save(); ctx.translate(px + shift, y); ctx.rotate(-sx * tilt); ctx.translate(-px, -y);
-  }
-  renderRig(ctx, x, y, scale, parts, { prefix: 'eb-ranger', boil, shadow: opts.shadow, shadowSeed: 'hero-shadow' });
-  if (tilt) ctx.restore();
+  withTilt(ctx, x, y, scale, sx, bodyTilt(action, t), action === 'dead',
+    () => renderRig(ctx, x, y, scale, parts, { prefix: 'eb-ranger', boil, shadow: opts.shadow, shadowSeed: 'hero-shadow' }));
   const S = p => ({ x: x + p.x * scale, y: y + p.y * scale });
   return {
     leftHand: S(UG(...P.grip)), rightHand: S(UG(...P.rHand)), stringMid: S(UG(...geo.stringMid)),
@@ -228,8 +214,8 @@ export const ebRanger = Object.freeze({
     walk: { period: 1 / WALK_HZ, frames: 10 },
     attack: { period: RANGER_ATTACK_T, keys: KEYS.attack, once: true, releaseAt: RANGER_RELEASE_U },
     cast: { period: RANGER_RAIN_T, keys: KEYS.cast, once: true, releaseAt: RAIN_RELEASE_U },
-    hurt: { period: RANGER_HURT_T, keys: KEYS.hurt, once: true },
-    dead: { period: RANGER_DEAD_T, keys: KEYS.dead, once: true, hold: true },
+    hurt: hurtAction,
+    dead: deadAction,
   },
   frameBox: { x0: -100, x1: 100, y0: -126, y1: 24 },
   equipment: { leftHand: 'bow', rightHand: 'string', back: 'quiver' },

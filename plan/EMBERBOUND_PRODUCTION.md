@@ -9,6 +9,10 @@
 - 1体 = `characters/eb-<名前>/character.js`。Studio の ID は `eb-` + ゲームの ID のアンダースコアをハイフンにしたもの (`ash_crawler` → `eb-ash-crawler`)。
 - 定義に `emberbound: { gameId, heightPx, facing }` を書く (ゲームの ID・ゲームでの描画高さ・ゲームでの向き)。移植のときの対応表になる。
 - 既存の11体は見本として変えない。流用するときはファイルを**コピー**して直す (別のキャラクターを import すると、書き出しで単独に取り出せない)。複数の EMBERBOUND キャラクターで共有する部品は `characters/shared/emberbound/` に置く。
+- **新しいキャラクターは `npm run eb:new` で始める**。元にするキャラクターのファイルをコピーして名前を付け替え、`emberbound` と Studio の情報を書き、カタログに登録し、元に武器の検査 (`ARMED`) があれば同じ読み方で1行足す。例:
+  `npm run eb:new -- --game oracle --from eb-arcanist --name "Oracle（暁の巫女）" --height 25 --description "…"`
+  (`--from` は `characters/` のフォルダ名。`--facing L` で敵向き、`--category` でカテゴリー)
+- 共通部品 [characters/shared/emberbound/actions.js](../characters/shared/emberbound/actions.js): ゲームの長さ (`GAME_T`)、被弾・戦闘不能の動作の定義 (`hurtAction` / `deadAction`)、反動の量 (`hurtAmount`)、体ごとの傾きと倒れ方 (`fallTilt` / `withTilt`)。各キャラクターは見た目と攻撃・詠唱の動きだけを書く。
 - Studio のカテゴリーは `EMBERBOUND 味方` / `EMBERBOUND 第1エリア` … / `EMBERBOUND 影` とする。
 
 ## 2. 動作と長さ
@@ -40,13 +44,12 @@
 
 ## 4. 確認
 
-1体ごとに次を確かめてから報告する。
+1体ごとに次の2つで確かめてから報告する。
 
-- Studio の詳細画面と [side-sheet.html](../tests/browser/side-sheet.html) で、左右 × 全動作のコマ。
-- [emberbound-stage0.html](../tests/browser/emberbound-stage0.html) で、ゲームの戦闘サイズ (×2〜×4) での見え方。
-- 武器を持つキャラクターは `tests/node/lib/clearance.mjs` の `ARMED` に1行足し、体を通り抜けないこと (`npm test`)。
-- [check.html](../tests/browser/check.html) で描画範囲 (`frameBox`) からはみ出さないこと (倒れる絵は横に長いので特に)。
-- `npm run drawings:update` で指紋を足し、**ほかのキャラクターの指紋が変わっていない**こと。
+1. **`npm run eb:check`**: カタログの更新、EMBERBOUND のキャラクターの絵の指紋の更新、全テスト (武器が体を通り抜けないこと・床に潜らないことを含む) を1回で行う。**EMBERBOUND 以外のキャラクターの絵が変わっていたら止まる**。最後に、変わったキャラクターの確認ページを表示する。
+2. **[eb-review.html](../tests/browser/eb-review.html)`?id=eb-…`** (サーバー経由): 1画面に、全動作 × 左右の要所 (始め・溜め・命中や放つ瞬間・振り抜き)、ゲームの戦闘サイズ (×3) の要所、描画範囲 (`frameBox`) のはみ出しの有無をまとめて表示する。`&act=cast` でその動作だけを8コマ大きく、`&k=4` でゲームのサイズの倍率、`&scale=1.6` で上段の拡大。
+
+武器を持つキャラクターは、武器の読み方が元と違えば `tests/node/lib/clearance.mjs` の `ARMED` を直す。戦闘の並びの中で見たいときは [emberbound-stage0.html](../tests/browser/emberbound-stage0.html)。
 
 ## 5. 作る順番と進み具合
 
@@ -56,8 +59,8 @@
 |---:|---|---|---|---|---|
 | 1 | guardian | A | warrior | 任意 | **試作済み** (`eb-guardian`。装備の色は段階0の色のまま) |
 | 2 | ranger | A | archer | 不要 | **作成済み** (`eb-ranger`。攻撃の始まりに矢を放つ短い射撃、上空への矢の雨) |
-| 3 | arcanist | A | mage | あるとよい (ローブを紫寄り・杖の光を残り火色にする色の参考) | |
-| 4 | oracle | B大 | mage の体 | 必要 | |
+| 3 | arcanist | A | mage | 受領 (紫の帽子とローブ、白い三つ編み、残り火の杖、炎の紋章の本) | **作成済み** (`eb-arcanist`。杖を突き出す短い魔法、杖を掲げる隕石) |
+| 4 | oracle | B大 | mage の体 (eb-arcanist から) | 受領 (光輪、波打つ金髪、白い法衣と肩掛け、青い前掛け、三日月の杖) | **作成済み** (`eb-oracle`。聖撃、回復・聖域、被弾、戦闘不能) |
 | 5 | ash_brute | B中 | goblin | 必要 | |
 | 6 | ash_crawler | C | 新規 (甲虫) | 必要 | |
 | 7 | ember_wisp | C | 新規 (火球) | 必要 | |

@@ -8,6 +8,8 @@
     "catalog:check": "node tools/sync-catalog.mjs --check",
     "baseline:update": "node tools/update-src-baseline.mjs",
     "drawings:update": "node tools/update-side-drawings.mjs",
+    "eb:check": "node tools/eb-check.mjs",
+    "eb:new": "node tools/new-eb-character.mjs",
     "export:game": "node tools/export-game.mjs",
     "test": "node --test tests/node/*.test.mjs"
   },

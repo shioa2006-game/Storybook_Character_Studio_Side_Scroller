@@ -32,6 +32,8 @@ export const ARMED = {
   skeleton: { head: [0, 0, 66, 24], weapons: P => P.attack ? [{ name: 'sword', base: P.attack.hand, dir: P.attack.dir, from: 6, to: 49 }] : [] },
   goblin: { head: [9, 0, 62, 16], weapons: P => [{ name: 'club', base: P.club, dir: P.axis, from: 4, to: 37 }] },
   mage: { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 53, floor: false }] },
+  'eb-arcanist': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
+  'eb-oracle': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
   'dark-mage': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 40, floor: false }] },
 };
 

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>EMBERBOUND 1体の確認</title>
+<style>
+body{font:14px/1.45 system-ui;margin:10px;background:#f3eee3;color:#282e27}
+h1{font-size:18px;margin:0}
+#summary{margin:4px 0 8px;font-size:15px}#summary b.ok{color:#2f6b2f}#summary b.ng{color:#a03c2c}
+.note{font-size:13px;color:#555}
+canvas{display:block;max-width:100%}
+#startup{color:#a03c2c;font-size:15px}
+</style></head>
+<body>
+<h1 id="title">EMBERBOUND 1体の確認</h1>
+<p id="summary">読み込み中…</p>
+<p id="startup">この表示が消えない場合は、ページをサーバー経由で開いてください (例: <code>http://127.0.0.1:8081/tests/browser/eb-review.html?id=eb-guardian</code>)。</p>
+<canvas id="sheet"></canvas>
+<p class="note">上: 全動作 × 右向き (左4コマ) / 左向き (右4コマ)。各動作の要所 (始め・命中や放つ瞬間・途中・終わり) を描く。灰色の枠 = frameBox。<br>
+下: ゲームの戦闘サイズ (×3、ゲームでの描画高さ) で並べた要所。<br>
+URL: <code>?id=eb-oracle</code>、<code>&amp;act=cast</code> でその動作だけを8コマ大きく、<code>&amp;k=4</code> でゲームのサイズの倍率、<code>&amp;scale=1.2</code> で上段の拡大。</p>
+<script>
+  if (!/^https?:$/.test(location.protocol)) document.getElementById('startup').textContent = 'ファイルを直接開いているため表示できません。Studio を起動し、表示された URL の後ろに tests/browser/eb-review.html?id=… を付けて開いてください。';
+  addEventListener('error', e => { document.getElementById('summary').textContent = `表示エラー: ${e.message || e.error}`; });
+  addEventListener('unhandledrejection', e => { document.getElementById('summary').textContent = `表示エラー: ${e.reason?.message || e.reason}`; });
+</script>
+<script type="module">
+import { catalog } from '../../characters/catalog.js';
+import { frameKeysOf } from '../../src/index.js';
+import { isolateDrawing, DRAW_DEFAULTS } from '../../src/core/settings.js';
+
+const q = new URL(location.href).searchParams, $ = id => document.getElementById(id);
+$('startup').hidden = true;
+const entry = catalog.find(e => e.id === (q.get('id') || 'eb-guardian'));
+if (!entry) throw new Error(`未登録の ID: ${q.get('id')} (EMBERBOUND: ${catalog.filter(e => e.id.startsWith('eb-')).map(e => e.id).join(', ')})`);
+const def = entry.definition, box = def.frameBox, dirs = entry.directions.length ? entry.directions : [null];
+const meta = def.emberbound || {};
+$('title').textContent = `${entry.name} — ${def.id}${meta.gameId ? ` (ゲーム ID ${meta.gameId}、高さ ${meta.heightPx}px、向き ${meta.facing})` : ''}`;
+document.title = `${def.id} | EMBERBOUND 1体の確認`;
+
+const draw = (g, x, y, dir, action, t, s, lw = 1) =>
+  isolateDrawing({ ...DRAW_DEFAULTS, lw }, () => def.draw(g, x, y, dir, action, t, s, { shadow: false }));
+
+/** Key phases of an action (or n evenly spaced). */
+function phasesOf(action, n) {
+  const spec = def.actions[action];
+  if (n > 4) return Array.from({ length: n }, (_, i) => i / n);
+  if (!spec.once) return [0, .25, .5, .75];
+  if (action === 'dead') return [0, .3, .62, .99];
+  // Start, the wind-up, the impact (or the release of a projectile) and the follow-through.
+  const hit = spec.releaseAt ?? (action === 'hurt' ? .15 : .4);
+  return [0, hit / 2, Math.max(.02, hit - .001), Math.min(.98, hit + .25)];
+}
+
+/** Pixels drawn outside frameBox over every cached key and in-between, in both directions. */
+function frameBoxProblems() {
+  const pad = 40, w = Math.ceil(box.x1 - box.x0) + pad * 2, h = Math.ceil(box.y1 - box.y0) + pad * 2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  const out = [];
+  for (const action of entry.actions) {
+    const keys = frameKeysOf(def.actions[action]);
+    for (const u of keys.flatMap((k, i) => [k, (k + (keys[i + 1] ?? 1)) / 2])) for (const dir of dirs) {
+      g.clearRect(0, 0, w, h); draw(g, pad - box.x0, pad - box.y0, dir, action, u * def.actions[action].period + 1e-9, 1);
+      const p = g.getImageData(0, 0, w, h).data; let n = 0;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        if (p[(y * w + x) * 4 + 3] <= 2) continue;
+        if (x < pad || x >= w - pad || y < pad || y >= h - pad) n++;
+      }
+      if (n) out.push(`${action} ${dir ?? ''} u=${u.toFixed(2)} (${n}px)`);
+    }
+  }
+  return out;
+}
+
+/** Drawn height at scale 1 (alpha > 40, the game's spriteBounds rule). */
+function studioHeight() {
+  const pad = 10, w = Math.ceil(box.x1 - box.x0) + 20, h = Math.ceil(box.y1 - box.y0) + 20;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  draw(g, pad - box.x0, pad - box.y0, dirs[0], 'idle', 0, 1);
+  const p = g.getImageData(0, 0, w, h).data; let y0 = h, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (p[(y * w + x) * 4 + 3] > 40) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return y1 - y0 + 1;
+}
+
+function render() {
+  const only = q.get('act'), actions = only ? [only] : entry.actions, n = only ? 8 : 4;
+  // Overview: one row per action, right then left. Detail (act=…): one row per direction.
+  const dpr = devicePixelRatio || 1, k = Number(q.get('k') || 3), cols = only ? n : n * dirs.length, rowsPerAction = only ? dirs.length : 1;
+  const avail = Math.min(1180, innerWidth - 24), cellW = Math.floor(avail / cols);
+  // Size by height; frameBox is wide for the fall, so cells clip instead of shrinking every figure.
+  const s0 = (only ? 170 : 92) / (box.y1 - box.y0) * Number(q.get('scale') || 1);
+  const cellH = Math.ceil((box.y1 - box.y0) * s0) + 16;
+  const gameH = meta.heightPx || 28, sh = studioHeight(), gs = gameH / sh * k;   // local px → device px at game size
+  // One pose per action at game size: idle / walk at rest, the impact of attack / cast / hurt, the end of the fall.
+  const gameCellW = Math.ceil((box.x1 - box.x0) * gs * .75) + 6, gameCellH = Math.ceil((box.y1 - box.y0) * gs) + 18;
+  const gameRow = entry.actions.map(a => [a, a === 'dead' ? .99 : phasesOf(a, 4)[def.actions[a].once ? 1 : 0]]);
+  const gamePerRow = Math.max(1, Math.floor(avail * dpr / gameCellW));
+  const gameRows = Math.ceil(gameRow.length * dirs.length / gamePerRow);
+  const W = avail, H = actions.length * rowsPerAction * cellH + 24 + gameRows * gameCellH / dpr;
+  const c = $('sheet'); c.width = Math.ceil(W * dpr); c.height = Math.ceil(H * dpr); c.style.width = `${W}px`; c.style.height = `${H}px`;
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = '#fffcf5'; g.fillRect(0, 0, W, H); g.font = '11px system-ui';
+  actions.forEach((action, row) => {
+    const phases = phasesOf(action, n);
+    dirs.forEach((dir, di) => phases.forEach((u, pi) => {
+      const x0 = (only ? pi : di * n + pi) * cellW, y0 = (row * rowsPerAction + (only ? di : 0)) * cellH;
+      g.strokeStyle = '#e2dccd'; g.strokeRect(x0 + .5, y0 + .5, cellW - 1, cellH - 1);
+      g.fillStyle = '#5b5b52'; g.fillText(`${dir ?? ''} ${action} ${u.toFixed(2)}`, x0 + 3, y0 + 11);
+      const fx = x0 + (cellW - (box.x1 - box.x0) * s0) / 2 - box.x0 * s0, fy = y0 + 14 - box.y0 * s0;
+      g.strokeStyle = 'rgba(120,120,110,.35)'; g.strokeRect(fx + box.x0 * s0, fy + box.y0 * s0, (box.x1 - box.x0) * s0, (box.y1 - box.y0) * s0);
+      g.save(); g.beginPath(); g.rect(x0 + 1, y0 + 13, cellW - 2, cellH - 14); g.clip();
+      draw(g, fx, fy, dir, action, u * def.actions[action].period, s0); g.restore();
+    }));
+  });
+  // Game size: device pixels, on the battle's dark ground.
+  const top = actions.length * rowsPerAction * cellH + 20;
+  g.fillStyle = '#282e27'; g.font = '12px system-ui'; g.fillText(`ゲームのサイズ ×${k} (高さ ${gameH}px、Studio の高さ ${sh}px、縮小率 ${(gameH / sh).toFixed(3)}、線は自動で補う)`, 3, top - 4);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const lw = Math.max(1, 1 / (gameH / sh * k));
+  let i = 0;
+  for (const dir of dirs) for (const [action, u] of gameRow) {
+    const x0 = (i % gamePerRow) * gameCellW, y0 = top * dpr + Math.floor(i / gamePerRow) * gameCellH; i++;
+    g.save(); g.beginPath(); g.rect(x0, y0, gameCellW - 2, gameCellH - 2); g.clip();
+    g.fillStyle = '#3b2c33'; g.fillRect(x0, y0, gameCellW - 2, gameCellH - 2);
+    g.fillStyle = '#4a3a33'; g.fillRect(x0, y0 + gameCellH - 20, gameCellW - 2, 18);
+    g.fillStyle = '#d9cfbd'; g.font = `${10 * dpr}px system-ui`; g.fillText(`${dir ?? ''} ${action}`, x0 + 3, y0 + 11 * dpr);
+    draw(g, x0 + (gameCellW - (box.x1 - box.x0) * gs) / 2 - box.x0 * gs, y0 + gameCellH - 14, dir, action, u * def.actions[action].period, gs, lw);
+    g.restore();
+  }
+}
+
+render();
+const problems = frameBoxProblems();
+$('summary').innerHTML = `動作: ${entry.actions.join(' / ')} &nbsp; 描画範囲: ${problems.length ? `<b class="ng">はみ出し ${problems.length}件</b> (${problems.slice(0, 4).join('、')}${problems.length > 4 ? ' …' : ''})` : '<b class="ok">OK</b>'}`;
+window.__review = { problems, render };
+</script>
+</body></html>
