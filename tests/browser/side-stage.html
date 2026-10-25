@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>横スクロールの背景</title>
+<style>body{margin:0;background:#f6f3ec;color:#282e27;font:14px/1.6 system-ui}header{padding:10px 14px}h1{font-size:18px;margin:0}details{font-size:13px}code{background:#ebe5d6;padding:0 3px}canvas{display:block;image-rendering:pixelated}#error{color:#a03a2a}</style></head>
+<body><header><h1>横スクロールの背景</h1>
+<details><summary>URL の指定</summary>
+<ul>
+<li><code>theme</code> 背景テーマ (既定 dungeon)、<code>x</code> 画面の中央に置くステージ上の位置 (既定 400)</li>
+<li><code>w</code> / <code>h</code> 論理サイズ (既定 960 × 540)、<code>zoom</code> 表示の拡大 (既定 1。細部の確認用)</li>
+<li><code>character</code> 立たせるキャラクター (既定 warrior。<code>none</code> で無し)、<code>dir</code> 向き R / L、<code>t</code> 背景の動きの時刻 (秒)</li>
+<li><code>mark</code> 1 にすると背景の区画の境界に縦線を引く (継ぎ目の確認)</li>
+</ul></details><p id="error"></p><p id="stats" class="small"></p></header>
+<canvas id="c"></canvas>
+<script type="module">
+import { createSideRenderer, SIDE_THEMES } from '../../src/index.js';
+import { catalog } from '../../characters/catalog.js';
+const q = new URL(location.href).searchParams, num = (k, d) => Number(q.get(k) ?? d);
+const theme = q.get('theme') || 'dungeon', w = num('w', 960), h = num('h', 540), zoom = num('zoom', 1), x = num('x', 400);
+const canvas = document.getElementById('c');
+canvas.style.width = `${w * zoom}px`; canvas.style.height = `${h * zoom}px`;
+try {
+  if (!SIDE_THEMES[theme]) throw new Error(`未登録のテーマ "${theme}" (登録済み: ${Object.keys(SIDE_THEMES).join(', ')})`);
+  const renderer = createSideRenderer({ canvas, width: w, height: h, dpr: 1, characters: catalog.map(e => e.definition), lineBoil: false });
+  renderer.setStage({ id: `check-${theme}`, length: 3200, start: 260, margin: 60, theme }).centerOn(x);
+  const id = q.get('character') ?? 'warrior';
+  const units = id === 'none' ? [] : [{ id: 'hero', character: id, x, direction: q.get('dir') || 'R', action: 'idle', actionTime: 0 }];
+  renderer.render({ timeSeconds: num('t', 0), units });
+  if (q.get('mark') === '1') {   // chunk borders of the main (parallax 1) layer
+    const g = canvas.getContext('2d'), cam = renderer.getCamera(), step = 512, left = cam.x * cam.scale;
+    g.strokeStyle = 'rgba(200,40,40,.7)'; g.lineWidth = 1;
+    for (let sx = Math.ceil(left / step) * step - left; sx < w; sx += step) { g.beginPath(); g.moveTo(sx + .5, 0); g.lineTo(sx + .5, h); g.stroke(); }
+  }
+  const d = renderer.getDiagnostics();
+  document.getElementById('stats').textContent = `${theme}: 区画 ${d.background.chunks} 枚・焼き込み計 ${d.background.bakeMs.toFixed(1)} ms・カメラ x ${Math.round(d.camera.x)}`;
+  window.__stage = { renderer, diagnostics: d };
+} catch (error) { document.getElementById('error').textContent = error.message; }
+</script></body></html>

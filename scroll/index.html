@@ -8,10 +8,11 @@
   <div class="scroll-layout">
     <section class="scene-frame" aria-label="横スクロールの動作確認">
       <div class="scene-toolbar"><fieldset><legend>描画方式</legend><div class="button-row"><button data-mode="live" aria-pressed="true">Live Vector</button><button data-mode="cached" aria-pressed="false">Cached Frames</button></div></fieldset></div>
-      <div class="scroll-canvas-wrap"><canvas id="scroll" tabindex="0" aria-label="横に長い回廊。← → または A / D を押している間歩き、Space で攻撃。"></canvas></div>
+      <div class="scroll-canvas-wrap"><canvas id="scroll" tabindex="0" aria-label="横に長いステージ。← → または A / D を押している間歩き、Space で攻撃。"></canvas></div>
       <div class="scene-footer"><div><strong id="game-state">待機中</strong><span id="position">位置 0 / 0</span></div><button id="reset">初期位置へ戻す</button></div>
     </section>
     <aside class="character-panel" aria-label="キャラクターと操作">
+      <label class="select-label" for="stage-select">場所を選ぶ</label><select id="stage-select"></select>
       <label class="select-label" for="character-select">キャラクターを選ぶ</label><select id="character-select"></select>
       <p id="character-category" class="category"></p><h2 id="character-name"></h2><p id="character-description"></p>
       <a id="gallery-detail" class="button" href="../index.html#gallery">ギャラリーで詳しく見る</a>

@@ -155,6 +155,7 @@
 | [side-overview.html](../tests/browser/side-overview.html) | 全キャラクターの左右の待機と攻撃を一覧にする。共通リグを変えたときの影響確認に使う。幅の狭い画面では `?cells=R:idle:0,L:idle:0&s=0.98&ids=…` で左右2列・4体ずつ並べると読みやすい |
 | [横スクロール](../scroll/index.html) | 実際のゲームの大きさで、左右に歩かせ・向きを変え・攻撃させる。弓を持つキャラクターは飛ぶ矢も表示する。Studio の詳細画面の「横スクロールで見る」から開ける |
 | [check.html](../tests/browser/check.html) | 全キャラクター・左右・全動作の描画範囲 (`frameBox`) と Live / Cached の確認 |
+| [side-stage.html](../tests/browser/side-stage.html) | 横スクロールの背景の1場面にキャラクターを立たせる。例: `?theme=forest&x=1200&dir=L`。`character=none` で背景だけ、`mark=1` で区画の境界。背景と並べたときの大きさ・足元の確認に使う ([STAGE_GUIDE.md](STAGE_GUIDE.md)) |
 | `tests/node/side-clearance.test.mjs` | 武器を持つ全キャラクター (戦士・剣士・王・魔王・骸骨・ゴブリン・魔法使い・暗黒魔法使い) の横向きの全動作を201段階で調べ、手・武器が胴や頭に入ったり、刃先が床に潜ったりしたら失敗する。わざと貫く姿勢で検出できることも確かめる。キャラクターごとの頭の位置と武器の読み方は `tests/node/lib/clearance.mjs` の `ARMED` にあり、新しいキャラクターはここに1行足す |
 | `npm test` | 上記を含む全テスト。4方向の戦士の絵が変わっていないかも確認する |
 

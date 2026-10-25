@@ -1,16 +1,17 @@
 import { createSideRenderer } from '../src/index.js';
 import { catalog, findCharacter } from '../characters/catalog.js';
-import { createScrollGame, scrollStage, CHARACTER_SCALE } from './game.js';
+import { createScrollGame, SCROLL_STAGES, CHARACTER_SCALE } from './game.js';
 import { bindScrollControls } from './controls.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('scroll');
-const requested = new URL(location.href).searchParams.get('character');
-let selected = findCharacter(requested) || findCharacter('warrior') || catalog[0];
+const params = new URL(location.href).searchParams;
+let selected = findCharacter(params.get('character')) || findCharacter('warrior') || catalog[0];
+let stage = SCROLL_STAGES[params.get('stage')] || SCROLL_STAGES.dungeon;
 const renderer = createSideRenderer({ canvas, width: 960, height: 540, characters: [], characterScale: CHARACTER_SCALE, lineBoil: true, footFix: true });
 for (const entry of catalog) renderer.registerCharacter(entry.definition);
-renderer.setStage(scrollStage);
-const game = createScrollGame({ stage: scrollStage, characterScale: CHARACTER_SCALE, character: selected.definition });
+renderer.setStage(stage);
+const game = createScrollGame({ stage, characterScale: CHARACTER_SCALE, character: selected.definition });
 let mode = 'live', last = null, sceneTime = 0, resizeTimer, request = 0, raf = 0, disposed = false;
 const errors = [];
 function showError(error) {
@@ -22,6 +23,19 @@ window.addEventListener('unhandledrejection', e => showError(e.reason));
 const controls = bindScrollControls(canvas, game);
 const releaseHold = [controls.holdButton($('walk-left'), -1), controls.holdButton($('walk-right'), 1)];
 
+for (const [key, s] of Object.entries(SCROLL_STAGES)) {
+  const option = document.createElement('option');
+  option.value = key; option.textContent = s.name;
+  $('stage-select').append(option);
+}
+$('stage-select').value = stage.theme;
+$('stage-select').addEventListener('change', e => {
+  const next = SCROLL_STAGES[e.target.value];
+  if (!next) return;
+  stage = next; renderer.setStage(stage).centerOn(game.unit.x);
+  const url = new URL(location.href); url.searchParams.set('stage', e.target.value); history.replaceState(null, '', url);
+  canvas.focus({ preventScroll: true });
+});
 for (const entry of catalog) {
   const option = document.createElement('option');
   option.value = entry.id; option.textContent = entry.name;
@@ -87,9 +101,9 @@ function render(dt) {
   renderer.render({ timeSeconds: sceneTime, units: [game.unit], projectiles: game.projectiles });
   const facing = selected.directions.length ? ` · ${game.unit.direction === 'R' ? '右向き' : '左向き'}` : '';
   $('game-state').textContent = `${game.status}${facing}`;
-  $('position').textContent = `位置 ${Math.round(game.unit.x)} / ${scrollStage.length}`;
+  $('position').textContent = `${stage.name} · 位置 ${Math.round(game.unit.x)} / ${stage.length}`;
 }
-function snapshot() { return { character: selected.id, mode, game: game.snapshot(), renderer: renderer.getDiagnostics(), errors: [...errors] }; }
+function snapshot() { return { character: selected.id, stage: stage.theme, mode, game: game.snapshot(), renderer: renderer.getDiagnostics(), errors: [...errors] }; }
 function updateDiagnostics() { if ($('diagnostics').open) $('diagnostic-output').textContent = JSON.stringify(snapshot(), null, 2); }
 $('refresh-diagnostics').addEventListener('click', updateDiagnostics);
 $('diagnostics').addEventListener('toggle', updateDiagnostics);

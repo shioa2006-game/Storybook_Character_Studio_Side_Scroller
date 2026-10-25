@@ -6,14 +6,7 @@
 import { seed, R } from '../../core/random.js';
 import { PAL } from '../../core/palette.js';
 import { fillPoly, hatchPoly, inkLine, inkShape, stipplePoly } from '../../core/ink.js';
-
-/** 床の帯: 奥の縁 (y < 0) と手前の縁 (y > 0)、手前の縁石の下端。キャラの足元 (y = 0) は帯の中 */
-export const FLOOR = Object.freeze({ back: -26, front: 16, slab: 54 });
-
-/** [x0, x1] にかかる「間隔 step の n 番目」の部品を順に呼ぶ (pad は部品の幅の余裕) */
-function each(view, step, pad, fn) {
-  for (let n = Math.floor((view.x0 - pad) / step); n * step <= view.x1 + pad; n++) fn(n, n * step);
-}
+import { FLOOR, each, stageEnds } from './pencil.js';
 
 const hill = x => -128 + 16 * Math.sin(x * .0045) + 8 * Math.sin(x * .013 + 1.3);
 
@@ -68,8 +61,8 @@ function ground(g, view) {
       inkLine(g, [{ x: cx, y: cy }, { x: cx + R(-6, 6), y: cy + R(4, 8) }, { x: cx + R(-8, 8), y: cy + R(9, 14) }], { w: .8, amp: .3, step: 4, double: 0 });
     }
   });
-  // Stage ends: dark hatched walls beyond 0 and length.
-  for (const [a, b, id] of [[-320, 0, 'left'], [view.stage.length, view.stage.length + 320, 'right']]) {
+  // Stage ends: hatched walls reaching just inside 0 and length, so they show at the screen edge.
+  for (const [[a, b], id] of stageEnds(view.stage, 320).map((s, i) => [s, i ? 'right' : 'left'])) {
     if (b < view.x0 - 4 || a > view.x1 + 4) continue;
     seed(`ph-end-${id}`);
     const wall = inkShape(g, [{ x: a, y: view.top - 20 }, { x: b, y: view.top - 20 }, { x: b, y: slab }, { x: a, y: slab }], { fill: '#d9d3c7', w: 2.4, amp: .6 });

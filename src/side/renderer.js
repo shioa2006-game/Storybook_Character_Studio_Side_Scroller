@@ -4,7 +4,7 @@
  * ゲームから「ステージのデータ」と「毎フレームの状態 (誰がどこで何をしているか)」を受け取って描く。
  * 移動・攻撃・当たり判定などのゲームの規則は持たない (scroll/game.js などのゲーム側の責務)。
  *
- * 1フレームの描画順: 紙と背景の層 → 足元の影 → キャラクター (x の順) → 飛んでいる矢 → [デバッグ]
+ * 1フレームの描画順: 紙と奥の背景の層 → 背景の動き (松明の炎など) → 足元の影 → キャラクター (x の順) → 飛んでいる矢 → 前景の層
  * キャラクターは右向き R / 左向き L で描き、Cached Frames は左右2方向のコマを作る。
  * 描画の入口で描画設定と乱数状態を自分のものに切り替え、終わったら元に戻す (8×8ダンジョンの Renderer と同じ)。
  */
@@ -151,7 +151,7 @@ export function createSideRenderer(o = {}) {
       return isolateDrawing(st.draw, () => {
         seed('inkstone-side-frame');
         const t0 = performance.now(), warnings = [], items = [];
-        st.background.draw(ctx, cam);
+        st.background.drawBack(ctx, cam, f.timeSeconds ?? 0);
         for (const u of f.units || []) {
           const def = st.registry.get(u.character); checkUnit(u, def);
           const action = resolveAction(def, u.action || 'idle');
@@ -164,6 +164,7 @@ export function createSideRenderer(o = {}) {
         for (const it of items) drawUnit(it.u, it.def, it.action, it.t);
         const characterMs = performance.now() - c0;
         for (const pr of f.projectiles || []) drawProjectile(pr);
+        st.background.drawFront(ctx, cam);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         st.last = { totalMs: performance.now() - t0, characterMs, warnings };
         return st.last;

@@ -12,7 +12,7 @@ import { createRenderer, createCharacterView, /* … */ } from './src/index.js';
 | `createCharacterView(options)` | 関数 | キャラクター1体の確認用の描画 (§7) |
 | `createSideRenderer(options)` | 関数 | 横スクロールのステージとキャラクターの描画 (§11) |
 | `STAGE_DEFAULTS` / `normalizeStage(stageData)` / `clampToStage(stage, x)` | 定数・関数 | 横スクロールのステージデータの既定値・検査・立てる範囲 (§11) |
-| `SIDE_THEMES` / `SIDE_CHUNK` / `SIDE_VIEW_HEIGHT` | 表・定数 | 横スクロールの背景テーマ・背景の区画の幅 (512 論理 px)・縦に映るワールドの高さ (360 px) |
+| `SIDE_THEMES` / `SIDE_CHUNK` / `SIDE_VIEW_HEIGHT` | 表・定数 | 横スクロールの背景テーマ (`dungeon` / `forest` / `town` / `placeholder`)・背景の区画の幅 (512 論理 px)・縦に映るワールドの高さ (360 px) |
 | `createCharacterRegistry(defs?)` | 関数 | キャラクター登録簿を作る (§6) |
 | `validateCharacter(def)` | 関数 | キャラクター定義を検査する (不足があればエラー) |
 | `BUILTIN_CHARACTERS` | 配列 | 組み込みのキャラクター定義 `[swordsman, archer, skeleton]` |
@@ -285,8 +285,9 @@ renderer.render({
 ```
 
 - **ワールド座標**: x = ステージの左端からの距離 (右へ +)、y = 地面からの高さ (下へ +、足元 = 0)。単位はワールド px。縦に `SIDE_VIEW_HEIGHT` (360) px が映るよう倍率が決まり、地面は画面の高さの 74% の位置です。
-- **ステージ** (`normalizeStage`): `length` (200 以上)、`start` (開始位置)、`margin` (立てる範囲の左右の余白)、`theme` (`SIDE_THEMES` のキー。現在は仮の背景 `placeholder`)。
+- **ステージ** (`normalizeStage`): `length` (200 以上)、`start` (開始位置)、`margin` (立てる範囲の左右の余白)、`theme` (`SIDE_THEMES` のキー。鉛筆画の `dungeon` / `forest` / `town`、既定は仮の背景 `placeholder`)。
 - **歩行の時間**: `actionTime` = 横に歩いた距離 (ワールド px) × `sideWalkSecondsPerPixel(characterScale)` にすると足が滑りません。
 - **飛んでいる矢**: `x` は放ったキャラの足元、`distance` は進んだ距離 (ワールド px)。矢は定義の `projectile.origin(direction)` の矢筈の位置から、画面の水平に向きの側へ進みます。いつ放つか・どこまで飛ぶかはゲームが決めます (放つ位相は `projectile.releaseAt`)。
-- **背景**: テーマの層 (`{ id, parallax, draw(g, view) }`) を幅 `SIDE_CHUNK` の区画に焼き込み、映る区画だけを貼ります。倍率・DPR・キャンバスの大きさ・ステージが変わると作り直します。
+- **背景**: テーマの層を幅 `SIDE_CHUNK` の区画に焼き込み、映る区画だけを貼ります。倍率・DPR・キャンバスの大きさ・ステージが変わると作り直します。区画はスクロールの向きの側に1枚だけ先に作り、通り過ぎた区画は捨てます。
+  層 = `{ id, parallax, draw(g, view), front?, opacity?, band?, spans?, dynamic? }`。`draw` は層の座標 (x = 層の上の位置、y = 地面からの高さ) で描き、`view = { x0, x1, top, bottom, stage, parallax }`。`front` はキャラクターより手前、`opacity` は貼るときの不透明度、`band: [上端, 下端]` は描く高さの範囲 (ワールド y。`null` = 画面の端。区画をその高さだけ作る)、`spans: stage => [[x0, x1], …]` は絵がある範囲 (範囲外の区画は作らない)、`dynamic(g, view, time)` は毎フレーム描く動き。テーマの作り方は [STAGE_GUIDE.md](STAGE_GUIDE.md)。
 - その他: `setStage(stageData)` / `centerOn(x)` / `resize(width, height, dpr)` / `setMode` / `setOptions({ lineBoil, footFix })` / `registerCharacter` / `prepareCaches(ids)` / `disposeCaches(ids)` / `worldToScreen(x, y)` / `screenToWorld(px, py)` / `getCamera()` / `getDiagnostics()` (`background: { chunks, bytesRGBA, bakedChunks, bakeMs }` を含む) / `dispose()`。

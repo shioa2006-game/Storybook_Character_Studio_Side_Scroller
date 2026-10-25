@@ -2,7 +2,14 @@ import { normalizeStage, clampToStage, sideWalkSecondsPerPixel, validateCharacte
 
 /** The stage is data consumed by Inkstone. Movement rules live here. */
 export const CHARACTER_SCALE = 1.25;
-export const scrollStage = Object.freeze({ id: 'scroll-placeholder-v1', name: '仮の回廊', length: 3200, start: 260, margin: 60, theme: 'placeholder' });
+/** The three locations share one length, start and margin, so switching keeps the walker in place. */
+const STAGE_SHAPE = { length: 3200, start: 260, margin: 60 };
+export const SCROLL_STAGES = Object.freeze({
+  dungeon: Object.freeze({ ...STAGE_SHAPE, id: 'scroll-dungeon-v1', name: 'ダンジョンの回廊', theme: 'dungeon' }),
+  forest: Object.freeze({ ...STAGE_SHAPE, id: 'scroll-forest-v1', name: '森の小道', theme: 'forest' }),
+  town: Object.freeze({ ...STAGE_SHAPE, id: 'scroll-town-v1', name: '城下町の通り', theme: 'town' }),
+});
+export const scrollStage = SCROLL_STAGES.dungeon;
 
 /**
  * Game state only: Inkstone owns projection, poses, background and drawing.

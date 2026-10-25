@@ -30,8 +30,12 @@ src/
 ├─ side/                横スクロール (8×8ダンジョンとは別の描画)
 │  ├─ stage.js             ステージデータの検査と既定値 (長さ・開始位置・余白・背景テーマ)
 │  ├─ camera.js            横スクロールのカメラ (高さから倍率・地面の位置、追従と端で止める、座標変換)
-│  ├─ background.js        背景の層を区画ごとに画像へ焼き込んで使い回す仕組み、テーマの登録 SIDE_THEMES
-│  ├─ themes/placeholder.js 段階3の仮の背景 (遠景の丘・中景の柱・床の帯と縁石・両端の壁)
+│  ├─ background.js        背景の層を区画ごとに画像へ焼き込んで使い回す仕組み (高さの帯・絵のある範囲だけ作る)、テーマの登録 SIDE_THEMES
+│  ├─ themes/pencil.js     テーマで共有する鉛筆画の部品 (床の帯、繰り返し、石積みの割り付け、正面の石、両端の壁の範囲)
+│  ├─ themes/dungeon.js    ダンジョンの回廊 (奥の回廊・石壁とアーチの窓・松明・敷石・前景の柱と鎖)
+│  ├─ themes/forest.js     森の小道 (空・遠くの木立・木・茂み・土の小道・前景のシダと枝)
+│  ├─ themes/town.js       城下町の通り (遠くの城・木組みの家並み・街灯と旗・石畳・前景の街灯と看板)
+│  ├─ themes/placeholder.js 段階3の仮の背景 (ステージの theme の既定値)
 │  └─ renderer.js          SideRenderer (背景 → 足元の影 → キャラ → 飛んでいる矢)
 └─ rendering/            描画とキャッシュ
    ├─ camera.js            カメラ (倍率・平行移動・DPR)・部屋に合わせる・座標変換
@@ -57,6 +61,7 @@ index.js ──► rendering/renderer.js, rendering/character-view.js, character
 rendering/renderer.js ──► camera, depth-sort, cache, scene, effects, overlays, characters/registry, characters/rig, dungeon/room, dungeon/architecture, core/*
 side/renderer.js ──► side/{stage, camera, background}, rendering/{cache, effects, camera}, characters/registry, characters/rig, core/*
 side/background.js ──► side/themes/*, core/ink
+side/themes/* ──► side/themes/pencil, core/{ink, paint, random, palette}, dungeon/architecture (松明の炎)
 rendering/cache.js ──► sprites, effects, characters/registry, characters/rig
 rendering/scene.js ──► camera, sprites, dungeon/room, core/ink
 characters/registry.js ──► swordsman, archer, skeleton
