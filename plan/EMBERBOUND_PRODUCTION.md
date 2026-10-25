@@ -68,7 +68,13 @@
 | 9 | cinder_sapling | C | 新規 (樹木) | 受領 (焦げた切り株、頭頂の炎、小枝の腕、根の脚) | **作成済み** (`eb-cinder-sapling`。小枝の腕で払う) |
 | 10 | thornback | C | char_wolf の四足 | 受領 (茶色の毛、背中の棘、白い牙、桃色の鼻) | **作成済み** (`eb-thornback`。突き上げる突進、溜め=頭を下げて蹄で地面をかくループ) |
 | 11 | gnarlwood | C | cinder_sapling の樹皮 | 受領 (顔のある大木、燃える枝先、枝の腕と根の手) | **作成済み** (`eb-gnarlwood`。腕の振り下ろし、溜め=両腕を掲げて震えるループ。樹皮の色は共通の `TREE`) |
-| 12〜 | 第2〜第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
+| 12 | reef_lurker | C | 新規 (蟹) | 受領 (青緑の平たい甲羅、フジツボ、背中の赤い珊瑚、大きな鋏) | **作成済み** (`eb-reef-lurker`。鋏を振り上げて挟む) |
+| 13 | tideling | B大 | goblin の体 (eb-ash-brute から) | 受領 (丸い魚の頭、珊瑚色のひれ、水かきの足、石の穂先の槍) | **作成済み** (`eb-tideling`。槍の突き) |
+| 14 | drowned_archer | B小 | skeleton-archer | 受領 (怒った頭骨、青緑のぼろ布、海藻) | **作成済み** (`eb-drowned-archer`。攻撃の始まりに矢を放つ短い射撃) |
+| 15 | siren | C | 新規 (人魚) | 受領 (青緑の長い髪、貝の髪飾り、ひれの耳、鱗の尾) | **作成済み** (`eb-siren`。水の玉を投げる攻撃、溜め=Tidal Hymn の歌のループ。尾と腕の共通部品は `characters/shared/emberbound/merfolk.js`) |
+| 16 | coral_knight | B大 | warrior の体 (eb-guardian から) | 受領 (珊瑚色の鎧、珊瑚の兜飾り、貝殻の盾、金の三叉槍) | **作成済み** (`eb-coral-knight`。三叉槍の突き、溜め=Tidebreaker で三叉槍を振りかぶるループ) |
+| 17 | coilscale | C | 新規 (蛇の女王)。Siren と部品を共有 | 受領 (金の冠、青いドレス、青い鱗の蛇体、三叉槍) | **作成済み** (`eb-coilscale`。毒の玉を投げる攻撃、溜め=Crashing Wave で三叉槍を掲げるループ) |
+| 18〜 | 第3〜第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
 | 〜40 | 非人型の系統 (C) | C | 流用計画の系統順 | 必要 | |
 | 41〜44 | shadow_* | D | 完成した味方4人 | 不要 | |
 

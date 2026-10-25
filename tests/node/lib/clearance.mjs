@@ -22,6 +22,8 @@ export const ARMED = {
   'eb-guardian': { head: [1.5, 0, 66, 18], weapons: P => [
     ...[P.sword, ...(P.trail?.samples ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 41 })),
   ] },
+  // The Coral Knight keeps the Guardian's body; the trident is held mid-shaft (butt to prong tips).
+  'eb-coral-knight': { head: [1.5, 0, 66, 18], weapons: P => [{ name: 'trident', base: P.trident.hand, dir: P.trident.dir, from: -26, to: 59 }] },
   swordsman: { head: [1.5, 0, 67, 17], weapons: P => [
     ...[P.sword, ...(P.trail?.pts ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 38 })),
   ] },
@@ -32,6 +34,7 @@ export const ARMED = {
   skeleton: { head: [0, 0, 66, 24], weapons: P => P.attack ? [{ name: 'sword', base: P.attack.hand, dir: P.attack.dir, from: 6, to: 49 }] : [] },
   goblin: { head: [9, 0, 62, 16], weapons: P => [{ name: 'club', base: P.club, dir: P.axis, from: 4, to: 37 }] },
   'eb-ash-brute': { head: [9, 0, 63, 17], weapons: P => [{ name: 'club', base: P.club, dir: P.axis, from: 4, to: 40 }] },
+  'eb-tideling': { head: [7, 0, 62, 26], weapons: P => [{ name: 'spear', base: P.spear, dir: P.axis, from: -24, to: 58 }] },
   mage: { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 53, floor: false }] },
   'eb-arcanist': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
   'eb-oracle': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
