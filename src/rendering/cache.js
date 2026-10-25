@@ -9,6 +9,7 @@
  *   「定義そのもの」に依存する。どれかが変われば、次に使うときにその職業のコマを作り直す (古いコマは破棄)。
  * - 容量は幅 × 高さ × 4 (RGBA の理論値)。ブラウザが実際に使うメモリ (GPU 側の複製など) とは別物。
  * - 生成は同期処理 (その間は画面が止まる)。生成にかかった時間を pauses に記録する。
+ * - 生成する向きはストアごとに決める (既定: アイソメ4方向。CharacterView は横スクロールの左右2方向)。
  */
 import { DIR_ORDER } from '../characters/rig.js';
 import { frameKeysOf } from '../characters/registry.js';
@@ -19,14 +20,15 @@ export const modT = (t, p) => ((t % p) + p) % p;
 /** 時刻 → コマ番号 (そのコマの開始位相 ≦ 現在の位相 となる最後のコマ) */
 export function frameIndexOf(keys, u) { let i = 0; while (i + 1 < keys.length && keys[i + 1] <= u) i++; return i; }
 
-export function createFrameCacheStore() {
+/** @param {string[]} [directions] コマを作る向き (DIRS のキー) */
+export function createFrameCacheStore(directions = DIR_ORDER) {
   const entries = new Map();   // id → { def, key, k, frames, keys, count, bytes, ms, frameW, frameH }
   const pauses = [];           // 同期生成の記録 [{ id, ms, frames, at }]
   let shadow = null;           // { k, c } 足元の影のスプライト
   const keyOf = (k, draw) => `${k}|${draw.lw}|${draw.boil}|${draw.footGround}|${draw.linearStance}`;
 
   function build(def, k, draw) {
-    const t0 = performance.now(), frames = {}, keys = {}, dirs = def.directional === false ? [''] : DIR_ORDER;
+    const t0 = performance.now(), frames = {}, keys = {}, dirs = def.directional === false ? [''] : directions;
     let count = 0, bytes = 0;
     for (const a of Object.keys(def.actions)) {
       keys[a] = frameKeysOf(def.actions[a]);
@@ -57,6 +59,7 @@ export function createFrameCacheStore() {
     /** 時刻 t のコマ。direction は向きを持たない定義では無視 */
     frame(e, direction, action, t) {
       const spec = e.def.actions[action], list = e.frames[(e.def.directional === false ? '' : direction) + action];
+      if (!list) throw new Error(`Inkstone: "${e.def.id}" の向き "${direction}" のコマはありません (このキャッシュの向き: ${directions.join(' / ')})`);
       const u = modT(t, spec.period) / spec.period;
       return list[spec.index === 'floor' ? Math.floor(u * list.length) % list.length : frameIndexOf(e.keys[action], u)];
     },
@@ -78,5 +81,6 @@ export function createFrameCacheStore() {
       return { characters: out, totalFrames: frames, totalBytesRGBA: bytes };
     },
     pauses,
+    directions,
   };
 }

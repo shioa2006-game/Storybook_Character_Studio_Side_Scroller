@@ -60,14 +60,32 @@ export function footProj(dir, a, b, z) {
   return { x: (w.X - w.Y) * KX, y: (w.X + w.Y) * (DRAW.footGround ? KY_G() : KY) - z, d: w.X + w.Y };
 }
 
+/**
+ * 横スクロールの視点: 真横 (画面の右 = ワールド (1,−1)/√2) から手前 (ワールド (1,1)/√2) へ傾ける角度。
+ * 0 だと rf.front が偽になり、正面系・背面系の2種類しかない頭が後頭部になる。20〜30° で既存の絵のまま横向きに見える。
+ */
+export const SIDE_VIEW_ANGLE = 25 * Math.PI / 180;
+
+/** 横向き (sign = +1 右 / −1 左) の前ベクトル。左右反転ではなく投影で描くので、持ち手は体の左右のまま保たれる */
+const sideForward = sign => {
+  const c = Math.cos(SIDE_VIEW_ANGLE) * Math.SQRT1_2, n = Math.sin(SIDE_VIEW_ANGLE) * Math.SQRT1_2;
+  return [sign * c + n, -sign * c + n];
+};
+
 export const DIRS = {
   NW: { key: 'NW', arrow: '↖', name: '左上', axis: '−x', f: [-1, 0] },
   NE: { key: 'NE', arrow: '↗', name: '右上', axis: '−y', f: [0, -1] },
   SW: { key: 'SW', arrow: '↙', name: '左下', axis: '+y', f: [0, 1] },
   SE: { key: 'SE', arrow: '↘', name: '右下', axis: '+x', f: [1, 0] },
+  R: { key: 'R', arrow: '→', name: '右', axis: 'side+', f: sideForward(1) },
+  L: { key: 'L', arrow: '←', name: '左', axis: 'side−', f: sideForward(-1) },
 };
 
+/** アイソメの4方向 (8×8ダンジョンの Renderer が使う) */
 export const DIR_ORDER = ['NW', 'NE', 'SW', 'SE'];
+
+/** 横スクロールの左右2方向 (Studio・カタログの既定) */
+export const SIDE_DIR_ORDER = ['R', 'L'];
 
 export const ACTIONS = { idle: '待機', walk: '歩行', attack: '攻撃' };
 
@@ -203,3 +221,9 @@ export const WALK_STRIDE = 9;
  * ゲーム側は歩行の actionTime = 歩いた距離 (マス) × この値 にする。scale = キャラの表示倍率 (Renderer の characterScale)。
  */
 export const walkSecondsPerTile = scale => (TW / 2) / (WALK_STRIDE * KX * scale * (2 / Math.PI) * (TAU * WALK_HZ));
+/**
+ * 横向き (R / L) で足を滑らせないための「画面上を1px進む間に進めるアニメーション時間 (秒)」。
+ * 前方向 a の1px は画面の横 cos(SIDE_VIEW_ANGLE) px。接地した足は1周期に 4 × 歩幅 だけ後ろへ動く。
+ * ゲーム側は歩行の actionTime = 横に歩いた距離 (ワールド px) × この値 にする。
+ */
+export const sideWalkSecondsPerPixel = scale => 1 / (4 * WALK_STRIDE * WALK_HZ * Math.cos(SIDE_VIEW_ANGLE) * scale);

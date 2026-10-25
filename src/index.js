@@ -8,7 +8,7 @@
  *   - createRenderer          部屋とキャラクターを描く (ゲーム画面用)
  *   - createCharacterView     キャラクター1体を確認用に描く
  *   - キャラクター定義と登録   swordsman / archer / skeleton / BUILTIN_CHARACTERS / createCharacterRegistry / validateCharacter
- *   - 向き・動作の定数         DIRECTIONS / ACTIONS_LIST
+ *   - 向き・動作の定数         DIRECTIONS (アイソメ4方向) / SIDE_DIRECTIONS (横スクロール左右) / ACTIONS_LIST
  *   - 部屋                     ROOM_DEFAULTS / PROP_TYPES / normalizeRoom
  *   - 描画プリミティブ (新しい職業・小物を作るとき用) は ./authoring.js から
  */
@@ -20,16 +20,21 @@ export { archer, ARCHER_ATTACK_KEYS } from './characters/archer.js';
 export { skeleton } from './characters/skeleton.js';
 export { ROOM_DEFAULTS, normalizeRoom } from './dungeon/room.js';
 export { PROP_TYPES } from './dungeon/props.js';
-export { walkSecondsPerTile } from './characters/rig.js';
+export { walkSecondsPerTile, sideWalkSecondsPerPixel, SIDE_VIEW_ANGLE } from './characters/rig.js';
 export { PAL as PALETTE } from './core/palette.js';
 export { TW as TILE_WIDTH, TH as TILE_HEIGHT, ZH as HEIGHT_UNIT } from './core/geometry.js';
 
-/** 向き: 画面上の4方向 (ワールドの軸 ±x, ±y) */
+/** 向き: アイソメの4方向 (ワールドの軸 ±x, ±y)。8×8ダンジョンの移動に使う */
 export const DIRECTIONS = Object.freeze({
   NW: Object.freeze({ key: 'NW', axis: '-x', vector: Object.freeze([-1, 0]) }),
   NE: Object.freeze({ key: 'NE', axis: '-y', vector: Object.freeze([0, -1]) }),
   SW: Object.freeze({ key: 'SW', axis: '+y', vector: Object.freeze([0, 1]) }),
   SE: Object.freeze({ key: 'SE', axis: '+x', vector: Object.freeze([1, 0]) }),
+});
+/** 向き: 横スクロールの左右2方向 (sign = 画面の横の向き)。Studio・カタログの既定 */
+export const SIDE_DIRECTIONS = Object.freeze({
+  R: Object.freeze({ key: 'R', name: '右', sign: 1 }),
+  L: Object.freeze({ key: 'L', name: '左', sign: -1 }),
 });
 /** 動作: 人型キャラクターの共通の3動作 */
 export const ACTIONS_LIST = Object.freeze(['idle', 'walk', 'attack']);

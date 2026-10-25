@@ -241,4 +241,4 @@ export const character=Object.freeze({
 });
 export const studio=Object.freeze({name:'魔王',category:'モンスター族',
   description:'赤い宝石の鉄冠と暗い兜を戴く魔王。影の顔に赤い目が光り、右手の大剣で重い一撃を振り下ろします。',
-  preview:{direction:'SE',phase:0}});
+  preview:{direction:'R',phase:0}});

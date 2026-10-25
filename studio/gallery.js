@@ -8,7 +8,7 @@ export function mountGallery(root, catalog) {
       const canvas = target.target, entry = catalog[Number(canvas.dataset.index)], box = entry.definition.frameBox;
       const scale = Math.min(2.05, 300/(box.x1-box.x0), 276/(box.y1-box.y0)), start = performance.now();
       const view = createCharacterView({canvas,width:360,height:310,dpr:1,scale,characters:[entry.definition],lineBoil:false,footFix:true,lineScale:.85});
-      view.render({character:entry.id,direction:entry.preview.direction || 'SE',action:'idle',actionTime:entry.preview.phase*entry.definition.actions.idle.period,originX:180-(box.x0+box.x1)*scale/2,originY:155-(box.y0+box.y1)*scale/2,tile:false,background:'#ece8dd',projectile:false});
+      view.render({character:entry.id,direction:entry.preview.direction || 'R',action:'idle',actionTime:entry.preview.phase*entry.definition.actions.idle.period,originX:180-(box.x0+box.x1)*scale/2,originY:155-(box.y0+box.y1)*scale/2,tile:false,background:'#ece8dd',projectile:false});
       view.dispose();drawMs+=performance.now()-start;rendered++;observer.unobserve(canvas);
       root.querySelector('#gallery-metrics').textContent=`表示済み ${rendered} / ${catalog.length} 体・描画計 ${drawMs.toFixed(1)} ms。静止画のみ。アニメーションキャッシュ 0 枚。`;
     }

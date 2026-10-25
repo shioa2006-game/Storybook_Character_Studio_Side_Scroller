@@ -229,4 +229,4 @@ export const character=Object.freeze({
 });
 export const studio={name:'ゴブリン',category:'魔物',
   description:'大きな耳と小さな牙の、前かがみのゴブリン。粗末な革装備をまとい、左手の鋲付き棍棒を振り下ろします。',
-  preview:{direction:'SE',phase:0}};
+  preview:{direction:'R',phase:0}};

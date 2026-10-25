@@ -431,4 +431,4 @@ export const warrior=Object.freeze({
 });
 
 export { warrior as character };
-export const studio = Object.freeze({ name: '灰燼の衛士', category: '重装戦士', description: '銀の鎧と赤茶の羽飾り。大きな盾で仲間を守る、小さく頼もしい戦士。', preview: { direction: 'SE', phase: 0 } });
+export const studio = Object.freeze({ name: '灰燼の衛士', category: '重装戦士', description: '銀の鎧と赤茶の羽飾り。大きな盾で仲間を守る、小さく頼もしい戦士。', preview: { direction: 'R', phase: 0 } });

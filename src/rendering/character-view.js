@@ -10,7 +10,7 @@ import { seed } from '../core/random.js';
 import { TW, TH } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { strokePath } from '../core/ink.js';
-import { DIRS } from '../characters/rig.js';
+import { DIRS, SIDE_DIR_ORDER } from '../characters/rig.js';
 import { createCharacterRegistry, resolveAction, BUILTIN_CHARACTERS } from '../characters/registry.js';
 import { createFrameCacheStore, modT } from './cache.js';
 import { SHADOW_BOX, drawUnitShadow } from './effects.js';
@@ -26,6 +26,7 @@ import { defaultDpr } from './camera.js';
  * @param {boolean} [o.lineBoil=true] @param {boolean} [o.footFix=true]
  * @param {object[]} [o.characters] 登録するキャラクター定義 (既定: 組み込み)
  * @param {object} [o.registry] 既存の登録簿を共有する場合 (Renderer.listCharacters と同じ内容を見せたいとき)
+ * @param {string[]} [o.directions] Cached Frames で作る向き (既定: 横スクロールの左右 R / L)
  */
 export function createCharacterView(o = {}) {
   if (!o.canvas) throw new Error('Inkstone: createCharacterView({ canvas }) にキャンバスを渡してください');
@@ -33,8 +34,9 @@ export function createCharacterView(o = {}) {
   const st = {
     width: o.width ?? 400, height: o.height ?? 470, dpr: o.dpr ?? defaultDpr(), scale: o.scale ?? 2.9, mode: o.mode === 'cached' ? 'cached' : 'live',
     draw: { lw: o.lineScale ?? 0.72, boil: o.lineBoil ?? true, footGround: o.footFix ?? true, linearStance: o.footFix ?? true },
-    registry: o.registry || createCharacterRegistry(o.characters || BUILTIN_CHARACTERS), caches: createFrameCacheStore(),
+    registry: o.registry || createCharacterRegistry(o.characters || BUILTIN_CHARACTERS), directions: o.directions || SIDE_DIR_ORDER,
   };
+  st.caches = createFrameCacheStore(st.directions);
   const size = () => { canvas.width = st.width * st.dpr; canvas.height = st.height * st.dpr; canvas.style.width = st.width + 'px'; canvas.style.height = st.height + 'px'; };
   size();
   /** 射撃のあと飛んでいく矢 (確認画面用。ゲーム内と同じ速さ・向き。実験D・Eの drawPreviewArrow) */
@@ -65,10 +67,10 @@ export function createCharacterView(o = {}) {
      * 1体描く。(originX, originY) = 足元の論理座標 (既定: 中央下寄り)。
      * @returns 定義の draw が返す情報 (手・武器の位置など。Live のときだけ)
      */
-    render({ character, direction = 'SE', action = 'idle', actionTime = 0, originX, originY, tile = true, background = PAL.paper, clear = true, clip = null, projectile = true, projectileSpeed = 9 } = {}) {
+    render({ character, direction = st.directions[0], action = 'idle', actionTime = 0, originX, originY, tile = true, background = PAL.paper, clear = true, clip = null, projectile = true, projectileSpeed = 9 } = {}) {
       const def = st.registry.get(character), act = resolveAction(def, action), S = st.scale;
       const X = originX ?? st.width / 2, Y = originY ?? st.height - 78;
-      if (def.directional !== false && !DIRS[direction]) throw new Error(`Inkstone: direction は NW / NE / SW / SE (受け取った値: ${direction})`);
+      if (def.directional !== false && !DIRS[direction]) throw new Error(`Inkstone: direction は ${Object.keys(DIRS).join(' / ')} のどれか (受け取った値: ${direction})`);
       return isolateDrawing(st.draw, () => {
         seed('inkstone-view');
         g.save();

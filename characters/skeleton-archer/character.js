@@ -190,4 +190,4 @@ export const character=Object.freeze({
 });
 export const studio=Object.freeze({name:'骸骨弓兵',category:'モンスター族',
   description:'象牙色の骨に茶色の革装備をまとった骸骨の射手。左手の木弓に右手で矢をつがえ、前方へ一射します。',
-  preview:{direction:'SE',phase:0}});
+  preview:{direction:'R',phase:0}});

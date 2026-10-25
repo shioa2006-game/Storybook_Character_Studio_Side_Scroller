@@ -17,7 +17,7 @@ import { iso, TW } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
 import { torchCup, drawFlame } from '../dungeon/architecture.js';
 import { normalizeRoom } from '../dungeon/room.js';
-import { DIRS, walkSecondsPerTile } from '../characters/rig.js';
+import { DIRS, DIR_ORDER, walkSecondsPerTile } from '../characters/rig.js';
 import { createCharacterRegistry, resolveAction, BUILTIN_CHARACTERS } from '../characters/registry.js';
 import { createCamera, defaultDpr, fitCameraToRoom, camTransform, devX, devY, worldToScreen, screenToWorld } from './camera.js';
 import { depthSort, unitFootprint } from './depth-sort.js';
@@ -41,6 +41,7 @@ const MODES = ['live', 'cached'];
  * @param {boolean} [o.footFix=true] 足の接地補正 (滑り防止)
  * @param {boolean} [o.xray=true] 柱の陰のキャラを半透明で重ねる
  * @param {object[]} [o.characters] 最初に登録するキャラクター定義 (既定: 剣士・弓使い・骸骨)
+ * @param {string[]} [o.directions] Cached Frames で作る向き (既定: アイソメ4方向)
  * @param {object} [o.room] 最初の部屋 (setRoom と同じ)
  */
 export function createRenderer(o = {}) {
@@ -54,7 +55,7 @@ export function createRenderer(o = {}) {
     xray: o.xray ?? true,
     room: null, scene: null, cameraFit: { margin: 26, maxScale: 1.1 },
     registry: createCharacterRegistry(o.characters || BUILTIN_CHARACTERS),
-    caches: createFrameCacheStore(), ghostBuf: null, disposed: false,
+    caches: createFrameCacheStore(o.directions || DIR_ORDER), ghostBuf: null, disposed: false,
     last: { totalMs: 0, characterMs: 0, order: [], occluded: [], warnings: [] },
   };
   const k = () => st.characterScale * cam.s * cam.dpr;   // キャラのコマ・影の倍率 (実験C〜Eの HERO_SCALE * cam.s * DPR と同じ計算順)
@@ -130,7 +131,7 @@ export function createRenderer(o = {}) {
     };
   }
   function checkUnit(u, def) {
-    if (def.directional !== false && !DIRS[u.direction]) throw new Error(`Inkstone: unit "${u.id}" の direction は NW / NE / SW / SE のどれかにしてください (受け取った値: ${u.direction})`);
+    if (def.directional !== false && !DIRS[u.direction]) throw new Error(`Inkstone: unit "${u.id}" の direction は ${Object.keys(DIRS).join(' / ')} のどれかにしてください (受け取った値: ${u.direction})`);
     if (!(Number.isFinite(u.x) && Number.isFinite(u.y))) throw new Error(`Inkstone: unit "${u.id}" の x, y (床上のワールド座標) が数値ではありません`);
   }
 

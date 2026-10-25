@@ -206,4 +206,4 @@ export const character=Object.freeze({
 });
 export const studio=Object.freeze({name:'暗黒魔法使い',category:'モンスター族',
   description:'深紫のフードの影に琥珀色の目が光る魔法使い。左手の紫水晶の木杖と、右手の髑髏印の魔法書で詠唱します。',
-  preview:{direction:'SE',phase:0}});
+  preview:{direction:'R',phase:0}});

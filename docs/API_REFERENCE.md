@@ -17,10 +17,13 @@ import { createRenderer, createCharacterView, /* … */ } from './src/index.js';
 | `ARCHER_ATTACK_KEYS` | 配列 | 弓使いの射撃のコマ割り (20コマ、離れ 0.75 を含む) |
 | `frameKeysOf(actionSpec)` | 関数 | 動作のコマ割り (各コマの開始位相) |
 | `walkSecondsPerTile(scale)` | 関数 | 1マス歩く間に進めるアニメ時間 (秒)。足を滑らせないため |
+| `sideWalkSecondsPerPixel(scale)` | 関数 | 横向き (R / L) で画面上を1px歩く間に進めるアニメ時間 (秒)。横スクロール用 |
+| `SIDE_VIEW_ANGLE` | 定数 | 横向きの視点の角度 (真横から手前へ 25°、ラジアン) |
 | `normalizeRoom(roomData)` | 関数 | 部屋データを内部形式へ (検査を含む。通常は直接使わない) |
 | `ROOM_DEFAULTS` | 定数 | 部屋データの既定値 |
 | `PROP_TYPES` | 表 | 小物の種類 (描画関数・既定の寸法・高さ・表示名) |
-| `DIRECTIONS` / `ACTIONS_LIST` | 定数 | 向き (NW/NE/SW/SE とワールドの軸) / 人型の動作 (idle/walk/attack) |
+| `DIRECTIONS` / `ACTIONS_LIST` | 定数 | アイソメの向き (NW/NE/SW/SE とワールドの軸。8×8ダンジョン用) / 人型の動作 (idle/walk/attack) |
+| `SIDE_DIRECTIONS` | 定数 | 横スクロールの向き `R` (右) / `L` (左) と画面の横の向き `sign`。Studio・カタログの既定 |
 | `PALETTE` | 定数 | 色 (床の表示の色 `tileAlly` / `tileEnemy` など) |
 | `TILE_WIDTH` / `TILE_HEIGHT` / `HEIGHT_UNIT` | 定数 | 1マスの画面上の幅 150px・高さ 84px、高さ1 = 66px |
 | `VERSION` | 文字列 | ライブラリの版 |
@@ -42,6 +45,7 @@ const renderer = createRenderer({
   footFix: true,        // 足の接地補正 (滑り防止)
   xray: true,           // 柱などの陰のキャラを半透明で重ねる
   characters: [...],    // 最初に登録するキャラクター定義 (既定: 剣士・弓使い・骸骨)
+  directions: [...],    // Cached Frames で作る向き (既定: ['NW', 'NE', 'SW', 'SE'])
   room: { ... },        // 最初の部屋 (setRoom と同じ)
 });
 renderer.dispose();     // キャッシュと背景の画像を解放。以後の呼び出しはエラー
@@ -200,12 +204,14 @@ registry.register(def); registry.get(id); registry.list(); registry.has(id); reg
 ## 7. CharacterView (キャラクター1体の確認用)
 
 ```js
-const view = createCharacterView({ canvas, width: 420, height: 470, scale: 2.9, mode: 'live', lineScale: 0.72, registry });
-view.render({ character: 'archer', direction: 'SW', action: 'attack', actionTime: 1.2,
+const view = createCharacterView({ canvas, width: 420, height: 470, scale: 2.9, mode: 'live', lineScale: 0.72, registry, directions: ['R', 'L'] });
+view.render({ character: 'archer', direction: 'R', action: 'attack', actionTime: 1.2,
               originX, originY, tile: true, clear: true, clip: { x, y, w, h }, projectile: true });
 view.setMode('cached'); view.setScale(1.5); view.setOptions({ lineBoil, footFix, lineScale }); view.resize(w, h, dpr);
 view.getDiagnostics(); view.disposeCaches(); view.dispose();
 ```
+
+`directions` は Cached Frames で作る向きです (既定: 横スクロールの `['R', 'L']`)。Live はどの向きでも描けますが、Cached は作った向きだけです。`direction` の既定は `directions` の先頭です。
 
 `render` は Live のとき定義の `draw` が返す情報 (手・武器の位置など) を返します。`clip` と `clear: true` を組み合わせると、1枚のキャンバスに一覧を並べられます。
 

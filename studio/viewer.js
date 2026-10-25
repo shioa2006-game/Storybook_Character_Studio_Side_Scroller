@@ -1,5 +1,5 @@
 import { createCharacterView } from '../src/index.js';
-const directionLabels={NW:'左上 NW',NE:'右上 NE',SW:'左下 SW',SE:'右下 SE'};
+const directionLabels={R:'右向き R',L:'左向き L'};
 const actionLabels={idle:'待機',walk:'歩行',attack:'攻撃'};
 const labelAction=a=>actionLabels[a]||a;
 const button=(text,data,value)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.dataset[data]=value;b.setAttribute('aria-pressed','false');return b;};
@@ -11,9 +11,9 @@ export function mountViewer(root,entry) {
   <div class="mode-row"><fieldset><legend>表示サイズ</legend><div class="button-row" id="sizes"></div></fieldset><fieldset><legend>描画方式</legend><div class="button-row" id="modes"></div></fieldset></div></div>
   <div class="controls"><fieldset id="direction-field"><legend>向き</legend><div class="button-row" id="directions"></div></fieldset><fieldset><legend>動作</legend><div class="button-row" id="actions"></div></fieldset></div>
   <p id="capability-note" class="notice" hidden></p><p id="busy" role="status" aria-live="polite"></p>
-  <div class="extra-actions"><button id="show-directions">全方向を見る</button><button id="show-all">全方向・全動作を見る</button><a id="demo-link" class="button" hidden>ダンジョンで見る</a></div>
+  <div class="extra-actions"><button id="show-directions">左右を見る</button><button id="show-all">左右・全動作を見る</button><a id="demo-link" class="button" hidden>ダンジョンで見る</a></div>
   <section class="sheet-section" id="sheet" hidden><div class="sheet-controls"><h2 id="sheet-title"></h2><button id="close-sheet">一覧を閉じる</button></div><p>上の再生・位相・描画方式と連動します。</p><div class="sheet-grid"></div></section>
-  <details id="technical"><summary>開発者向け情報・ゲームへの持ち出し</summary><p>RGBA理論容量は画像の幅×高さ×4です。ブラウザーやGPUの実メモリ使用量ではありません。</p><p>Cached Framesは選択した1体の全方向・全動作を初回に生成します。大きな表示ほど容量が増えます。</p><pre id="export-command"></pre><a href="./docs/EXPORT_GUIDE.md">持ち出し手順を読む</a><pre id="diagnostics"></pre></details>`;
+  <details id="technical"><summary>開発者向け情報・ゲームへの持ち出し</summary><p>RGBA理論容量は画像の幅×高さ×4です。ブラウザーやGPUの実メモリ使用量ではありません。</p><p>Cached Framesは選択した1体の左右・全動作を初回に生成します。大きな表示ほど容量が増えます。</p><pre id="export-command"></pre><a href="./docs/EXPORT_GUIDE.md">持ち出し手順を読む</a><pre id="diagnostics"></pre></details>`;
   const $=id=>root.querySelector('#'+id),def=entry.definition;
   // Keep direction/action choices beside the artwork on wide screens; stack
   // without shrinking text when the viewport or browser zoom reduces space.
@@ -22,7 +22,7 @@ export function mountViewer(root,entry) {
   $('export-command').textContent=`node tools/export-game.mjs --characters ${entry.id}`;
   $('demo-link').href=`./game/index.html?character=${encodeURIComponent(entry.id)}`;
   $('demo-link').hidden=false;
-  const state={direction:entry.preview.direction||'SE',action:'idle',phase:entry.preview.phase,playing:!matchMedia('(prefers-reduced-motion: reduce)').matches,speed:1,mode:'live',size:'large'};
+  const state={direction:entry.preview.direction||'R',action:'idle',phase:entry.preview.phase,playing:!matchMedia('(prefers-reduced-motion: reduce)').matches,speed:1,mode:'live',size:'large'};
   const view=createCharacterView({canvas:$('hero'),width:700,height:440,dpr:1,characters:[def],lineBoil:true,footFix:true,lineScale:.82});
   let sheetView=null,sheetCells=[],sheetType='',disposed=false,dirty=true,last=null,raf=0,modeToken=0,resizeTimer,scale=1,width=700,height=440,sheetViewCanvas;
   for(const d of entry.directions)$('directions').append(button(directionLabels[d],'direction',d));
@@ -40,9 +40,9 @@ export function mountViewer(root,entry) {
     dirty=false;
   }
   function closeSheet(){sheetView?.dispose();sheetView=null;sheetViewCanvas=null;sheetCells.forEach(c=>{c.canvas.width=0;c.canvas.height=0;});sheetCells=[];$('sheet').hidden=true;$('sheet').querySelector('.sheet-grid').replaceChildren();sheetType='';}
-  function openSheet(type){closeSheet();sheetType=type;$('sheet').hidden=false;$('sheet-title').textContent=type==='all'?'全方向・全動作':'全方向';const b=def.frameBox;
+  function openSheet(type){closeSheet();sheetType=type;$('sheet').hidden=false;$('sheet-title').textContent=type==='all'?'左右・全動作':'左右';const b=def.frameBox;
     sheetViewCanvas=document.createElement('canvas');sheetView=createCharacterView({canvas:sheetViewCanvas,width:280,height:290,dpr:1,scale:Math.min(1.65,250/(b.x1-b.x0),252/(b.y1-b.y0)),characters:[def],mode:state.mode,lineBoil:true,footFix:true,lineScale:.9});
-    for(const action of(type==='all'?entry.actions:[state.action]))for(const direction of(entry.directions.length?entry.directions:['SE'])){const fig=document.createElement('figure');fig.className='sheet-cell';const cap=document.createElement('figcaption');cap.textContent=`${directionLabels[direction]} / ${labelAction(action)}`;const canvas=document.createElement('canvas');canvas.width=280;canvas.height=290;fig.append(cap,canvas);$('sheet').querySelector('.sheet-grid').append(fig);sheetCells.push({canvas,action,direction});}
+    for(const action of(type==='all'?entry.actions:[state.action]))for(const direction of(entry.directions.length?entry.directions:['R'])){const fig=document.createElement('figure');fig.className='sheet-cell';const cap=document.createElement('figcaption');cap.textContent=`${directionLabels[direction]} / ${labelAction(action)}`;const canvas=document.createElement('canvas');canvas.width=280;canvas.height=290;fig.append(cap,canvas);$('sheet').querySelector('.sheet-grid').append(fig);sheetCells.push({canvas,action,direction});}
     dirty=true;$('sheet').scrollIntoView({block:'start',behavior:'instant'});
   }
   root.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{state.direction=b.dataset.direction;dirty=true;selected();});

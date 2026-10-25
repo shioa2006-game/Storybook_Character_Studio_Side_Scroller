@@ -227,4 +227,4 @@ export const character=Object.freeze({
 });
 export const studio=Object.freeze({ name:'王',category:'人間・王族',
   description:'金の王冠と銀の鎧、落ち着いた赤いマントをまとった王。右手の剣で前方を一度斬ります。',
-  preview:{direction:'SE',phase:0} });
+  preview:{direction:'R',phase:0} });

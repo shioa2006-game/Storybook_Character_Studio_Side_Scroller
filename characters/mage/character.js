@@ -205,4 +205,4 @@ export const character=Object.freeze({
 });
 export const studio={name:'魔法使い',category:'冒険者',
   description:'白髪と青灰色のとんがり帽子の魔法使い。左手の水晶杖と右手の魔導書で、小さな青い光を灯します。',
-  preview:{direction:'SE',phase:0}};
+  preview:{direction:'R',phase:0}};

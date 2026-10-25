@@ -108,5 +108,5 @@ export const character = Object.freeze({
 export const studio = {
   name:'スライム',category:'魔物',
   description:'淡い青色の、やわらかな小さなスライム。丸い体を縮めて跳ね、体当たりで攻撃します。',
-  preview:{direction:'SE',phase:0},
+  preview:{direction:'R',phase:0},
 };

@@ -93,7 +93,7 @@ export async function runBrowserChecks({ onProgress = () => {}, galleries = {} }
     const box = warrior.frameBox, margin = 80;
     const width = Math.ceil(box.x1 - box.x0 + margin * 2), height = Math.ceil(box.y1 - box.y0 + margin * 2);
     const originX = margin - box.x0, originY = margin - box.y0, canvas = canvasOf(width, height);
-    view = createCharacterView({ canvas, width, height, dpr: 1, scale: 1, lineScale: 1, lineBoil: true, footFix: true, registry });
+    view = createCharacterView({ canvas, width, height, dpr: 1, scale: 1, lineScale: 1, lineBoil: true, footFix: true, registry, directions: DIRECTIONS });
     const liveRows = [], clipping = [], union = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
     const boneReferences = {}, armLengthErrors = [], anatomyErrors = [];
     let maxBoneDeviation = 0;

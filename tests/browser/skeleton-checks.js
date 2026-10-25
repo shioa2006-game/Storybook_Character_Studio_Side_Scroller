@@ -38,7 +38,7 @@ $('skeleton-run').onclick=async()=>{
  const r={generatedAt:new Date().toISOString(),scales:[1.25,2.2],directions:dirs,actions:Object.keys(skeleton.actions),comparisons:0,clipSamples:0,errors:[],bounds:{},cacheFrames:0};
  const check=(ok,message)=>{if(!ok)r.errors.push(message);};
  try{isolateDrawing(draw,()=>{
-  artwork();const entry=catalog.find(c=>c.id==='skeleton');check(catalog.filter(c=>c.id==='skeleton').length===1,'duplicate skeleton');check(entry.directions.join()===dirs.join(),'catalog directions');
+  artwork();const entry=catalog.find(c=>c.id==='skeleton');check(catalog.filter(c=>c.id==='skeleton').length===1,'duplicate skeleton');check(entry.directions.join()==='R,L','catalog directions');
   for(const scale of r.scales){const store=createFrameCacheStore(),e=store.get(skeleton,scale,draw);check(e.count===216,'expected 216 frames');r.cacheFrames=e.count;
    for(const direction of dirs){
     for(let i=0;i<16;i++){
