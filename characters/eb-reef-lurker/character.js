@@ -78,7 +78,8 @@ export function drawLurker(ctx, x, y, direction, action, t, scale = 1, opts = {}
   parts.push({ id: 'body', d: 0, draw: () => {
     const top = -74 - b - ly, Y = py => py - ly;
     // Underside and the face beneath the front of the rim: angry eyes, a toothy plate mouth.
-    blob(ctx, f, [[-44 + sx, Y(-30)], [48 + sx, Y(-32)], [60 + sx, Y(-30)], [54 + sx, Y(-16)], [30 + sx, Y(-12)], [-24 + sx, Y(-12)], [-48 + sx, Y(-18)]], C.under, { w: 1.6, depth: 1.6 });
+    // (Its top edge runs up under the shell, so no gap opens between the rim and the body.)
+    blob(ctx, f, [[-58 + sx, Y(-40)], [-30 + sx, Y(-52)], [10 + sx, Y(-56)], [46 + sx, Y(-50)], [60 + sx, Y(-36)], [54 + sx, Y(-16)], [30 + sx, Y(-12)], [-24 + sx, Y(-12)], [-50 + sx, Y(-20)]], C.under, { w: 1.6, depth: 1.6 });
     blob(ctx, f, [[40 + sx, Y(-40)], [62 + sx, Y(-40)], [66 + sx, Y(-26)], [56 + sx, Y(-17)], [42 + sx, Y(-20)]], '#7d9c88', { w: 1.4, depth: 1 });
     for (const ex of [48, 60]) disc(ctx, f, ex + sx, Y(-33), 2.6, 3.6, C.ink, { w: .5, depth: 0, speck: 0 });
     line(ctx, f, [[43 + sx, Y(-40)], [49 + sx, Y(-37)], [53 + sx, Y(-37)]], 1.3);

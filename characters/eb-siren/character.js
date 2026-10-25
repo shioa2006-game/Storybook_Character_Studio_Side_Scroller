@@ -95,10 +95,10 @@ export function drawSiren(ctx, x, y, direction, action, t, scale = 1, opts = {})
     else disc(ctx, f, m[0], m[1], 1.2 + P.sing, 1.4 + P.sing * 1.2, '#7a3b38', { w: .7, depth: 0, speck: 0 });
   } });
   parts.push({ id: 'nearArm', d: 8, draw: () => arm(ctx, f, U([6, -64]), U(P.near[0]), U(P.near[1]), C.skin, { hand: 3.6, splay: P.splay }) });
-  parts.push({ id: 'hairFront', d: 9, draw: () => {
-    // A strand falling over the near shoulder.
+  parts.push({ id: 'hairFront', d: 4.5, draw: () => {
+    // A strand falling from behind the ear, under the shell ornament, down over the back of the shoulder.
     const sw = P.sway;
-    blob(ctx, f, [[10, -98], [14, -88], [12, -76], [16 + sw, -66], [12 + sw, -58], [10 + sw, -64], [8, -74], [9, -86]].map(U), C.hair, { w: 1.4, depth: 1, speck: .5 });
+    blob(ctx, f, [[-13, -96], [-8, -88], [-9, -76], [-5 + sw, -64], [-8 + sw, -54], [-11 + sw, -60], [-15, -72], [-16, -86]].map(U), C.hair, { w: 1.4, depth: 1, speck: .5 });
   } });
   parts.push({ id: 'magic', d: 12, draw: () => {
     if (P.ball >= 0) {

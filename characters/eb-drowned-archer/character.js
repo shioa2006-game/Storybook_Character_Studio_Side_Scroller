@@ -1,10 +1,11 @@
 /**
  * EMBERBOUND EXPEDITION — Drowned Archer (game id `drowned_archer`), the skeleton archer after the user's
- * reference image: an angry bare skull, a torn teal capelet with a bronze brooch and a ragged teal skirt,
- * seaweed hanging from the cloth and the bow, and the same leather belt, wraps, quiver and bow.
+ * reference image: an angry bare skull with a little red coral growing on top, a ragged teal skirt, seaweed
+ * hanging from the cloth and the bow, and the same leather belt, wraps, quiver and bow.
  * Actions (plan/EMBERBOUND_PRODUCTION.md): the game launches the arrow when the attack starts, so the attack
  * plays the end of the archer's shot (full draw → release at about 0.03 s → lower); the shared hurt.
- * Left holds the bow; right handles the string and arrow.
+ * Unlike the skeleton archer, the RIGHT hand holds the bow and the LEFT draws: the archer's pose is mirrored
+ * across the body (b → −b) in drownedPose, and the arms are swapped in the drawing.
  */
 import {
   LW, LAYER, DRAW, PAL, KX, rigFrame, renderRig, bodyToWorld, chestToLegs,
@@ -17,12 +18,11 @@ import {
   ARROW_LEN, archerPose, bowCantSign, bowGeometry, drawArrowShape,
 } from '../../src/characters/archer-pose.js';
 import { drawBow, drawQuiver, bandAcross, polyStroke } from '../../src/characters/archer-parts.js';
-import { archerReleaseInfo } from '../../src/characters/archer.js';
 import { hurtAction, phase, hurtAmount, fallTilt, withTilt } from '../shared/emberbound/actions.js';
 
 const C={bone:'#f5e7cd',hollow:'#29241d',
   leather:'#88603f',dark:'#60442f',gold:'#bc9861',
-  cloth:'#4f9a98',clothDark:'#356f70',weed:'#5f7a45',bronze:'#b07a3c'};
+  cloth:'#4f9a98',clothDark:'#356f70',weed:'#5f7a45',coral:'#d9573f'};
 // Game timing: the archer's 1.7 s shot from full draw (SHOT_FROM of the way in), squeezed into 0.3 s.
 export const DROWNED_ATTACK_T=.3;
 const SHOT_FROM=.72;
@@ -54,8 +54,21 @@ export function drownedPose(action,t) {
   } else {
     P=archerPose('idle',t);P.body[2]*=.45;P.quiverSway*=.5;
   }
-  P.footL[1]=9;P.footR[1]=-9;
+  // Mirror across the body so the right hand holds the bow: every sideways (b) component changes sign, the
+  // aim twist turns the right shoulder to the target, and the forward foot swaps.
+  const nb=v=>[v[0],-v[1],v[2]];
+  P.grip=nb(P.grip);P.rHand=nb(P.rHand);P.elbowL=nb(P.elbowL);P.elbowR=nb(P.elbowR);
+  P.bowUp=nb(P.bowUp);P.bowFwd=nb(P.bowFwd);P.body=nb(P.body);P.yaw=-P.yaw;
+  if(P.arrow?.dir)P.arrow={...P.arrow,dir:nb(P.arrow.dir)};
+  const fl=P.footL,fr=P.footR;P.footL=[fr[0],9,fr[2]];P.footR=[fl[0],-9,fl[2]];
   return P;
+}
+
+/** Where the game's arrow starts (the nock at the release), for the mirrored pose. */
+export function drownedReleaseInfo(dirKey) {
+  const P=drownedPose('attack',RELEASE_FRAME*DROWNED_ATTACK_T-1e-4),rf=rigFrame(dirKey,[0,0,0],0);
+  const w=bodyToWorld(rf.dir,...chestToLegs(rf.dir.turn,P.rHand[0]+P.body[0],P.rHand[1]+P.body[1]));
+  return {nock:{x:(w.X-w.Y)*KX,y:(w.X+w.Y)*groundDirScreen(1,0).y-(P.rHand[2]+P.body[2])},f:rf.dir.f};
 }
 
 /** A strand of seaweed hanging from p, swaying a little. */
@@ -86,6 +99,14 @@ function skull(ctx,rf) {
   cLine(ctx,[[-20,7],[-15,8],[-14,11],[-9,12]],.75);
   cLine(ctx,[[-10,-22],[-12,-17],[-8,-13],[-10,-9]],.65);
   cLine(ctx,[[-12,-17],[-16,-16]],.5);
+  // A little red coral growing on the crown (as on the Reef Lurker's shell).
+  const coral=(pts,w)=>{for(let i=0;i<pts.length-1;i++){const [ax,ay]=pts[i],[bx,by]=pts[i+1];
+    paint(ctx,taperPts({x:ax,y:ay},{x:bx,y:by},w*(1-i*.18),w*(1-(i+1)*.18)),{fill:C.coral,w:1.2,depth:.8,speck:.4,speckScale:.3,amp:.15});}};
+  ctx.save();ctx.translate(3,-24);ctx.scale(.68,.68);ctx.translate(-3,24);   // kept small, rooted on the crown
+  coral([[0,-24],[-1,-33],[2,-40],[0,-46]],2.6);coral([[-1,-32],[-7,-36],[-8,-42]],1.8);
+  coral([[1,-39],[6,-43]],1.4);coral([[6,-23],[11,-29],[11,-35]],1.9);
+  for(const [x,y] of [[0,-46],[-8,-42],[6,-43],[11,-35]])oval(ctx,x,y,1.4,1.4,C.coral,{w:.9,depth:0,speck:0});
+  ctx.restore();
   ctx.restore();
 }
 
@@ -109,14 +130,6 @@ function torso(ctx,rf) {
     {fill:C.cloth,w:1.6,depth:1.4,speck:.7,amp:.25});
   paint(ctx,Q([[2,-10,24],[2,8,24],[2,6,18],[2,-8,18]]),{fill:C.clothDark,w:0,depth:0,speck:.4,amp:.2});
   for(const [b,z,len] of [[11,14,9],[-4,12,11]])weed(ctx,U(2,b,z),len,1.5);
-  // Torn capelet over the shoulders, pinned with a bronze brooch.
-  paint(ctx,Q([[a,-17,50],[a,17,50],[a,19,40],[a,14,42],[a,12,35],[a,7,39],[a,3,33],[a,-2,38],
-    [a,-6,33],[a,-10,38],[a,-14,34],[a,-19,39]]),{fill:C.cloth,w:1.6,depth:1.4,speck:.8,amp:.28});
-  for(const [b,z] of [[8,43],[-12,42]]){const p=U(a,b,z);oval(ctx,p.x,p.y,1.3,1,C.hollow,{w:.5,depth:0,speck:0});}
-  cLine(ctx,Q([[a,10,48],[a,8,40]]).map(xy),.55);cLine(ctx,Q([[a,-8,48],[a,-5,39]]).map(xy),.55);
-  for(const [b,z,len] of [[14,41,10],[-15,38,8]])weed(ctx,U(a,b,z),len,-1);
-  const br=U(a+.5,0,46);oval(ctx,br.x,br.y,3.4,3.4,C.bronze,{w:1,depth:.6,speck:.2});
-  oval(ctx,br.x,br.y,1.4,1.4,C.dark,{w:0,depth:0,speck:0});
   paint(ctx,Q([[a,-14,30],[a,14,30],[a,14,26],[a,-14,26]]),
     {fill:C.dark,w:1.2,depth:.6,speck:.3,amp:.2});
   const p=U(10,0,28);
@@ -155,14 +168,16 @@ export function drawDrownedArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const UG=(a,b,z)=>{const w=bodyToWorld(rf.dir,...chestToLegs(rf.turn,a+P.body[0],b+P.body[1]));
     return {x:(w.X-w.Y)*KX,y:(w.X+w.Y)*groundY-z-P.body[2],d:w.X+w.Y};};
   const key=p=>bodyLayerKey(rf,...p);
-  P.bowUp=nrm3([P.bowUp[0],P.bowUp[1]+bowCantSign(direction)*(.12+.62*P.yaw/AIM_YAW),P.bowUp[2]]);
+  // The bow's cant away from the head, mirrored: the skeleton archer facing the other way, with b reversed.
+  P.bowUp=nrm3([P.bowUp[0],P.bowUp[1]-bowCantSign(direction==='R'?'L':'R')*(.12+.62*-P.yaw/AIM_YAW),P.bowUp[2]]);
   const geo=bowGeometry(P),parts=legs(ctx,rf,P);
   const joints=Object.fromEntries(['L','R'].map(side=>{
-    const a=yawToBody(rf,0,side==='L'?14:-14),S=[...a,47],H=side==='L'?P.grip:P.rHand;
+    // 'L' is the bow arm and 'R' the drawing arm, as in the skeleton archer; the bow arm is now the right shoulder (b −14).
+    const a=yawToBody(rf,0,side==='L'?-14:14),S=[...a,47],H=side==='L'?P.grip:P.rHand;
     return [side,{S,H,E:ik2(S,H,13.5,13.5,side==='L'?P.elbowL:P.elbowR)}];
   }));
-  // Facing left the bow hand is near.
-  const nearBow=direction==='L'&&geo.nocked;
+  // Facing right the bow hand (now the right) is near.
+  const nearBow=direction==='R'&&geo.nocked;
   const nockedDepth=Math.min(key(joints.L.E),key(geo.G)-.02)-.04;
   const armDepth=(side,d)=>nearBow&&side==='R'?Math.min(d,nockedDepth-.02):d;
   parts.push({id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf)});
@@ -185,7 +200,7 @@ export function drawDrownedArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
     }
     const d=side==='R'&&nearBow?nockedDepth+.01:key(handKey);
     parts.push({id:'hand'+side,d,draw:()=>{
-      mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.5,C.bone,{thumbSide:side==='L'?-rf.sx:rf.sx});
+      mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.5,C.bone,{thumbSide:side==='L'?rf.sx:-rf.sx});
       cLine(ctx,[[h.x-1.5,h.y],[h.x+1.5,h.y+.3]],.55);
     }});
   }
@@ -223,7 +238,7 @@ export const character=Object.freeze({
   frameBox:{x0:-86,x1:86,y0:-126,y1:28},
   equipment:{leftHand:'bow',rightHand:'string',back:'quiver'},
   emberbound:{gameId:'drowned_archer',heightPx:25,facing:'L'},
-  projectile:{type:'arrow',releaseAt:DROWNED_RELEASE_U,origin:archerReleaseInfo,draw:drawArrowShape,length:ARROW_LEN},
+  projectile:{type:'arrow',releaseAt:DROWNED_RELEASE_U,origin:drownedReleaseInfo,draw:drawArrowShape,length:ARROW_LEN},
 });
 export const studio=Object.freeze({order:14,name:"Drowned Archer（溺れた弓兵）",category:"EMBERBOUND 第2エリア",
   description:"青緑のぼろ布と海藻をまとった骸骨の弓兵。後衛を狙う遠距離の敵。",

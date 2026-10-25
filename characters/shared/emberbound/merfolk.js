@@ -3,7 +3,7 @@
  * Matriarch's serpent coils). Same local frame as creature.js: facing right, ground at y = 0, every point
  * mirrored by f.
  */
-import { paint, taperPts, PAL } from '../../../src/authoring.js';
+import { paint, taperPts, strokePath, DRAW, PAL } from '../../../src/authoring.js';
 import { blob, disc, line, pts } from './creature.js';
 
 /** Catmull-Rom points through `list` (n steps per span), carrying `widths` along. */
@@ -36,8 +36,16 @@ export function tube(ctx, f, spine, widths, o = {}) {
     const s = o.bellySide ?? 1, k = 1 - 2 * (o.belly ?? .45);
     B.push([p[0] + n[0] * w * s * k, p[1] + n[1] * w * s * k]);
   }
-  blob(ctx, f, [...L, ...R.reverse()], o.fill, { w: o.w ?? 2, depth: o.depth ?? 3, light: .2, speck: 1.4, amp: .2 });
-  R.reverse();
+  // `openEnds` ('start' | 'end' | 'both') leaves the cut end(s) without an ink line, so a piece that continues
+  // under another piece of the same body joins it without a seam.
+  const open = o.openEnds, w = o.w ?? 2;
+  blob(ctx, f, [...L, ...R.slice().reverse()], o.fill, { w: open ? 0 : w, depth: o.depth ?? 3, light: .2, speck: 1.4, amp: .2 });
+  if (open) {
+    const ink = list => strokePath(ctx, pts(f, list).map(([x, y]) => ({ x, y })), w * DRAW.lw, false);
+    if (open === 'both') { ink(L); ink(R); }
+    else if (open === 'start') ink([...L, ...R.slice().reverse()]);
+    else ink([...L.slice().reverse(), ...R]);
+  }
   if (o.bellyFill) {
     const edge = (o.bellySide ?? 1) > 0 ? L : R;
     blob(ctx, f, [...edge, ...B.slice().reverse()], o.bellyFill, { w: 0, depth: .8, speck: .6, amp: .15 });
