@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>EMBERBOUND 段階0 表示試作</title>
+<style>
+body{font:16px/1.5 system-ui;margin:16px;background:#f3eee3;color:#282e27}
+h1{font-size:22px;margin:0 0 4px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:10px 0}
+label{white-space:nowrap}select,button,input[type=file]{font:inherit;min-height:36px}
+.stage{overflow:auto;max-width:100%;border:1px solid #60705d;background:#222}
+canvas{display:block}
+table{border-collapse:collapse;font-size:14px;margin-top:12px}td,th{border:1px solid #bbb;padding:3px 7px;text-align:right}td:first-child,th:first-child,td:nth-child(2){text-align:left}
+.note{font-size:14px;color:#555;max-width:980px}
+</style></head>
+<body>
+<h1>EMBERBOUND 段階0 — 戦闘サイズでの表示試作</h1>
+<p class="note">ゲームの戦闘画面 (400×180、地面 y=150) と同じ並び・同じ高さに、今の Studio のキャラクターを仮の役として置きます。
+「表示の倍率」はゲーム画面1ピクセルが何デバイス画素になるか。「描き方」でキャラクターを高解像度の層に描くか、400×180 の画像に描いてから拡大するかを比べます。
+背景はゲームの <code>docs/art/bg_*.png</code> を選ぶと表示できます。URL 例: <code>?k=4&amp;mode=hires&amp;scene=normal</code></p>
+<div class="controls">
+  <label>場面 <select id="scene"><option value="normal">通常編成</option><option value="boss">ボス</option></select></label>
+  <label>表示の倍率 <select id="k"><option>2</option><option>3</option><option selected>4</option><option>5</option></select></label>
+  <label>描き方 <select id="mode"><option value="hires">高解像度の層に描く</option><option value="pixel">400×180 に描いて拡大</option></select></label>
+  <label>線の太さ <select id="line"><option value="1">Studio のまま</option><option value="auto" selected>自動 (縮んだ分を補う)</option><option value="1.5">1.5倍</option><option value="2">2倍</option></select></label>
+  <label>動作 <select id="act"><option value="cycle">待機と攻撃 (ゲームのように)</option><option value="idle">待機</option><option value="walk">歩行</option><option value="attack">攻撃をくり返す</option><option value="cast">詠唱・スキル</option><option value="hurt">被弾</option><option value="dead">戦闘不能</option></select></label>
+  <label>攻撃の長さ <select id="atk"><option value="studio">Studio の長さ (1.1〜1.8秒)</option><option value="0.6">0.6秒</option><option value="0.4">0.4秒</option><option value="0.2" selected>0.2秒 (ゲームと同じ)</option></select></label>
+  <label><input type="checkbox" id="flash" checked> 被弾の白い点滅</label>
+  <label><input type="checkbox" id="guide"> 目安の高さ</label>
+  <label>背景 <input type="file" id="bg" accept="image/png"></label>
+  <button id="pause">一時停止</button>
+  <button id="compare">描き方と倍率を並べて比べる</button>
+</div>
+<p id="startup" class="note" style="color:#a03c2c;font-size:16px">読み込み中… この表示が消えない場合は、ページをサーバー経由で開いてください (下記)。</p>
+<script>
+  // Plain script: runs even when the module below is blocked (file://) or fails.
+  const say = m => { document.getElementById('startup').innerHTML = m; };
+  if (!/^https?:$/.test(location.protocol)) say('ファイルを直接開いているため表示できません。<b>start-studio.bat</b> (または <code>npm start</code>) で Studio を起動し、表示された URL の後ろに <code>tests/browser/emberbound-stage0.html</code> を付けて開いてください (例: <code>http://127.0.0.1:8081/tests/browser/emberbound-stage0.html</code>)。');
+  addEventListener('error', e => say(`表示エラー: ${e.message || e.error}`));
+  addEventListener('unhandledrejection', e => say(`表示エラー: ${e.reason?.message || e.reason}`));
+</script>
+<div class="stage"><canvas id="c"></canvas></div>
+<div class="stage" id="compare-wrap" hidden><canvas id="compare-out"></canvas></div>
+<table id="info"></table>
+<script type="module">
+import { catalog } from '../../characters/catalog.js';
+import { isolateDrawing, DRAW_DEFAULTS } from '../../src/core/settings.js';
+
+const W = 400, H = 180, GROUND = 150;
+// Game drawn heights (tier 0, idle frame 0) from plan/CHARACTER_RENDERING_AUDIT.md §2.
+const SCENES = {
+  normal: [
+    { role: 'Guardian', id: 'eb-guardian', x: 152, y: 150, h: 30, dir: 'R' },
+    { role: 'Ranger', id: 'eb-ranger', x: 120, y: 146, h: 27, dir: 'R' },
+    { role: 'Arcanist', id: 'mage', x: 90, y: 151, h: 28, dir: 'R' },
+    { role: 'Oracle (仮: 剣士)', id: 'swordsman', x: 60, y: 147, h: 25, dir: 'R' },
+    { role: 'Ash Brute', id: 'goblin', x: 236, y: 150, h: 24, dir: 'L' },
+    { role: 'Frost Revenant', id: 'skeleton', x: 266, y: 144, h: 23, dir: 'L' },
+    { role: 'Gloom Caster', id: 'dark-mage', x: 296, y: 153, h: 21, dir: 'L' },
+    { role: 'Drowned Archer', id: 'skeleton-archer', x: 324, y: 146, h: 25, dir: 'L' },
+    { role: 'Ember Wisp (小型の仮)', id: 'slime', x: 352, y: 152, h: 15, dir: 'L' },
+    { role: 'Ember Tyrant (エリート)', id: 'king', x: 378, y: 145, h: 38, dir: 'L' },
+  ],
+  boss: [
+    { role: 'Guardian', id: 'eb-guardian', x: 152, y: 150, h: 30, dir: 'R' },
+    { role: 'Ranger', id: 'eb-ranger', x: 120, y: 146, h: 27, dir: 'R' },
+    { role: 'Arcanist', id: 'mage', x: 90, y: 151, h: 28, dir: 'R' },
+    { role: 'Oracle (仮: 剣士)', id: 'swordsman', x: 60, y: 147, h: 25, dir: 'R' },
+    { role: 'Hollow Sovereign (巨大ボス)', id: 'demon-king', x: 318, y: 152, h: 70, dir: 'L' },
+    { role: '召喚 (小型の仮)', id: 'slime', x: 236, y: 150, h: 15, dir: 'L' },
+    { role: '召喚 (小型の仮)', id: 'slime', x: 262, y: 144, h: 15, dir: 'L' },
+  ],
+};
+
+const q = new URL(location.href).searchParams, $ = id => document.getElementById(id);
+for (const k of ['scene', 'k', 'mode', 'line', 'act', 'atk']) if (q.get(k)) $(k).value = q.get(k);
+const defs = Object.fromEntries(catalog.map(e => [e.id, e.definition]));
+
+/** Drawn height at scale 1 (alpha > 40, like the game's spriteBounds), measured once per character. */
+const measured = {};
+function studioHeight(def) {
+  if (measured[def.id]) return measured[def.id];
+  const b = def.frameBox, w = Math.ceil(b.x1 - b.x0) + 20, h = Math.ceil(b.y1 - b.y0) + 20;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  isolateDrawing({ ...DRAW_DEFAULTS }, () => def.draw(g, 10 - b.x0, 10 - b.y0, def.directional === false ? null : 'R', 'idle', 0, 1, { shadow: false }));
+  const p = g.getImageData(0, 0, w, h).data; let y0 = h, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (p[(y * w + x) * 4 + 3] > 40) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return (measured[def.id] = { height: y1 - y0 + 1, aboveFoot: 10 - b.y0 - y0 });
+}
+
+let bgImage = null;
+$('bg').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image(); img.onload = () => { bgImage = img; }; img.src = URL.createObjectURL(f);
+});
+
+const world = document.createElement('canvas'); world.width = W; world.height = H;
+const wg = world.getContext('2d');
+function drawBackground() {
+  wg.imageSmoothingEnabled = false;
+  if (bgImage) { wg.drawImage(bgImage, 0, 0, W, H); return; }
+  const grad = wg.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, '#2b2233'); grad.addColorStop(.75, '#4a3340'); grad.addColorStop(1, '#2a2020');
+  wg.fillStyle = grad; wg.fillRect(0, 0, W, H);
+  wg.fillStyle = '#3b2c27'; wg.fillRect(0, GROUND - 4, W, H - GROUND + 4);
+  wg.fillStyle = '#5a463a'; for (let x = 0; x < W; x += 7) wg.fillRect(x, GROUND - 4 + (x * 13 % 5), 3, 1);
+}
+
+const scratch = new Map();   // per unit: offscreen canvas for the white hit flash
+const canvas = $('c'), ctx = canvas.getContext('2d');
+let time = 0, last = null, paused = false;
+$('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? '再生' : '一時停止'; };
+
+/** Which action, and how far into it, a unit is at the scene time t. */
+function actionAt(u, i, def, t) {
+  const mode = $('act').value, atk = $('atk').value;
+  const A = def.actions.attack, dur = atk === 'studio' || !A ? A?.period ?? 1 : Number(atk);
+  if (mode === 'idle' || (mode === 'cycle' && !A)) return ['idle', t];
+  if (mode === 'walk') return [def.actions.walk ? 'walk' : 'idle', t];
+  if (['cast', 'hurt', 'dead'].includes(mode)) {
+    const S = def.actions[mode]; if (!S) return ['idle', t];
+    // Repeat with a pause; dead holds its last frame for a while before starting again.
+    const local = (t + i * .37) % (S.period + 1);
+    return [mode, Math.min(local, S.period * .999)];
+  }
+  const every = Math.max(1.4, dur + .6), local = (t + i * .37) % (mode === 'attack' ? dur : every);
+  if (mode === 'attack' || local < dur) return ['attack', local / dur * A.period];
+  return ['idle', t];
+}
+
+function render() {
+  const k = Number($('k').value), hires = $('mode').value === 'hires', lineMode = $('line').value;
+  const units = SCENES[$('scene').value].map((u, i) => ({ ...u, i })).sort((a, b) => a.y - b.y);
+  if (canvas.width !== W * k) {
+    canvas.width = W * k; canvas.height = H * k;
+    canvas.style.width = `${W * k / devicePixelRatio}px`; canvas.style.height = `${H * k / devicePixelRatio}px`;
+  }
+  drawBackground();
+  const rows = [];
+  // Pixel mode: characters go into the 400×180 world image, which is then enlarged.
+  const target = hires ? ctx : wg, px = hires ? k : 1;
+  if (hires) { ctx.imageSmoothingEnabled = false; ctx.drawImage(world, 0, 0, W * k, H * k); }
+  for (const u of units) {
+    const def = defs[u.id], m = studioHeight(def);
+    const scale = u.h / m.height, s = scale * px;   // local px → target px
+    const lw = lineMode === 'auto' ? Math.max(1, 1 / (scale * k)) : Number(lineMode);
+    const [action, at] = actionAt(u, u.i, def, time);
+    const b = def.frameBox, ow = Math.ceil((b.x1 - b.x0) * s) + 4, oh = Math.ceil((b.y1 - b.y0) * s) + 4;
+    let off = scratch.get(u.i);
+    if (!off || off.width !== ow || off.height !== oh) { off = document.createElement('canvas'); off.width = ow; off.height = oh; scratch.set(u.i, off); }
+    const og = off.getContext('2d'); og.setTransform(1, 0, 0, 1, 0, 0); og.clearRect(0, 0, ow, oh);
+    const fx = 2 - b.x0 * s, fy = 2 - b.y0 * s;
+    isolateDrawing({ ...DRAW_DEFAULTS, lw }, () => def.draw(og, fx, fy, def.directional === false ? null : u.dir, action, at, s, { shadow: false }));
+    const flashing = $('flash').checked && u.dir === 'L' && (time + u.i * .53) % 1.3 < .09;
+    if (flashing) { og.globalCompositeOperation = 'source-atop'; og.fillStyle = '#fff'; og.fillRect(0, 0, ow, oh); og.globalCompositeOperation = 'source-over'; }
+    target.imageSmoothingEnabled = true;
+    target.drawImage(off, Math.round(u.x * px - fx), Math.round(u.y * px - fy));
+    if ($('guide').checked) {
+      target.strokeStyle = 'rgba(255,220,120,.8)'; target.lineWidth = 1;
+      target.strokeRect(Math.round((u.x - 9) * px) + .5, Math.round((u.y - u.h) * px) + .5, Math.round(18 * px), Math.round(u.h * px));
+    }
+    rows.push([u.role, u.id, u.h, m.height, scale.toFixed(3), Math.round(u.h * k), (scale * k).toFixed(2), lw.toFixed(2)]);
+  }
+  if (!hires) { ctx.imageSmoothingEnabled = false; ctx.drawImage(world, 0, 0, W * k, H * k); }
+  return rows;
+}
+
+let lastRows = '';
+function tick(now) {
+  const dt = last === null || paused ? 0 : Math.min(.05, (now - last) / 1000); last = now; time += dt;
+  const rows = render(), key = JSON.stringify(rows.map(r => r.slice(0, 7)).concat([$('line').value]));
+  if (key !== lastRows) {
+    lastRows = key;
+    $('info').innerHTML = '<tr><th>役</th><th>仮のキャラクター</th><th>ゲームの高さ</th><th>Studio の高さ</th><th>縮小率</th><th>表示の高さ (デバイス画素)</th><th>Studio 等倍との比</th><th>線の倍率</th></tr>'
+      + rows.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
+  }
+  requestAnimationFrame(tick);
+}
+/** The heroes' corner of the scene under several settings, copied at real device pixels (no rescaling). */
+function compare() {
+  const keep = ['mode', 'k', 'line'].map(id => [id, $(id).value]);
+  const shots = [['pixel', 4, '1'], ['pixel', 3, '1'], ['hires', 2, '1'], ['hires', 2, 'auto'], ['hires', 3, 'auto'], ['hires', 4, 'auto']];
+  const out = $('compare-out'), cell = [130, 55], gap = 22;
+  out.width = cell[0] * 4 + 20; out.height = shots.reduce((h, [, k]) => h + cell[1] * k + gap, 0);
+  out.style.width = `${out.width / devicePixelRatio}px`; out.style.height = `${out.height / devicePixelRatio}px`;
+  const g = out.getContext('2d'); g.fillStyle = '#f3eee3'; g.fillRect(0, 0, out.width, out.height);
+  g.fillStyle = '#282e27'; g.font = `${14 * devicePixelRatio}px system-ui`;
+  let y = 0;
+  for (const [mode, k, line] of shots) {
+    $('mode').value = mode; $('k').value = String(k); $('line').value = line; render();
+    g.fillText(`${mode === 'hires' ? '高解像度の層' : '400×180 に描いて拡大'} ×${k}  線: ${line === 'auto' ? '自動' : 'Studio のまま'}`, 4, y + 16);
+    g.drawImage(canvas, 40 * k, 105 * k, cell[0] * k, cell[1] * k, 0, y + gap, cell[0] * k, cell[1] * k);
+    y += cell[1] * k + gap;
+  }
+  for (const [id, v] of keep) $(id).value = v;
+  $('compare-wrap').hidden = false;
+}
+$('compare').onclick = compare;
+window.__stage0 = { render, compare, setTime: t => { time = t; }, measured };
+render(); $('startup').hidden = true;
+requestAnimationFrame(tick);
+</script>
+</body></html>

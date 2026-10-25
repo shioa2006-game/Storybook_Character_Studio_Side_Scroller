@@ -18,6 +18,10 @@ export const ARMED = {
   warrior: { head: [1.5, 0, 66, 18], weapons: P => [
     ...[P.sword, ...(P.trail?.samples ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 41 })),
   ] },
+  // The EMBERBOUND Guardian keeps the warrior's body and sword.
+  'eb-guardian': { head: [1.5, 0, 66, 18], weapons: P => [
+    ...[P.sword, ...(P.trail?.samples ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 41 })),
+  ] },
   swordsman: { head: [1.5, 0, 67, 17], weapons: P => [
     ...[P.sword, ...(P.trail?.pts ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 38 })),
   ] },

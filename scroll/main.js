@@ -47,7 +47,7 @@ function updateCharacter() {
   $('character-category').textContent = selected.category;
   $('character-description').textContent = selected.description;
   $('gallery-detail').href = `../index.html#character/${encodeURIComponent(selected.id)}`;
-  const labels = { idle: '待機', walk: '歩行', attack: '攻撃' }, def = selected.definition;
+  const labels = { idle: '待機', walk: '歩行', attack: '攻撃', cast: '詠唱・スキル', hurt: '被弾', dead: '戦闘不能' }, def = selected.definition;
   const notes = [`${selected.directions.length ? '左右' : '方向なし'} / ${selected.actions.map(a => labels[a] || a).join('・')}`];
   if (!selected.actions.includes('walk')) notes.push('歩行アニメーションは未対応です。待機姿勢のまま移動します');
   if (!selected.actions.includes('attack')) notes.push('攻撃は未対応です。Spaceは無効です');

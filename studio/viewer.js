@@ -1,6 +1,6 @@
 import { createCharacterView } from '../src/index.js';
 const directionLabels={R:'右向き R',L:'左向き L'};
-const actionLabels={idle:'待機',walk:'歩行',attack:'攻撃'};
+const actionLabels={idle:'待機',walk:'歩行',attack:'攻撃',cast:'詠唱・スキル',hurt:'被弾',dead:'戦闘不能'};
 const labelAction=a=>actionLabels[a]||a;
 const button=(text,data,value)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.dataset[data]=value;b.setAttribute('aria-pressed','false');return b;};
 
