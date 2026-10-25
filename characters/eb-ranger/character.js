@@ -1,9 +1,9 @@
 /**
  * EMBERBOUND EXPEDITION — Ranger (game id `ranger`), the blond elf archer of the library (src/characters/archer*).
  * The pose and parts are the library's; this file copies only the assembly and adds the game's actions
- * (plan/EMBERBOUND_PRODUCTION.md): the game launches the arrow when the attack starts, so the attack plays
- * the end of the archer's shot (full draw → release at 0.032 s → lower); `cast` is Arrow Rain, the same
- * draw tilted up; `hurt` and `dead` tilt the whole figure like the Guardian.
+ * (plan/EMBERBOUND_PRODUCTION.md): the attack plays the second half of the archer's shot, so the draw reads
+ * before the arrow leaves (nocked arrow drawn back → full draw → release at 0.15 s → lower); `cast` is Arrow
+ * Rain, the same draw tilted up; `hurt` and `dead` tilt the whole figure like the Guardian.
  *   左手 = 弓、右手 = 弦と矢、矢筒 = 背中。
  */
 import { DRAW } from '../../src/core/settings.js';
@@ -19,9 +19,11 @@ import { archerReleaseInfo } from '../../src/characters/archer.js';
 import { hurtAction, deadAction, phase, sample, hurtAmount, deadPhase, fallTilt, withTilt } from '../shared/emberbound/actions.js';
 
 // Game timing (seconds).
-export const RANGER_ATTACK_T = .3;   // the archer's shot from full draw: release at 0.032 s, then lower the bow
-export const RANGER_RAIN_T = .4;     // Arrow Rain: release at 0.137 s (the game's first rain arrow is at 0.15 s)
-const SHOT_FROM = .72, RAIN_FROM = .62;   // where on the archer's 1.7 s shot each action starts
+export const RANGER_ATTACK_T = .3;   // the archer's shot from the nocked arrow: draw, release at 0.15 s, lower the bow
+export const RANGER_RAIN_T = .4;     // Arrow Rain: the same, tilted up; release at 0.2 s
+// Where on the archer's 1.7 s shot each action starts: the arrow is already nocked and the draw is under way, so
+// the drawing back and the full draw both show before the release.
+const SHOT_FROM = .5, RAIN_FROM = .5;
 export const RANGER_RELEASE_U = (ARCHER_RELEASE_U - SHOT_FROM) / (1 - SHOT_FROM);
 const RAIN_RELEASE_U = (ARCHER_RELEASE_U - RAIN_FROM) / (1 - RAIN_FROM);
 // Arrow Rain: the whole body leans back 20° (RAIN_LEAN) and the arms raise the aim 35°, with the bow held
@@ -30,8 +32,8 @@ const RAIN_RELEASE_U = (ARCHER_RELEASE_U - RAIN_FROM) / (1 - RAIN_FROM);
 // alone would put the bow across the large chibi face.
 const RAIN_PITCH = 35 * Math.PI / 180, RAIN_LEAN = .35;
 const KEYS = Object.freeze({
-  attack: [0, .05, RANGER_RELEASE_U, .15, .22, .3, .4, .55, .7, .85],
-  cast: [0, .1, .2, .3, RAIN_RELEASE_U, .4, .5, .65, .8],
+  attack: [0, .1, .2, .3, .4, RANGER_RELEASE_U, .6, .7, .8, .9],
+  cast: [0, .1, .2, .3, .4, RAIN_RELEASE_U, .6, .7, .85],
 });
 
 /** Rotate a chest-frame point or direction about the shoulder line so that forward turns upward. */

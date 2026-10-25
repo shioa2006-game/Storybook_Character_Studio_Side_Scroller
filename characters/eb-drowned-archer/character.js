@@ -2,8 +2,8 @@
  * EMBERBOUND EXPEDITION — Drowned Archer (game id `drowned_archer`), the skeleton archer after the user's
  * reference image: an angry bare skull with a little red coral growing on top, a ragged teal skirt, seaweed
  * hanging from the cloth and the bow, and the same leather belt, wraps, quiver and bow.
- * Actions (plan/EMBERBOUND_PRODUCTION.md): the game launches the arrow when the attack starts, so the attack
- * plays the end of the archer's shot (full draw → release at about 0.03 s → lower); the shared hurt.
+ * Actions (plan/EMBERBOUND_PRODUCTION.md): the attack plays the second half of the archer's shot, so the draw
+ * reads before the arrow leaves (nocked arrow drawn back → full draw → release at 0.15 s → lower); the shared hurt.
  * Unlike the skeleton archer, the RIGHT hand holds the bow and the LEFT draws: the archer's pose is mirrored
  * across the body (b → −b) in drownedPose, and the arms are swapped in the drawing.
  */
@@ -23,14 +23,14 @@ import { hurtAction, phase, hurtAmount, fallTilt, withTilt } from '../shared/emb
 const C={bone:'#f5e7cd',hollow:'#29241d',
   leather:'#88603f',dark:'#60442f',gold:'#bc9861',
   cloth:'#4f9a98',clothDark:'#356f70',weed:'#5f7a45',coral:'#d9573f'};
-// Game timing: the archer's 1.7 s shot from full draw (SHOT_FROM of the way in), squeezed into 0.3 s.
+// Game timing: the archer's 1.7 s shot from the nocked arrow (SHOT_FROM of the way in), squeezed into 0.3 s.
 export const DROWNED_ATTACK_T=.3;
-const SHOT_FROM=.72;
+const SHOT_FROM=.5;
 export const DROWNED_RELEASE_U=(ARCHER_RELEASE_U-SHOT_FROM)/(1-SHOT_FROM);
 // The shared cache's modulo can round the release phase down by a few ulps.
 // Use a boundary a billionth early in the pose, so the release frame never shows the held arrow.
 const RELEASE_FRAME=DROWNED_RELEASE_U-1e-9;
-const ATTACK_KEYS=Object.freeze([0,.05,DROWNED_RELEASE_U,.15,.22,.3,.4,.55,.7,.85]);
+const ATTACK_KEYS=Object.freeze([0,.1,.2,.3,.4,DROWNED_RELEASE_U,.6,.7,.8,.9]);
 const xy=p=>[p.x,p.y];
 const shape=(ctx,pts,fill,o={})=>paintA(ctx,pts,{fill,w:LW.part,depth:1.3,
   light:.2,speck:.65,speckScale:.3,amp:.22,step:3,...o});

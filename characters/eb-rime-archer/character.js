@@ -3,8 +3,8 @@
  * user's reference image: a deep blue hood lined with white fur around a shadowed face with glowing cyan eyes, a
  * blue capelet with a fur trim and a snowflake brooch, a pale blue tunic with a snowflake hem, navy trousers,
  * brown boots with fur cuffs, a ragged blue cloak, and a pale ice bow with frost spikes along its limbs.
- * Actions (plan/EMBERBOUND_PRODUCTION.md): the game launches the arrow when the attack starts, so the attack plays
- * the end of the archer's shot (full draw → release at 0.032 s → lower); the shared hurt.
+ * Actions (plan/EMBERBOUND_PRODUCTION.md): the attack plays the second half of the archer's shot, so the draw reads
+ * before the arrow leaves (nocked arrow drawn back → full draw → release at 0.15 s → lower); the shared hurt.
  *   左手 = 弓、右手 = 弦と矢、矢筒 = 背中。
  */
 import { DRAW } from '../../src/core/settings.js';
@@ -20,10 +20,10 @@ import { archerReleaseInfo } from '../../src/characters/archer.js';
 import { hurtAction, phase, hurtAmount, fallTilt, withTilt } from '../shared/emberbound/actions.js';
 
 // Game timing (seconds).
-export const RIME_ATTACK_T = .3;   // the archer's shot from full draw: release at 0.032 s, then lower the bow
-const SHOT_FROM = .72;             // where on the archer's 1.7 s shot the attack starts
+export const RIME_ATTACK_T = .3;   // the archer's shot from the nocked arrow: draw, release at 0.15 s, lower the bow
+const SHOT_FROM = .5;              // where on the archer's 1.7 s shot the attack starts (arrow nocked, drawing)
 export const RIME_RELEASE_U = (ARCHER_RELEASE_U - SHOT_FROM) / (1 - SHOT_FROM);
-const KEYS = Object.freeze({ attack: [0, .05, RIME_RELEASE_U, .15, .22, .3, .4, .55, .7, .85] });
+const KEYS = Object.freeze({ attack: [0, .1, .2, .3, .4, RIME_RELEASE_U, .6, .7, .8, .9] });
 
 const R = Object.freeze({
   hood: '#3f6290', hoodDark: '#2c486e', fur: '#f1eee6', furShade: '#cfd6de', void: '#11141c', eye: '#93f1ec',
