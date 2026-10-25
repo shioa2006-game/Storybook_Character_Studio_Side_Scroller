@@ -63,7 +63,7 @@ export const studio = {
 2. キャラクターを上記の配置・exportsで制作します。原則 `src/` を変更しません。共通リグなどを意図して変更した場合は `npm run baseline:update` で基準を作り直し、全キャラクターを [SIDE_VIEW_GUIDE.md の6章](SIDE_VIEW_GUIDE.md#6-全キャラクターを点検する進め方と落とし穴) の手順で点検し直します。ファイルの改行コード (CRLF / LF) は元のまま保ちます。
 3. 共通リグ、接地補正、IK、描画層を使い、必要な方向・動作を実装します。
 4. `node tools/sync-catalog.mjs`。重複・不足はファイル名付きで修正します。失敗時は既存カタログを置き換えません。
-5. ギャラリーを再読込し、カード→詳細→拡大→通常サイズ→方向・動作→「左右・全動作を見る」を確認します。
+5. ギャラリーを再読込し、カード→詳細→拡大→通常サイズ→方向・動作→「左右・全動作を見る」を確認します。「横スクロールで見る」から、実際のゲームの大きさで左右に歩かせ、攻撃させます (弓を持つキャラクターは飛ぶ矢も)。
 6. Live/Cachedを比較し、攻撃の重要な位相、装備の左右、頭身、接地、背中側の装備を目視します。`tests/browser/side-sheet.html?id=［id］&act=attack&dirs=R,L` で左右の全コマを並べ、[SIDE_VIEW_GUIDE.md のチェックリスト](SIDE_VIEW_GUIDE.md#4-確認方法とチェックリスト)を確認します。
 7. 武器を持つキャラクターは、`tests/node/lib/clearance.mjs` の `ARMED` に頭の位置と武器の読み方を1行追加し、手・刃が胴や頭を通り抜けず刃先が床に潜らないことを `tests/node/side-clearance.test.mjs` で全位相検査します。`npm test` を通します。
 8. `tests/browser/check.html` で全登録キャラクターの `frameBox` を全cache keyと中間位相で確認します。既存戦士の部屋・遮蔽検査（4方向）は `tests/browser/warrior.html` です。登録時の形式検査だけでは画素のはみ出しを検出しません。

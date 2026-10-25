@@ -5,7 +5,8 @@
  *   import { createRenderer } from './src/index.js';
  *
  * 公開するもの:
- *   - createRenderer          部屋とキャラクターを描く (ゲーム画面用)
+ *   - createRenderer          部屋とキャラクターを描く (8×8ダンジョンのゲーム画面用)
+ *   - createSideRenderer      横スクロールのステージとキャラクターを描く (ステージ: STAGE_DEFAULTS / normalizeStage / SIDE_THEMES)
  *   - createCharacterView     キャラクター1体を確認用に描く
  *   - キャラクター定義と登録   swordsman / archer / skeleton / BUILTIN_CHARACTERS / createCharacterRegistry / validateCharacter
  *   - 向き・動作の定数         DIRECTIONS (アイソメ4方向) / SIDE_DIRECTIONS (横スクロール左右) / ACTIONS_LIST
@@ -14,6 +15,10 @@
  */
 export { createRenderer } from './rendering/renderer.js';
 export { createCharacterView } from './rendering/character-view.js';
+export { createSideRenderer } from './side/renderer.js';
+export { STAGE_DEFAULTS, normalizeStage, clampToStage } from './side/stage.js';
+export { SIDE_THEMES, CHUNK as SIDE_CHUNK } from './side/background.js';
+export { VIEW_HEIGHT as SIDE_VIEW_HEIGHT } from './side/camera.js';
 export { createCharacterRegistry, validateCharacter, BUILTIN_CHARACTERS, frameKeysOf } from './characters/registry.js';
 export { swordsman } from './characters/swordsman.js';
 export { archer, ARCHER_ATTACK_KEYS } from './characters/archer.js';

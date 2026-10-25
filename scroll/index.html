@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f3eee3"><title>横スクロール | Inkstone Character Studio</title><link rel="stylesheet" href="../studio/style.css"><link rel="stylesheet" href="./style.css"></head>
+<body><a class="skip-link" href="#content">本文へ移動</a>
+<header class="site-header"><a class="brand" href="../index.html#gallery"><span class="brand-icon" aria-hidden="true">I</span><span>Inkstone<span class="brand-sub">Character Studio</span></span></a><nav aria-label="メイン"><a href="../index.html#gallery">キャラクター一覧</a><a href="./index.html" aria-current="page">横スクロール</a><a href="../game/index.html">8×8ダンジョン</a></nav></header>
+<main id="content" tabindex="-1">
+  <section class="scroll-heading"><h1>横スクロール</h1><p>仲間を選んで、左右に歩く・向きを変える・攻撃する。</p></section>
+  <div class="scroll-layout">
+    <section class="scene-frame" aria-label="横スクロールの動作確認">
+      <div class="scene-toolbar"><fieldset><legend>描画方式</legend><div class="button-row"><button data-mode="live" aria-pressed="true">Live Vector</button><button data-mode="cached" aria-pressed="false">Cached Frames</button></div></fieldset></div>
+      <div class="scroll-canvas-wrap"><canvas id="scroll" tabindex="0" aria-label="横に長い回廊。← → または A / D を押している間歩き、Space で攻撃。"></canvas></div>
+      <div class="scene-footer"><div><strong id="game-state">待機中</strong><span id="position">位置 0 / 0</span></div><button id="reset">初期位置へ戻す</button></div>
+    </section>
+    <aside class="character-panel" aria-label="キャラクターと操作">
+      <label class="select-label" for="character-select">キャラクターを選ぶ</label><select id="character-select"></select>
+      <p id="character-category" class="category"></p><h2 id="character-name"></h2><p id="character-description"></p>
+      <a id="gallery-detail" class="button" href="../index.html#gallery">ギャラリーで詳しく見る</a>
+      <p id="capability-note" class="support-note"></p>
+      <div class="movement"><h2>操作する</h2><p>← → (A / D) またはボタンを押している間、その向きへ歩きます。</p><div class="move-buttons"><button id="walk-left" type="button">← 左へ歩く</button><button id="walk-right" type="button">右へ歩く →</button></div><button id="attack" class="primary">攻撃する（Space）</button></div>
+      <p class="small switch-note">キャラクターを切り替えると、攻撃と飛んでいる矢を止め、その場から再開します。</p>
+    </aside>
+  </div>
+  <p id="app-message" role="status" aria-live="polite"></p>
+  <details id="diagnostics"><summary>開発者向け情報</summary><p class="small">RGBA容量は画像寸法から求めた理論値です。ブラウザーの実メモリ使用量ではありません。</p><button id="refresh-diagnostics">計測値を更新</button><pre id="diagnostic-output"></pre><a href="../tests/browser/side-sheet.html">横向きのコマ一覧を開く</a></details>
+</main><footer><p>Inkstone Character Studio · 横スクロールで動きを確かめる。</p><a href="../index.html#gallery">キャラクターギャラリーへ戻る</a></footer><script type="module" src="./main.js"></script></body></html>

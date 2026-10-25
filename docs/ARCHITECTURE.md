@@ -27,6 +27,12 @@ src/
 │  ├─ archer.js            弓使いの組み立て (描画順の補正) と定義
 │  ├─ skeleton.js          骸骨 (専用骨格寸法・共通投影による4方向と左右の待機・歩行・攻撃。上半身用の投影 JU / WU) と定義
 │  └─ registry.js          キャラクター登録簿 (検査・登録・取得)・コマ割り
+├─ side/                横スクロール (8×8ダンジョンとは別の描画)
+│  ├─ stage.js             ステージデータの検査と既定値 (長さ・開始位置・余白・背景テーマ)
+│  ├─ camera.js            横スクロールのカメラ (高さから倍率・地面の位置、追従と端で止める、座標変換)
+│  ├─ background.js        背景の層を区画ごとに画像へ焼き込んで使い回す仕組み、テーマの登録 SIDE_THEMES
+│  ├─ themes/placeholder.js 段階3の仮の背景 (遠景の丘・中景の柱・床の帯と縁石・両端の壁)
+│  └─ renderer.js          SideRenderer (背景 → 足元の影 → キャラ → 飛んでいる矢)
 └─ rendering/            描画とキャッシュ
    ├─ camera.js            カメラ (倍率・平行移動・DPR)・部屋に合わせる・座標変換
    ├─ sprites.js           オフスクリーンのスプライト (デバイス画素に揃える)・キャラのコマ
@@ -49,6 +55,8 @@ src/
 ```
 index.js ──► rendering/renderer.js, rendering/character-view.js, characters/registry.js, dungeon/room.js, dungeon/props.js
 rendering/renderer.js ──► camera, depth-sort, cache, scene, effects, overlays, characters/registry, characters/rig, dungeon/room, dungeon/architecture, core/*
+side/renderer.js ──► side/{stage, camera, background}, rendering/{cache, effects, camera}, characters/registry, characters/rig, core/*
+side/background.js ──► side/themes/*, core/ink
 rendering/cache.js ──► sprites, effects, characters/registry, characters/rig
 rendering/scene.js ──► camera, sprites, dungeon/room, core/ink
 characters/registry.js ──► swordsman, archer, skeleton

@@ -10,6 +10,9 @@ import { createRenderer, createCharacterView, /* … */ } from './src/index.js';
 |---|---|---|
 | `createRenderer(options)` | 関数 | 部屋とキャラクターを描く Renderer を作る (§2) |
 | `createCharacterView(options)` | 関数 | キャラクター1体の確認用の描画 (§7) |
+| `createSideRenderer(options)` | 関数 | 横スクロールのステージとキャラクターの描画 (§11) |
+| `STAGE_DEFAULTS` / `normalizeStage(stageData)` / `clampToStage(stage, x)` | 定数・関数 | 横スクロールのステージデータの既定値・検査・立てる範囲 (§11) |
+| `SIDE_THEMES` / `SIDE_CHUNK` / `SIDE_VIEW_HEIGHT` | 表・定数 | 横スクロールの背景テーマ・背景の区画の幅 (512 論理 px)・縦に映るワールドの高さ (360 px) |
 | `createCharacterRegistry(defs?)` | 関数 | キャラクター登録簿を作る (§6) |
 | `validateCharacter(def)` | 関数 | キャラクター定義を検査する (不足があればエラー) |
 | `BUILTIN_CHARACTERS` | 配列 | 組み込みのキャラクター定義 `[swordsman, archer, skeleton]` |
@@ -259,3 +262,31 @@ renderer.getDiagnostics();
 ```
 
 `totalMs` は `render()` の中の CPU 時間です (GPU での塗りの時間は含みません)。
+
+## 11. 横スクロール (SideRenderer)
+
+8×8ダンジョンの Renderer とは別に、横スクロール用の描画を `src/side/` に持ちます。ゲームの規則 (移動・攻撃・矢がどこまで飛ぶか) はゲーム側です (例: `scroll/game.js`)。
+
+```js
+import { createSideRenderer } from './src/index.js';
+const renderer = createSideRenderer({
+  canvas, width: 960, height: 540,   // 論理サイズ。dpr は既定 min(2, devicePixelRatio)
+  characterScale: 1.25,              // キャラの表示倍率 (ワールド px / キャラのローカル px)
+  mode: 'live',                      // 'live' | 'cached' (Cached は右向き・左向きの2方向のコマを作る)
+  characters: [...],
+  stage: { id: 'hall', length: 3200, start: 260, margin: 60, theme: 'placeholder' },
+});
+renderer.follow(hero.x);             // カメラの追従 (画面中央の遊びの外で動き、ステージの端で止まる)
+renderer.render({
+  timeSeconds,
+  units: [{ id: 'hero', character: 'warrior', x: hero.x, direction: 'R', action: 'walk', actionTime }],
+  projectiles: [{ character: 'archer', x: shooter.x, direction: 'R', distance: 120 }],
+});
+```
+
+- **ワールド座標**: x = ステージの左端からの距離 (右へ +)、y = 地面からの高さ (下へ +、足元 = 0)。単位はワールド px。縦に `SIDE_VIEW_HEIGHT` (360) px が映るよう倍率が決まり、地面は画面の高さの 74% の位置です。
+- **ステージ** (`normalizeStage`): `length` (200 以上)、`start` (開始位置)、`margin` (立てる範囲の左右の余白)、`theme` (`SIDE_THEMES` のキー。現在は仮の背景 `placeholder`)。
+- **歩行の時間**: `actionTime` = 横に歩いた距離 (ワールド px) × `sideWalkSecondsPerPixel(characterScale)` にすると足が滑りません。
+- **飛んでいる矢**: `x` は放ったキャラの足元、`distance` は進んだ距離 (ワールド px)。矢は定義の `projectile.origin(direction)` の矢筈の位置から、画面の水平に向きの側へ進みます。いつ放つか・どこまで飛ぶかはゲームが決めます (放つ位相は `projectile.releaseAt`)。
+- **背景**: テーマの層 (`{ id, parallax, draw(g, view) }`) を幅 `SIDE_CHUNK` の区画に焼き込み、映る区画だけを貼ります。倍率・DPR・キャンバスの大きさ・ステージが変わると作り直します。
+- その他: `setStage(stageData)` / `centerOn(x)` / `resize(width, height, dpr)` / `setMode` / `setOptions({ lineBoil, footFix })` / `registerCharacter` / `prepareCaches(ids)` / `disposeCaches(ids)` / `worldToScreen(x, y)` / `screenToWorld(px, py)` / `getCamera()` / `getDiagnostics()` (`background: { chunks, bytesRGBA, bakedChunks, bakeMs }` を含む) / `dispose()`。
