@@ -10,11 +10,11 @@ Node.js 18以上。パッケージのインストールは不要です。
 - ターミナル: **`npm start`** → 表示されたURLを開きます（通常は <http://127.0.0.1:8081/>）。終了はCtrl+C。
 - 配信元フォルダが一致するStudioだけを再利用します。旧版や別フォルダのサーバーが使用中のポートは避け、8081〜8090の空きポートで起動します。`start-studio.bat` は選ばれたURLを自動で開きます。
 
-トップページはキャラクターギャラリーです。詳細画面で方向・動作・再生・位相・拡大/通常サイズ・Live/Cachedを確認します。「横スクロールで見る」から選択したキャラクターを横に長いステージで、「ダンジョンで見る」から8×8の部屋で操作できます。
+トップページはキャラクターギャラリーです。詳細画面で向き（右・左）・動作・再生・位相・拡大/通常サイズ・Live/Cachedを確認します。「横スクロールで見る」から、選択したキャラクターを横に長いステージで操作できます。
 
 **横スクロール** (`scroll/index.html`) では、← → (A / D) を押している間歩き、Spaceで攻撃します。弓使い・骸骨弓兵は矢を放ちます。「場所を選ぶ」で鉛筆画の背景を ダンジョンの回廊・森の小道・城下町の通り から切り替えられます (`?stage=forest` でも指定可)。背景の描き方と増やし方は[横スクロールの背景ガイド](docs/STAGE_GUIDE.md)を参照してください。
 
-横スクロール化を進めています（[計画](docs/SIDE_SCROLLER_PLAN.md)）。Studioのキャラクターは左右2方向（右 R / 左 L）の待機・歩行・攻撃で表示します。8×8ダンジョンは横スクロール版に置き換えるまで従来の4方向（NW / NE / SW / SE）で動作します。ダンジョンでは移動中に歩行し、Spaceまたは攻撃ボタンで1.2秒の斬撃を再生します。通常サイズは倍率1.25×で、部屋を縮小するカメラ倍率とは別です。
+キャラクターは左右2方向（右 R / 左 L）の待機・歩行・攻撃で描きます。以前の8×8ダンジョンと4方向（NW / NE / SW / SE）の表示は、横スクロール化の段階5で退役しました（[計画](docs/SIDE_SCROLLER_PLAN.md)）。通常サイズは倍率1.25×です。
 
 ## キャラクターを追加する
 
@@ -50,17 +50,16 @@ node tools/serve.mjs 8091
 | `characters/` | 追加キャラクターの原本と共通カタログ |
 | `studio/` | ギャラリーと詳細画面 |
 | `scroll/` | カタログ共通の横スクロールの確認ページ、移動・攻撃・矢・入力 |
-| `game/` | カタログ共通の8×8ダンジョン、入力・経路探索 |
 | `tools/` | 起動、静的サーバー、登録情報生成、ゲーム用出力 |
-| `tests/node/` | ゲーム・登録・エクスポートの自動テスト |
-| `tests/browser/` | 実ブラウザーで実行する描画・遮蔽・レイアウト検証 |
-| `tests/fixtures/` | 造形維持テストの比較資料、エンジンのハッシュ基準 |
+| `tests/node/` | 横スクロール・背景・キャラクターの絵・登録・エクスポートの自動テスト |
+| `tests/browser/` | 実ブラウザーで実行する描画・背景・レイアウト検証 |
+| `tests/fixtures/` | 全キャラクターの左右の絵の指紋、エンジンのハッシュ基準 |
 | `docs/` | 現在のAPI・制作・出力ガイド |
 | `docs/reports/` | Studio制作報告と画像・測定記録 |
 | `docs/archive/` | 過去の戦士制作実験。通常のアプリから読み込まない |
 | `exports/` | 必要時に生成するゲーム用キット。Git管理対象外 |
 
-`game/characters/warrior.js` は旧importを維持する互換窓口です。描画ソースは `characters/warrior/character.js` の1つだけを編集します。`catalog.generated.js` は静的配信にも必要なので削除しません。
+`catalog.generated.js` は静的配信にも必要なので削除しません。
 
 ## 検証する
 
@@ -69,14 +68,14 @@ npm test
 npm run catalog:check
 ```
 
-`src/` を意図して変更したときは `npm run baseline:update` で `tests/fixtures/src-baseline.json` を作り直してから `npm test` を実行します。
+`src/` を意図して変更したときは `npm run baseline:update` で `tests/fixtures/src-baseline.json` を作り直してから `npm test` を実行します。キャラクターの絵を意図して変えたときは `npm run drawings:update` で左右の絵の指紋 (`tests/fixtures/side-drawings.json`) を作り直します。コードの整理だけなら、指紋が変わらないことが「絵が1本の線も変わっていない」証拠になります。
 
 サーバー起動後、次のページで検証できます。
 
 - [全キャラクターの描画範囲とLive/Cached](tests/browser/check.html)
 - [1体の左右の全コマを並べる](tests/browser/side-sheet.html)（例: `?id=warrior&act=attack`）
 - [全キャラクターの左右を一覧にする](tests/browser/side-overview.html)
-- [戦士の装備・関節・部屋の遮蔽](tests/browser/warrior.html)
+- [背景の1場面とキャラクター](tests/browser/side-stage.html)（例: `?theme=forest&x=1200`）
 - [画面幅・拡大相当の再配置](tests/browser/responsive.html)
 - [40カード時の遅延描画](tests/browser/performance.html)
 
@@ -84,8 +83,8 @@ npm run catalog:check
 
 ## 静的配信と保守
 
-相対URLとハッシュルーティングを使用します。静的配信時は生成済みカタログを含めてください。日常のアプリには `index.html`、`src/`、`characters/`、`studio/`、`scroll/`、`game/` と参照するガイドが必要です。テスト・過去資料・ゲーム用キットを配信する必要はありません。
+相対URLとハッシュルーティングを使用します。静的配信時は生成済みカタログを含めてください。日常のアプリには `index.html`、`src/`、`characters/`、`studio/`、`scroll/` と参照するガイドが必要です。テスト・過去資料・ゲーム用キットを配信する必要はありません。
 
 制作コードの原本に出力先のファイルを逆コピーしないでください。共通ライブラリを意図して更新するときは全体を同じ版にそろえ、`npm run baseline:update` で `tests/fixtures/src-baseline.json` の基準を作り直し、テストを確認してください。
 
-**改行コードを保ってください。** ファイルごとに CRLF と LF が混在しています (`README.md`・`docs/STUDIO_GUIDE.md` などは CRLF、`docs/CHARACTER_GUIDE.md`・多くの `.js` は LF、`src/characters/skeleton.js`・`index.html`・`tests/browser/check.html` などは1行だけ CRLF が混ざっている)。スクリプトで書き換えると、ファイル全体の改行が変わることがあります (Windows の Python はテキストモードで書くと LF を CRLF に変える)。編集後は `git diff --stat` で、変更した行数よりはるかに多い差分が出ていないかを確かめてください。`src/` の改行が変わるとハッシュ基準のテストも失敗します。
+**改行コードを保ってください。** ファイルごとに CRLF と LF が混在しています (`README.md`・`docs/STUDIO_GUIDE.md` などは CRLF、`docs/CHARACTER_GUIDE.md`・多くの `.js` は LF、`src/characters/skeleton.js`・`index.html` などは1行だけ CRLF が混ざっている)。スクリプトで書き換えると、ファイル全体の改行が変わることがあります (Windows の Python はテキストモードで書くと LF を CRLF に変える)。編集後は `git diff --stat` で、変更した行数よりはるかに多い差分が出ていないかを確かめてください。`src/` の改行が変わるとハッシュ基準のテストも失敗します。

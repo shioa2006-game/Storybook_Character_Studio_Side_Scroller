@@ -18,7 +18,9 @@ exports/game-kit/
     warrior/character.js   選択した追加キャラクター
     shared/...             実際にimportされる共有部品（ある場合）
     register.js            選択した定義の配列と登録関数
-  index.html / main.js      独立したRendererの部屋サンプル
+  scroll/game.js            サンプルのゲームの規則 (歩く・攻撃・矢)
+  scroll/controls.js        サンプルのキー入力 (← → / A D で歩く、Space で攻撃)
+  index.html / main.js      横スクロールのサンプル (場所・キャラクター・Live/Cached を切り替える)
   tools/serve.mjs           既存と同じ静的サーバー
   package.json
   export-manifest.json      選択IDと追加依存ファイル
@@ -32,37 +34,35 @@ cd exports/game-kit
 node tools/serve.mjs 8091
 ```
 
-<http://127.0.0.1:8091/> でキャラクター・向き・動作・Live/Cachedを確認します。元のStudioを起動する必要はありません。StudioのUI、過去の画像や検証ファイルは含まれません。
+<http://127.0.0.1:8091/> を開き、鉛筆画の背景の上でキャラクターを左右に歩かせ・攻撃させて確認します (場所・キャラクター・Live/Cached を切り替えられます)。元のStudioを起動する必要はありません。StudioのUI、過去の画像や検証ファイルは含まれません。
 
 ## 既存ゲームへ組み込む
 
 `src/` と `characters/` の相対位置を保ってコピーします。他のアセットと衝突する場合は、両方を `vendor/inkstone/` など同じ親フォルダに入れてください。
 
 ```js
-import { createRenderer } from './src/index.js';
+import { createSideRenderer, sideWalkSecondsPerPixel } from './src/index.js';
 import { characters, registerCharacters } from './characters/register.js';
 
-const renderer = createRenderer({
+const renderer = createSideRenderer({
   canvas: document.querySelector('canvas'),
-  width: 1000, height: 620, dpr: 1,
-  characters: [], mode: 'live',
-  room: { id: 'my-room', width: 6, depth: 6 },
+  width: 960, height: 540,
+  characters: [], mode: 'live', characterScale: 1.25,
+  stage: { id: 'my-stage', length: 3200, start: 260, margin: 60, theme: 'forest' },   // dungeon / forest / town
 });
 registerCharacters(renderer);
-renderer.fitToRoom({ margin: 24 });
-renderer.render({ timeSeconds: 0, units: [{
-  id: 'player', character: characters[0].id,
-  x: 3.5, y: 3.5, direction: 'SW', action: 'idle', actionTime: 0,
-}] });
+const hero = { id: 'player', character: characters[0].id, x: 260, direction: 'R', action: 'idle', actionTime: 0 };
+renderer.follow(hero.x);
+renderer.render({ timeSeconds: 0, units: [hero] });
 
 renderer.setMode('cached');
 renderer.prepareCaches([characters[0].id]); // 初回同期生成を任意のタイミングで
-// ゲームループでactionTimeを更新してrenderを繰り返す
-// 歩行のactionTime = 移動距離 × renderer.walkSecondsPerTile
+// ゲームループで x と actionTime を更新し、follow と render を繰り返す
+// 歩行の actionTime = 横に歩いた距離 × sideWalkSecondsPerPixel(1.25)
 // 終了時: renderer.dispose();
 ```
 
-経路探索、入力、当たり判定、攻撃終了後の状態管理はゲーム側の担当です。骸骨は4方向の待機・歩行・攻撃に対応します。攻撃は1.2秒です。剣・盾の持ち手を保つため `direction` を指定し、`unit.mirror` は使いません。
+入力、移動、当たり判定、攻撃終了後の状態管理はゲーム側の担当です (キットの `scroll/game.js` が例です)。向きは右 `R` / 左 `L` を `direction` で指定します。左右反転ではなく別の向きとして描くので、剣・盾などの持ち手は体の左右のまま保たれます。
 
 ## 依存の扱い
 
@@ -76,4 +76,4 @@ renderer.prepareCaches([characters[0].id]); // 初回同期生成を任意のタ
 
 出力はスナップショットです。Studio側のキャラクター変更はコピー先へ自動反映されません。再エクスポートし、ゲーム側の変更と比較して導入してください。エクスポート先を第二のキャラクター制作原本にしないでください。
 
-ライブラリ更新時は `src/` の版を揃え、単一ファイルだけを混ぜないでください。登録API、造形、方向・動作、コマ割り、frameBox、通常サイズ、奥行き・遮蔽を再検証します。コピー先のimport・環境差を確認するまで更新完了と判断しないでください。
+ライブラリ更新時は `src/` の版を揃え、単一ファイルだけを混ぜないでください。登録API、造形、向き・動作、コマ割り、frameBox、通常サイズ、背景を再検証します。コピー先のimport・環境差を確認するまで更新完了と判断しないでください。

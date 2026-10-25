@@ -20,7 +20,7 @@ import { ARCHER_LEGS, bandAcross, drawArcherCape, drawArcherMantle, drawArcherHe
 export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}) {
   const P = archerPose(action, t);
   const boil = 0; // Stable cloth and hair texture across animation frames.
-  const rf = rigFrame(dirKey, P.body, P.yaw), { dir, U, sx, front } = rf;
+  const rf = rigFrame(dirKey, P.body, P.yaw), { dir, U, sx } = rf;
   // Same upper-body frame as U (side views turn the chest by rf.turn), so the bow stays in the hand.
   const UG = (a, b, z) => { const w = bodyToWorld(dir, ...chestToLegs(rf.turn, a + P.body[0], b + P.body[1])); return { x: (w.X - w.Y) * KX, y: (w.X + w.Y) * KY_G() - (z + P.body[2]), d: w.X + w.Y }; };
   const key = (p, eps = 0) => bodyLayerKey(rf, p[0], p[1], p[2]) + eps;
@@ -32,10 +32,9 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
     const H = side === 'L' ? P.grip : P.rHand;
     return [side, { S, H, E: ik2(S, H, 11.5, 11.5, side === 'L' ? P.elbowL : P.elbowR) }];
   }));
-  // In SW the left bow arm is nearest. Keep the nocked arrow and drawing
+  // Facing left the left bow arm is nearest. Keep the nocked arrow and drawing
   // arm behind that whole assembly, including while the hands meet to nock.
-  // Facing left the bow arm is nearest as well.
-  const nearBowArm = (dirKey === 'SW' || dirKey === 'L') && geo.nocked;
+  const nearBowArm = dirKey === 'L' && geo.nocked;
   const nockedDepth = Math.min(key(joints.L.E), key(geo.G, -0.02)) - 0.04;
   const armDepth = (side, depth) => nearBowArm && side === 'R' ? Math.min(depth, nockedDepth - 0.02) : depth;
   // The drawing hand may sit at the chin, but its sleeve is behind the head.
@@ -47,15 +46,14 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
     // interpolation and makes it pop through the cloak (e.g. u=0.566).
     // Keep this order throughout the motion; the separate hand still reaches
     // the quiver/string, and sleeve portions outside the cloak remain visible.
-    const cover = front ? LAYER.head - 0.6 : LAYER.cape - 0.6;
-    return Math.min(armDepth(side, depth), cover);
+    return Math.min(armDepth(side, depth), LAYER.head - 0.6);
   };
   parts.push(...legParts2(ctx, rf, P, ARCHER_LEGS));
   parts.push({ id: 'torso', d: LAYER.torso, draw: () => drawArcherTorso(ctx, rf, P) });
-  parts.push({ id: 'cape', d: front ? -200 : LAYER.cape, draw: () => drawArcherCape(ctx, rf, P) });
+  parts.push({ id: 'cape', d: -200, draw: () => drawArcherCape(ctx, rf, P) });
   parts.push({ id: 'mantle', d: LAYER.cape + 1, draw: () => drawArcherMantle(ctx, rf) });
   const hc = U(1.5, 0, 67);
-  parts.push({ id: 'head', d: LAYER.head, draw: () => drawArcherHead(ctx, hc, sx, front, P) });
+  parts.push({ id: 'head', d: LAYER.head, draw: () => drawArcherHead(ctx, hc, sx, P) });
   const qa = yawToBody(rf, QUIVER_TOP[0], QUIVER_TOP[1]);
   parts.push({ id: 'quiver', d: Math.min(key([qa[0], qa[1], QUIVER_TOP[2]]), LAYER.head - 1), draw: () => drawQuiver(ctx, rf, P) });
   // 腕: 肩 → 肘 (IK) → 手。[E] 上腕・前腕を太さのある先細りの形にし、手をミトン形に
@@ -97,7 +95,7 @@ export function drawArcherRig(ctx, x, y, dirKey, action, t, scale = 1, opts = {}
     const e = U(...armR.E), h = UG(...armR.H);
     mittenHand(ctx, h, h.x - e.x, h.y - e.y, 3.9, ARC.leatherDark, { knuckles: false, thumbSide: sx });
   } });
-  // Bow under its gripping fingers; SW nocked arrow behind the left bow arm.
+  // Bow under its gripping fingers; facing left the nocked arrow is behind the left bow arm.
   parts.push({ id: 'bow', d: key(geo.G, -0.02), draw: () => drawBow(ctx, UG, geo) });
   const sm = vlerp(geo.G, geo.stringMid, 0.5);
   // [E修正8] 弦の上半分は頭より手前に来ても「頭の直前」に描く (↙↘ の引き切りで弦が顔の真ん中を斜めに横切っていた)。
@@ -148,7 +146,7 @@ export function archerReleaseInfo(dirKey) {
 export const ARCHER_ATTACK_KEYS = Object.freeze([0, 0.07, 0.14, 0.2, 0.25, 0.3, 0.36, 0.41, 0.45, 0.5, 0.55, 0.6, 0.66, 0.72, 0.75, 0.78, 0.82, 0.87, 0.93, 0.97]);
 /**
  * 弓使いのキャラクター定義。
- *   コマ数は 待機16・歩行10・射撃20 の計46コマ × 4方向 = 184コマ (実験D・Eと同じ)。
+ *   コマ数は 待機16・歩行10・射撃20 の計46コマ × 左右2方向 = 92コマ。
  *   projectile: 矢を放つ瞬間 (攻撃の位相 releaseAt)・放つ位置 origin(direction)・矢の形 draw・長さ length。
  *   放った後の矢はキャラの絵から切り離し、Renderer の projectiles として描く。
  */

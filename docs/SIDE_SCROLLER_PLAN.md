@@ -107,3 +107,13 @@
 - §5 の「目印だけを手で配置するステージデータ (`features`)」は見送った。テーマが窓・松明・木・家を一定の間隔で自動に並べる。必要になったら段階5以降で検討する。
 - 確認: `tests/node/side-themes.test.mjs` (層の形、同じ区画を2回描いて同じ絵になること、線が `band` の外へ出ないこと)。ブラウザーで3テーマの全体・両端・区画の継ぎ目 (`side-stage.html?mark=1&zoom=3`) を確認した。
 - 描き方の手引きは [STAGE_GUIDE.md](STAGE_GUIDE.md)。
+
+## 10. 段階5の結果: 8×8ダンジョンと4方向の退役
+
+- **入口**: トップ・横スクロールのメニューの「8×8ダンジョン」と、Studio の詳細画面の「ダンジョンで見る」を外した。
+- **ゲーム用キット** (`tools/export-game.mjs`): 8×8の部屋と4方向のサンプルを、横スクロールのサンプルに作り直した。キットには `scroll/game.js` (歩く・攻撃・矢の規則) と `scroll/controls.js` (入力) を同梱し、場所・キャラクター・Live / Cached を切り替えられる。
+- **削除したもの**: `game/` (8×8ダンジョンの画面)、`src/dungeon/` (部屋・小物・石材)、8×8の Renderer (`src/rendering/` の renderer・scene・depth-sort・sprites・overlays)、公開 API の `createRenderer`・部屋 (`ROOM_DEFAULTS` / `normalizeRoom` / `PROP_TYPES`)・`DIRECTIONS`・`walkSecondsPerTile`・`TILE_*`、アイソメの投影 (`iso` など)。松明の炎はダンジョンのテーマへ移し、コマ1枚の画像 (`frameCanvas`) は `rendering/cache.js` へ、Studio の足元のタイルは `character-view.js` へ移した。
+- **キャラクター内部の4方向のコード** (案B): 共通リグの向きを R / L だけにし (`DIRS`・`DIR_ORDER`・`rf.front`)、全キャラクターから後ろ向き (NW / NE) の頭・胴・マントの絵と、斜め向き専用の補正 (`direction==='SE'` など) を消した。キャラクターのコードは差し引き約250行減った。
+- **絵が変わっていないことの確かめ方**: 整理の前に、全11体 × 右・左 × 全動作 × 24位相の描画の命令 (線・塗り・座標) を記録して指紋にした (`tests/node/side-drawings.test.mjs`、`tests/fixtures/side-drawings.json`)。1ファイル直すごとに指紋を照合し、全員が整理の前と1本の線も変わっていないことを確かめた。1px ずらすと指紋が変わることもテストで確かめている。以後、絵を意図して変えたときは `npm run drawings:update` で作り直す。
+- **テストと確認ページ**: 8×8のテスト (`game.test.mjs`)、4方向の戦士の原本との照合と比較用の原本 (`warrior-before.js`・`skeleton-before.js`)、4方向の確認ページ (`warrior.html`・`warrior-checks.js`・`skeleton-checks.js`) を削除した。`responsive.html` は8×8の代わりに横スクロールの画面を測る。
+- **ドキュメント**: API リファレンス・構成の説明を SideRenderer 中心に書き直し、README・キャラクター追加ガイド・制作ガイド・持ち出しガイド・横向きガイドから4方向と8×8の説明を外した。部屋ガイドは `docs/archive/` へ、骸骨の4方向の報告は `docs/reports/` へ移した (どちらも記録として残す)。

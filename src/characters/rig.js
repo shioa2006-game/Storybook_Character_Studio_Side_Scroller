@@ -1,6 +1,6 @@
 /**
  * Inkstone — 共通人体リグ (職業に依存しない部分)
- *   体の座標系: a = 前, b = 左, z = 上 (ローカルpx)。4方向の違いは前ベクトル f だけ。
+ *   体の座標系: a = 前, b = 左, z = 上 (ローカルpx)。右向き R と左向き L の違いは前ベクトル f と上半身のひねり turn だけ。
  *   - 描画ヘルパー (cShape / cEllipse / cLine / shadeSide / limb / capsulePts)
  *   - 投影 (proj・足の接地補正 footProj)・向き (DIRS)・体の座標系 → ワールド (bodyToWorld)
  *   - アニメ補助 (smooth / keyframes / walkFeet)・2関節IK (ik2)・ベクトル (vlerp / dot3 / orth3)
@@ -62,14 +62,14 @@ export function footProj(dir, a, b, z) {
 
 /**
  * 横スクロールの視点: 真横 (画面の右 = ワールド (1,−1)/√2) から手前 (ワールド (1,1)/√2) へ傾ける角度。
- * 0 だと rf.front が偽になり、正面系・背面系の2種類しかない頭が後頭部になる。20〜30° で既存の絵のまま横向きに見える。
+ * 0 だと前ベクトルが画面の奥へ向かず、顔の正面 (3/4 の絵) が見えなくなる。20〜30° で頭の絵のまま横向きに見える。
  */
 export const SIDE_VIEW_ANGLE = 25 * Math.PI / 180;
 
 /**
  * 横向きだけ上半身 (U / UY) をカメラ側へひねる角度 (カメラに向けるごまかし)。脚と足運び (W・footProj) は進行方向のまま。
  * 胴・ベルトなどは前後の厚みのない板として描くので、真横に近いと板の幅が細く見える。
- * 25° + 20° = 45° で、4方向で調整した絵と同じ幅に戻す。
+ * 25° + 20° = 45° で、胴の板が斜め 45° から見たときと同じ幅になる (絵はその幅で描いてある)。
  */
 export const SIDE_CHEST_TURN = 20 * Math.PI / 180;
 
@@ -79,19 +79,13 @@ const sideForward = sign => {
   return [sign * c + n, -sign * c + n];
 };
 
+/** 向き。f = 前ベクトル (ワールドの X, Y)、turn = 上半身のひねり (+ で胸の正面が体の右側へ回る) */
 export const DIRS = {
-  NW: { key: 'NW', arrow: '↖', name: '左上', axis: '−x', f: [-1, 0] },
-  NE: { key: 'NE', arrow: '↗', name: '右上', axis: '−y', f: [0, -1] },
-  SW: { key: 'SW', arrow: '↙', name: '左下', axis: '+y', f: [0, 1] },
-  SE: { key: 'SE', arrow: '↘', name: '右下', axis: '+x', f: [1, 0] },
   R: { key: 'R', arrow: '→', name: '右', axis: 'side+', f: sideForward(1), turn: SIDE_CHEST_TURN },
   L: { key: 'L', arrow: '←', name: '左', axis: 'side−', f: sideForward(-1), turn: -SIDE_CHEST_TURN },
 };
 
-/** アイソメの4方向 (8×8ダンジョンの Renderer が使う) */
-export const DIR_ORDER = ['NW', 'NE', 'SW', 'SE'];
-
-/** 横スクロールの左右2方向 (Studio・カタログの既定) */
+/** 横スクロールの左右2方向 */
 export const SIDE_DIR_ORDER = ['R', 'L'];
 
 export const ACTIONS = { idle: '待機', walk: '歩行', attack: '攻撃' };
@@ -143,25 +137,25 @@ export function walkFeet(t) {
 /**
  * キャラ1体ぶんの座標フレーム。
  *  W(a,b,z)  : 体の座標系 → ローカル画面座標 (d = 奥行き X+Y)。脚・足はこれで描く
- *  U(a,b,z)  : 上半身の揺れ (body) を加えた W。横向き (R / L) では、さらに上半身を SIDE_CHEST_TURN だけカメラ側へひねる (turn)
+ *  U(a,b,z)  : 上半身の揺れ (body) を加えた W。さらに上半身を SIDE_CHEST_TURN だけカメラ側へひねる (turn)
  *  UY(a,b,z) : さらに上半身のひねり yaw (ラジアン, +で左肩が前へ) を加えたもの
  *  vs, vt    : 視点方向 (ワールドの (1,1)) を体の座標系の a, b 成分で表したもの
  */
 export function rigFrame(dirKey, body, yaw = 0) {
   const dir = DIRS[dirKey];
-  // 横向きは上半身 (U / UY) だけカメラ側へひねる (dir.turn。+ で胸の正面が体の右側 −b へ回る)。W (脚・足) は進行方向のまま
-  const turn = dir.turn || 0, ct = Math.cos(turn), st = Math.sin(turn);
+  // 上半身 (U / UY) だけカメラ側へひねる (dir.turn。+ で胸の正面が体の右側 −b へ回る)。W (脚・足) は進行方向のまま
+  const turn = dir.turn, ct = Math.cos(turn), st = Math.sin(turn);
   const W = (a, b, z) => { const w = bodyToWorld(dir, a, b); return { ...proj(w.X, w.Y, z), d: w.X + w.Y }; };
   const U = (a, b, z) => { const a1 = a + body[0], b1 = b + body[1]; return W(a1 * ct + b1 * st, -a1 * st + b1 * ct, z + body[2]); };
   const cy = Math.cos(yaw), sy = Math.sin(yaw);
   const UY = (a, b, z) => U(a * cy + b * sy, -a * sy + b * cy, z);
   const [fx, fy] = dir.f, Lx = fy, Ly = -fx, cT = Math.cos(yaw + turn), sT = Math.sin(yaw + turn);
   const fU = [cT * fx - sT * Lx, cT * fy - sT * Ly], LU = [sT * fx + cT * Lx, sT * fy + cT * Ly];
-  return { dir, W, U, UY, yaw, turn, fU, LU, sx: W(1, 0, 0).x >= 0 ? 1 : -1, front: fx + fy > 0, vs: fx + fy, vt: fy - fx };
+  return { dir, W, U, UY, yaw, turn, fU, LU, sx: W(1, 0, 0).x >= 0 ? 1 : -1, vs: fx + fy, vt: fy - fx };
 }
 
 /**
- * 上半身の座標 (a, b) → 脚の座標 (a, b)。横向きの上半身のひねり turn (rf.turn / DIRS[key].turn) を戻す。
+ * 上半身の座標 (a, b) → 脚の座標 (a, b)。上半身のひねり turn (rf.turn / DIRS[key].turn) を戻す。
  * bodyToWorld(dir, …) や独自の投影 (弓使いの UG など) へ上半身の点を渡すときに使い、U で描く手と位置をそろえる。
  */
 export function chestToLegs(turn, a, b) {
@@ -171,9 +165,9 @@ export function chestToLegs(turn, a, b) {
 }
 
 /**
- * 横向きで上半身の座標の向き v = [a, b, z] を、進行方向へ k の割合だけ戻す (横向きガイド 2.3)。
- * 胸がカメラを向いた分 (rf.turn) と上半身のひねり (yaw) だけ逆に回す。4方向では rf.turn = 0 で yaw だけ戻すので、
- * 横向きだけに使う。振り下ろし・詠唱の間だけ k を上げると、手の位置は動かさずに横方向の届きを保てる。
+ * 上半身の座標の向き v = [a, b, z] を、進行方向へ k の割合だけ戻す (横向きガイド 2.3)。
+ * 胸がカメラを向いた分 (rf.turn) と上半身のひねり (yaw) だけ逆に回す。
+ * 振り下ろし・詠唱の間だけ k を上げると、手の位置は動かさずに横方向の届きを保てる。
  */
 export function travelDir(rf, v, k = 1, yaw = rf.yaw) {
   const angle = (rf.turn + yaw) * k;
@@ -221,8 +215,8 @@ export const BODY_SHAPE = { A: 9, B: 16, head: { a: 1.5, z: 67, r: 17, hz: 6, rF
 export const LAYER = { torso: 500, cape: 600, head: 1500 };
 
 export function bodyLayerKey(rf, a, b, z) {
-  // a, b は上半身 (U) の座標。横向きのひねり rf.turn を戻して脚の座標系 (W) にする
-  const c = Math.cos(rf.turn || 0), s = Math.sin(rf.turn || 0);
+  // a, b は上半身 (U) の座標。ひねり rf.turn を戻して脚の座標系 (W) にする
+  const c = Math.cos(rf.turn), s = Math.sin(rf.turn);
   const w = bodyToWorld(rf.dir, a * c + b * s, -a * s + b * c);
   const at = w.X * rf.fU[0] + w.Y * rf.fU[1], bt = w.X * rf.LU[0] + w.Y * rf.LU[1];
   const vs = rf.fU[0] + rf.fU[1], vt = rf.LU[0] + rf.LU[1];
@@ -248,12 +242,6 @@ export const orth3 = (q, u) => { const k = dot3(q, u); return nrm3([q[0] - k * u
 
 /** 歩幅 (walkFeet の足の振れ幅 ±9) */
 export const WALK_STRIDE = 9;
-/**
- * 足を滑らせないための「1マス歩く間に進めるアニメーション時間 (秒)」。
- * 画面の横方向で「接地した足が体に対して後ろへ動く平均速度 = 体の移動速度」となるよう求める (実験Cの ANIM_PER_TILE)。
- * ゲーム側は歩行の actionTime = 歩いた距離 (マス) × この値 にする。scale = キャラの表示倍率 (Renderer の characterScale)。
- */
-export const walkSecondsPerTile = scale => (TW / 2) / (WALK_STRIDE * KX * scale * (2 / Math.PI) * (TAU * WALK_HZ));
 /**
  * 横向き (R / L) で足を滑らせないための「画面上を1px進む間に進めるアニメーション時間 (秒)」。
  * 前方向 a の1px は画面の横 cos(SIDE_VIEW_ANGLE) px。接地した足は1周期に 4 × 歩幅 だけ後ろへ動く。

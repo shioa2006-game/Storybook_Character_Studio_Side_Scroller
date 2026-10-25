@@ -1,11 +1,11 @@
 /**
- * Inkstone — 幾何・アイソメトリック投影の基本
- *   ワールド座標 (x: 右下へ, y: 左下へ, z: 上) → 画面座標。1マス = 画面上 TW×TH px、高さ1 = ZH px。
- *   実験Eまでは iso() が CFG.OX/OY (画面上の原点) を足していたが、ライブラリでは原点を常に 0 とし、
- *   画面上の位置合わせはカメラ (rendering/camera.js) が行う (実験Eのダンジョンも OX = OY = 0 だった)。
+ * Inkstone — 幾何の基本 (点・補間・外接矩形・楕円・凸包)
  */
-/** アイソメ1マスの画面上の幅・高さ (px)、ワールド高さ1単位あたりの px */
-export const TW = 150, TH = 84, ZH = 66;
+/**
+ * 斜め 45° から見た床の1マスの画面上の幅・高さ (px)。比 TH / TW が床の奥行きのつぶれ方で、
+ * キャラクターの足の接地 (rig.js の KY_G) と Studio の足元のタイルが使う。
+ */
+export const TW = 150, TH = 84;
 
 export const TAU = Math.PI * 2;
 
@@ -16,21 +16,6 @@ export const add = (p, q) => ({ x: p.x + q.x, y: p.y + q.y });
 export const sub = (p, q) => ({ x: p.x - q.x, y: p.y - q.y });
 
 export const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
-
-/** ワールド座標(x:右奥→右下, y:左奥→左下, z:上) → 画面座標 (原点 = 床の奥の角) */
-export function iso(x, y, z = 0) {
-  return { x: (x - y) * TW / 2, y: (x + y) * TH / 2 - z * ZH };
-}
-
-/** ワールドのベクトル → 画面のベクトル */
-export function isoVec(dx, dy, dz = 0) {
-  return { x: (dx - dy) * TW / 2, y: (dx + dy) * TH / 2 - dz * ZH };
-}
-
-/** 床に置いた半径rの円 → 画面上の楕円の半径 */
-export const isoRX = r => r * TW / Math.SQRT2;
-
-export const isoRY = r => r * TH / Math.SQRT2;
 
 export function bbox(pts) {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -65,12 +50,5 @@ export function convexHull(points) {
 }
 
 export const facePt = (A, B, D, u, v) => ({ x: A.x + (B.x - A.x) * u + (D.x - A.x) * v, y: A.y + (B.y - A.y) * u + (D.y - A.y) * v });
-
-/** 4点の四辺形内を (u,v) で補間 */
-export function quadPt(a, b, c, d, u, v) {
-  const p = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u) };
-  const q = { x: lerp(d.x, c.x, u), y: lerp(d.y, c.y, u) };
-  return { x: lerp(p.x, q.x, v), y: lerp(p.y, q.y, v) };
-}
 
 export const V = arr => arr.map(([x, y]) => ({ x, y }));

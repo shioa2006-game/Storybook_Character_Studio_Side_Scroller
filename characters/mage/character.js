@@ -47,27 +47,20 @@ function robe(ctx,rf,P) {
   ctx.save();ctx.translate(p.x,p.y);
   shape(ctx,[[-12,-51],[-17,-44],[-15,-34],[-20+sw,-16],[-23+sw,-11],
     [-13,-9],[0,-11],[11,-9],[23+sw,-12],[18+sw,-25],[15,-43],[11,-51]],C.cloth,{w:1.8});
-  if(rf.front) {
-    const Q=pts=>pts.map(([b,z])=>{const q=rf.U(9,b,z);return[q.x-p.x,q.y-p.y];});
-    shape(ctx,Q([[-5,46],[-7,33],[-13,12],[-1,12],[1,31],[3,12],[14,13],[7,35],[5,46]]),C.lining,{w:1,depth:.7,speck:.35});
-    for(const b of [-7,7]) {
-      const q=rf.U(9,b,18);shape(ctx,[[q.x-p.x,q.y-p.y-3],[q.x-p.x+1.6,q.y-p.y],
-        [q.x-p.x,q.y-p.y+3],[q.x-p.x-1.6,q.y-p.y]],C.light,{w:.3,depth:0,speck:0});
-    }
-    shape(ctx,[[-12,-50],[-3,-45],[0,-41],[3,-45],[12,-50],[8,-40],[0,-37],[-8,-41]],C.dark,{w:1});
-  } else {
-    cLine(ctx,[[-6,-46],[-8,-30],[-12+sw,-14]],.75);
-    cLine(ctx,[[7,-45],[9,-30],[14+sw,-14]],.7);
+  const Q=pts=>pts.map(([b,z])=>{const q=rf.U(9,b,z);return[q.x-p.x,q.y-p.y];});
+  shape(ctx,Q([[-5,46],[-7,33],[-13,12],[-1,12],[1,31],[3,12],[14,13],[7,35],[5,46]]),C.lining,{w:1,depth:.7,speck:.35});
+  for(const b of [-7,7]) {
+    const q=rf.U(9,b,18);shape(ctx,[[q.x-p.x,q.y-p.y-3],[q.x-p.x+1.6,q.y-p.y],
+      [q.x-p.x,q.y-p.y+3],[q.x-p.x-1.6,q.y-p.y]],C.light,{w:.3,depth:0,speck:0});
   }
+  shape(ctx,[[-12,-50],[-3,-45],[0,-41],[3,-45],[12,-50],[8,-40],[0,-37],[-8,-41]],C.dark,{w:1});
   shape(ctx,[[-14,-36],[14,-36],[14,-32],[-14,-32]],C.leather,{w:1,depth:.7});
-  if(rf.front) {
-    const buckle=rf.U(10,0,34);ctx.save();ctx.translate(buckle.x-p.x,buckle.y-p.y);
-    shape(ctx,[[-3,-2.5],[3,-2.5],[3,2.5],[-3,2.5]],C.gold,{w:.8,depth:0});
-    shape(ctx,[[-1.6,-1.2],[1.6,-1.2],[1.6,1.2],[-1.6,1.2]],C.book,{w:.5,depth:0});ctx.restore();
-    oval(ctx,0,-44,2.7,2.7,C.gold,{w:.8});
-    cLine(ctx,[[-16+sw,-17],[-11,-29],[-8,-35]],.65);
-    cLine(ctx,[[17+sw,-16],[12,-28],[10,-34]],.65);
-  }
+  const buckle=rf.U(10,0,34);ctx.save();ctx.translate(buckle.x-p.x,buckle.y-p.y);
+  shape(ctx,[[-3,-2.5],[3,-2.5],[3,2.5],[-3,2.5]],C.gold,{w:.8,depth:0});
+  shape(ctx,[[-1.6,-1.2],[1.6,-1.2],[1.6,1.2],[-1.6,1.2]],C.book,{w:.5,depth:0});ctx.restore();
+  oval(ctx,0,-44,2.7,2.7,C.gold,{w:.8});
+  cLine(ctx,[[-16+sw,-17],[-11,-29],[-8,-35]],.65);
+  cLine(ctx,[[17+sw,-16],[12,-28],[10,-34]],.65);
   ctx.restore();
 }
 
@@ -78,24 +71,20 @@ function head(ctx,h,rf,P) {
   // second protruding lip whose endpoints did not match the front edge.
   shape(ctx,[[-19,-19],[-11,-23],[7,-23],[18,-17],[22,-4],[21,15],[15,22],
     [12,17],[7,23],[-1,21],[-9,23],[-14,18],[-20,20],[-23,9],[-21,-4]],C.hair,{w:1.7});
-  if(rf.front) {
-    // Back-to-front: hanging side locks, face/ears, then the fringe.
-    shape(ctx,[[-18,-2],[-15,6],[-15,16],[-11,24],[-17,22],[-21,14],[-21,3]],C.hair,{w:1});
-    shape(ctx,[[19,-4],[21,9],[18,19],[15,21],[17,11],[15,2]],C.hair,{w:1});
-    oval(ctx,2,1,18.4,20,C.skin,{w:1.6,speck:0,depth:1.1});
-    oval(ctx,-15,8,4.8,5.4,C.skin,{w:1,speck:0});
-    cLine(ctx,[[-17,7],[-14,6],[-13,10]],.6);
-    for(const [x,y] of [[-2,5],[12,3]])oval(ctx,x,y,1.5,4.4,C.ink,{w:.5,depth:0,speck:0});
-    cLine(ctx,[[4,15],[6,15.4]],.65);
-    cLine(ctx,[[-4,-3],[-1,-4]],.65);cLine(ctx,[[10,-5],[13,-5]],.65);
-    for(const x of [-8,-6,15,17])cLine(ctx,[[x,12],[x+.5,13.4]],.4);
-    shape(ctx,[[-20,-8],[-13,-19],[1,-23],[15,-18],[20,-9],[23,4],[16,-2],
-      [19,10],[13,5],[9,-7],[5,0],[4,-12],[-2,-2],[-1,-14],[-9,-4],[-14,1],[-12,-9],[-19,4]],C.hair,{w:1.2});
-    cLine(ctx,[[-11,-15],[-15,-5],[-17,2]],.55);
-    cLine(ctx,[[3,-19],[1,-13],[-3,-7]],.55);
-  } else {
-    for(const x of [-13,-4,7,15])cLine(ctx,[[x,-15],[x+2,0],[x,16]],.65);
-  }
+  // Back-to-front: hanging side locks, face/ears, then the fringe.
+  shape(ctx,[[-18,-2],[-15,6],[-15,16],[-11,24],[-17,22],[-21,14],[-21,3]],C.hair,{w:1});
+  shape(ctx,[[19,-4],[21,9],[18,19],[15,21],[17,11],[15,2]],C.hair,{w:1});
+  oval(ctx,2,1,18.4,20,C.skin,{w:1.6,speck:0,depth:1.1});
+  oval(ctx,-15,8,4.8,5.4,C.skin,{w:1,speck:0});
+  cLine(ctx,[[-17,7],[-14,6],[-13,10]],.6);
+  for(const [x,y] of [[-2,5],[12,3]])oval(ctx,x,y,1.5,4.4,C.ink,{w:.5,depth:0,speck:0});
+  cLine(ctx,[[4,15],[6,15.4]],.65);
+  cLine(ctx,[[-4,-3],[-1,-4]],.65);cLine(ctx,[[10,-5],[13,-5]],.65);
+  for(const x of [-8,-6,15,17])cLine(ctx,[[x,12],[x+.5,13.4]],.4);
+  shape(ctx,[[-20,-8],[-13,-19],[1,-23],[15,-18],[20,-9],[23,4],[16,-2],
+    [19,10],[13,5],[9,-7],[5,0],[4,-12],[-2,-2],[-1,-14],[-9,-4],[-14,1],[-12,-9],[-19,4]],C.hair,{w:1.2});
+  cLine(ctx,[[-11,-15],[-15,-5],[-17,2]],.55);
+  cLine(ctx,[[3,-19],[1,-13],[-3,-7]],.55);
   // Floppy crown and broad tilted brim. Only this head accessory mirrors.
   // The brim-to-upper-eye gap was about 15–17px; lower the entire hat by 8px.
   ctx.translate(0,8);
@@ -105,10 +94,8 @@ function head(ctx,h,rf,P) {
   cLine(ctx,[[-25,-46],[-17,-44],[-12,-39]],.65);
   cLine(ctx,[[-10,-56],[-5,-50],[-2,-47]],.65);
   shape(ctx,[[-23,-31],[-5,-36],[15,-34],[18,-27],[-3,-28],[-25,-24]],C.leather,{w:1.2,depth:1});
-  if(rf.front) {
-    shape(ctx,[[2,-37],[12,-37],[14,-28],[4,-27]],C.gold,{w:1,depth:0});
-    shape(ctx,[[5,-34],[10,-34],[11,-30],[6,-30]],C.book,{w:.6,depth:0});
-  }
+  shape(ctx,[[2,-37],[12,-37],[14,-28],[4,-27]],C.gold,{w:1,depth:0});
+  shape(ctx,[[5,-34],[10,-34],[11,-30],[6,-30]],C.book,{w:.6,depth:0});
   shape(ctx,[[-22,-26],[-10,-28],[7,-28],[22,-24],[31,-19],[35,-12],[30,-12],
     [22,-17],[11,-18],[1,-14],[-14,-9],[-29,-4],[-35,-7],[-30,-16]],C.cloth,{w:1.7});
   cLine(ctx,[[-30,-10],[-17,-15],[-5,-20],[12,-23],[24,-20]],.7);
@@ -186,12 +173,11 @@ export function drawMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
   parts.push({id:'head',d:100,draw:()=>head(ctx,headCenter,rf,P)});
   for(const [side,H] of [[1,P.staff],[-1,P.book]]) {
     const S=[0,side*13,49],E=ik2(S,H,14,15,[-3,side*4,-14]),j={S,E,H};
-    // Sleeves stay below the head layer. In rear views the chest-held book is behind the robe.
-    const d=side===-1?(rf.front?25:-25):layer(mid(S,H));
-    // SW's left-hand staff is nearest: crystal and its wooden setting cover
-    // the hat brim. Keep the sleeve below the head and the grip over the shaft.
-    // Facing left the staff hand is near as well, so the same rule applies.
-    const staffInFront=side===1&&(direction==='SW'||direction==='L');
+    // Sleeves stay below the head layer.
+    const d=side===-1?25:layer(mid(S,H));
+    // Facing left the left-hand staff is nearest: crystal and its wooden setting
+    // cover the hat brim. Keep the sleeve below the head and the grip over the shaft.
+    const staffInFront=side===1&&direction==='L';
     parts.push({id:'sleeve'+side,d,draw:()=>sleeve(ctx,rf,j)});
     parts.push({id:'equipment'+side,d:staffInFront?101:d+1,draw:()=>side===1?staff(ctx,rf,P):book(ctx,rf,P)});
     // Book occludes the upper palm; its lower half remains visible under the edge.

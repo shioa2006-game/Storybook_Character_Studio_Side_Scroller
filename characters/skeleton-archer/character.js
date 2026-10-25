@@ -48,23 +48,17 @@ function skull(ctx,rf) {
   shape(ctx,[[-23,4],[-25,-5],[-22,-16],[-14,-23],[-3,-26],[10,-24],
     [20,-17],[24,-6],[23,5],[19,11],[12,13],[7,17],[-5,17],[-14,13],[-21,10]],
     C.bone,{w:LW.outline,depth:2.2,speck:1.2});
-  if(rf.front) {
-    shape(ctx,[[-9,10],[-3,13],[6,14],[17,9],[16,17],[12,18],[11,21],
-      [7,21],[6,19],[3,21],[0,21],[-1,18],[-4,20],[-7,18]],C.bone,{w:1.4,depth:.8,speck:.15});
-    for(const [x,y] of [[-3,16],[2,17],[7,16],[12,14]])cLine(ctx,[[x,y-1],[x,y+3]],.75);
-    shape(ctx,[[-12,-1],[-10,-7],[-3,-6],[1,-3],[1,4],[-3,8],[-10,7],[-13,3]],
-      C.hollow,{w:1.2,depth:0,speck:0});
-    shape(ctx,[[12,-5],[16,-10],[20,-11],[21,-5],[20,2],[17,5],[13,4]],
-      C.hollow,{w:1.1,depth:0,speck:0});
-    shape(ctx,[[6,4],[8,8],[7,11],[4,11],[3,9]],C.hollow,{w:.7,depth:0,speck:0});
-    cLine(ctx,[[-20,7],[-15,8],[-14,11],[-9,12]],.75);
-    cLine(ctx,[[-10,-22],[-12,-17],[-8,-13],[-10,-9]],.65);
-    cLine(ctx,[[-12,-17],[-16,-16]],.5);
-  } else {
-    cLine(ctx,[[0,-24],[-2,-18],[1,-14],[-2,-9],[1,-5],[-1,0]],.75);
-    cLine(ctx,[[-20,6],[-14,3],[-10,5],[-5,2],[-1,4],[4,2],[10,5],[18,4]],.7);
-    shape(ctx,[[-7,12],[-3,10],[3,10],[8,13],[4,17],[-2,17]],'#cfb992',{w:1,depth:.5,speck:.2});
-  }
+  shape(ctx,[[-9,10],[-3,13],[6,14],[17,9],[16,17],[12,18],[11,21],
+    [7,21],[6,19],[3,21],[0,21],[-1,18],[-4,20],[-7,18]],C.bone,{w:1.4,depth:.8,speck:.15});
+  for(const [x,y] of [[-3,16],[2,17],[7,16],[12,14]])cLine(ctx,[[x,y-1],[x,y+3]],.75);
+  shape(ctx,[[-12,-1],[-10,-7],[-3,-6],[1,-3],[1,4],[-3,8],[-10,7],[-13,3]],
+    C.hollow,{w:1.2,depth:0,speck:0});
+  shape(ctx,[[12,-5],[16,-10],[20,-11],[21,-5],[20,2],[17,5],[13,4]],
+    C.hollow,{w:1.1,depth:0,speck:0});
+  shape(ctx,[[6,4],[8,8],[7,11],[4,11],[3,9]],C.hollow,{w:.7,depth:0,speck:0});
+  cLine(ctx,[[-20,7],[-15,8],[-14,11],[-9,12]],.75);
+  cLine(ctx,[[-10,-22],[-12,-17],[-8,-13],[-10,-9]],.65);
+  cLine(ctx,[[-12,-17],[-16,-16]],.5);
   ctx.restore();
 }
 
@@ -78,11 +72,10 @@ function torso(ctx,rf) {
     boneStroke(ctx,Q([[-2,-b,z],[4,-b,z-2],[7,-b*.5,z-4],[7,0,z-3],
       [7,b*.5,z-4],[4,b,z-2],[-2,b,z]]).map(xy),2.1);
   }
-  if(rf.front)boneStroke(ctx,Q([[8,0,46],[8,0,32]]).map(xy),2.5);
-  else boneStroke(ctx,Q([[-7,0,46],[-7,0,29]]).map(xy),2.5);
+  boneStroke(ctx,Q([[8,0,46],[8,0,32]]).map(xy),2.5);
   boneStroke(ctx,Q([[0,-14,47],[3,-6,49],[2,0,48],[3,6,49],[0,14,47]]).map(xy),2.3);
   for(const z of [49,52]) {const p=U(0,0,z);oval(ctx,p.x,p.y,3,1.7,C.bone,{w:1,speck:0});}
-  const a=rf.front?9:-8;
+  const a=9;
   paint(ctx,Q([[a,-13,46],[a,-9,48],[a,12,30],[a,9,27]]),
     {fill:C.leather,w:1.3,depth:.7,speck:.4,amp:.2});
   paint(ctx,Q([[0,-13,27],[0,13,27],[2,16,17],[2,10,19],[2,8,13],
@@ -90,11 +83,9 @@ function torso(ctx,rf) {
     {fill:C.leather,w:1.6,depth:1.4,speck:.7,amp:.25});
   paint(ctx,Q([[a,-14,30],[a,14,30],[a,14,26],[a,-14,26]]),
     {fill:C.dark,w:1.2,depth:.6,speck:.3,amp:.2});
-  if(rf.front) {
-    const p=U(10,0,28);
-    shape(ctx,[[p.x-3,p.y-2.8],[p.x+3,p.y-2.8],[p.x+3,p.y+2.8],[p.x-3,p.y+2.8]],C.gold,{w:.8,depth:.3});
-    shape(ctx,[[p.x-1.6,p.y-1.4],[p.x+1.6,p.y-1.4],[p.x+1.6,p.y+1.4],[p.x-1.6,p.y+1.4]],C.dark,{w:.5,depth:0});
-  }
+  const p=U(10,0,28);
+  shape(ctx,[[p.x-3,p.y-2.8],[p.x+3,p.y-2.8],[p.x+3,p.y+2.8],[p.x-3,p.y+2.8]],C.gold,{w:.8,depth:.3});
+  shape(ctx,[[p.x-1.6,p.y-1.4],[p.x+1.6,p.y-1.4],[p.x+1.6,p.y+1.4],[p.x-1.6,p.y+1.4]],C.dark,{w:.5,depth:0});
 }
 
 function legs(ctx,rf,P) {
@@ -134,8 +125,8 @@ export function drawSkeletonArcher(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const a=yawToBody(rf,0,side==='L'?14:-14),S=[...a,47],H=side==='L'?P.grip:P.rHand;
     return [side,{S,H,E:ik2(S,H,13.5,13.5,side==='L'?P.elbowL:P.elbowR)}];
   }));
-  // Facing left the bow hand is near as in SW.
-  const nearBow=(direction==='SW'||direction==='L')&&geo.nocked;
+  // Facing left the bow hand is near.
+  const nearBow=direction==='L'&&geo.nocked;
   const nockedDepth=Math.min(key(joints.L.E),key(geo.G)-.02)-.04;
   const armDepth=(side,d)=>nearBow&&side==='R'?Math.min(d,nockedDepth-.02):d;
   parts.push({id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf)});

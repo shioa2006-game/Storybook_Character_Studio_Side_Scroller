@@ -81,22 +81,18 @@ function torso(ctx,rf) {
     plate(ctx,Q([[side*3,28],[side*15,29],[side*19,17],[side*10,14],[side*5,17]]));
     plate(ctx,Q([[side*6,25],[side*16,26],[side*17,23],[side*7,22]]),{fill:C.light,w:.7,depth:.5});
   }
-  if(rf.front) {
-    plate(ctx,[U(8,-12,45),U(9,0,49),U(8,12,45),U(10,11,35),U(11,0,30),U(10,-11,35)],
-      {fill:C.light,w:LW.part,depth:1.8});
-    plate(ctx,[U(9,0,47),U(10,10,44),U(11,8,36),U(12,0,32)],
-      {fill:C.iron,w:0,depth:0,speck:.5});
-    line(ctx,[U(10,-10,35),U(12,0,31),U(10,10,35)],.8);
-    plate(ctx,[U(10,-5,26),U(10,5,26),U(11,7,14),U(11,0,11),U(11,-7,14)],
-      {fill:C.dark,depth:1});
-  }
+  plate(ctx,[U(8,-12,45),U(9,0,49),U(8,12,45),U(10,11,35),U(11,0,30),U(10,-11,35)],
+    {fill:C.light,w:LW.part,depth:1.8});
+  plate(ctx,[U(9,0,47),U(10,10,44),U(11,8,36),U(12,0,32)],
+    {fill:C.iron,w:0,depth:0,speck:.5});
+  line(ctx,[U(10,-10,35),U(12,0,31),U(10,10,35)],.8);
+  plate(ctx,[U(10,-5,26),U(10,5,26),U(11,7,14),U(11,0,11),U(11,-7,14)],
+    {fill:C.dark,depth:1});
   plate(ctx,[U(11,-15,31),U(11,15,31),U(11,15,27),U(11,-15,27)],
     {fill:C.leather,w:LW.detail,depth:.6});
-  if(rf.front) {
-    const b=U(12,0,29);
-    shape(ctx,[[b.x,b.y-5],[b.x+5,b.y],[b.x,b.y+5],[b.x-5,b.y]],C.edge,{w:1,depth:.7});
-    shape(ctx,[[b.x,b.y-2.8],[b.x+2.6,b.y],[b.x,b.y+2.8],[b.x-2.6,b.y]],C.dark,{w:.6,depth:0});
-  }
+  const b=U(12,0,29);
+  shape(ctx,[[b.x,b.y-5],[b.x+5,b.y],[b.x,b.y+5],[b.x-5,b.y]],C.edge,{w:1,depth:.7});
+  shape(ctx,[[b.x,b.y-2.8],[b.x+2.6,b.y],[b.x,b.y+2.8],[b.x-2.6,b.y]],C.dark,{w:.6,depth:0});
   const c=rf.U(1.5,0,49);
   shape(ctx,[[c.x-15,c.y-3],[c.x-8,c.y-6],[c.x,c.y-2],[c.x+9,c.y-6],
     [c.x+15,c.y-2],[c.x+11,c.y+4],[c.x,c.y+7],[c.x-11,c.y+3]],C.redDark);
@@ -107,36 +103,27 @@ function torso(ctx,rf) {
 function helmet(ctx,rf) {
   const h=rf.U(1.5,0,69.5);
   ctx.save();ctx.translate(h.x,h.y);ctx.scale(rf.sx,1);
-  // 43px helmet envelope (z=92.5..49.5), shared front/back. Crown points are extra.
+  // 43px helmet envelope (z=92.5..49.5). Crown points are extra.
   shape(ctx,[[-21,-12],[-16,-21],[-5,-23],[9,-22],[19,-16],[22,-5],
     [21,10],[11,18],[2,20],[-10,16],[-21,8]],C.iron,{w:LW.outline,depth:2.6});
-  if(rf.front) {
-    // Angular brow and cheek cuts lead into a narrow vertical chin opening.
-    // Dense edge samples keep the shared paint path from rounding these corners.
-    shape(ctx,[[-15,-12],[-10,-14],[5,-7],[20,-15],[19,3],[9,11],
-      [9,18],[3,20],[3,11],[-14,4]],C.edge,
-      {w:1.1,depth:0,speck:.3,amp:.03,step:1});
-    shape(ctx,[[-13,-11],[-10,-12],[5,-5],[18,-12],[17,2],[7,10],
-      [7,17],[5,18],[5,10],[-12,3]],C.void,
-      {w:.8,depth:0,light:0,speck:0,amp:.02,step:1});
-    const eyes=[ [[-8,-4],[-1,-.7],[1,1],[-3,2],[-6,.5]],
-      [[10,0],[16,-4],[14,.8],[11,2],[9,1.8]] ];
-    ctx.save();ctx.globalAlpha=.17;
-    oval(ctx,-3,-.4,5.2,3,C.ember,{w:0,depth:0,light:0,speck:0});
-    oval(ctx,12.5,-.3,4.1,3,C.ember,{w:0,depth:0,light:0,speck:0});
-    ctx.restore();
-    for(const eye of eyes)shape(ctx,eye,C.ember,{w:0,depth:0,light:0,speck:0,amp:.06});
-    line(ctx,[[-18,-6],[-18,5],[-7,11],[0,14]],.65);
-    shape(ctx,[[-18,6],[-8,12],[1,15],[1,18],[-10,14],[-20,7]],C.light,{w:.7,depth:.5});
-    line(ctx,[[19,4],[18,10],[8,17]],.65);
-  } else {
-    // Rear is solid steel; seam and neck lames distinguish it from the face opening.
-    shape(ctx,[[-16,-16],[-7,-21],[-3,-20],[-4,9],[-13,5],[-18,-2]],C.light,{w:0,depth:0,speck:.6});
-    line(ctx,[[1,-20],[0,-5],[1,13]],.85);
-    shape(ctx,[[-20,5],[-10,10],[2,13],[14,9],[21,4],[20,10],[11,16],
-      [2,19],[-10,15],[-20,9]],C.dark,{w:1.2,depth:1});
-    line(ctx,[[-15,9],[-5,13],[3,15],[15,10]],.7);
-  }
+  // Angular brow and cheek cuts lead into a narrow vertical chin opening.
+  // Dense edge samples keep the shared paint path from rounding these corners.
+  shape(ctx,[[-15,-12],[-10,-14],[5,-7],[20,-15],[19,3],[9,11],
+    [9,18],[3,20],[3,11],[-14,4]],C.edge,
+    {w:1.1,depth:0,speck:.3,amp:.03,step:1});
+  shape(ctx,[[-13,-11],[-10,-12],[5,-5],[18,-12],[17,2],[7,10],
+    [7,17],[5,18],[5,10],[-12,3]],C.void,
+    {w:.8,depth:0,light:0,speck:0,amp:.02,step:1});
+  const eyes=[ [[-8,-4],[-1,-.7],[1,1],[-3,2],[-6,.5]],
+    [[10,0],[16,-4],[14,.8],[11,2],[9,1.8]] ];
+  ctx.save();ctx.globalAlpha=.17;
+  oval(ctx,-3,-.4,5.2,3,C.ember,{w:0,depth:0,light:0,speck:0});
+  oval(ctx,12.5,-.3,4.1,3,C.ember,{w:0,depth:0,light:0,speck:0});
+  ctx.restore();
+  for(const eye of eyes)shape(ctx,eye,C.ember,{w:0,depth:0,light:0,speck:0,amp:.06});
+  line(ctx,[[-18,-6],[-18,5],[-7,11],[0,14]],.65);
+  shape(ctx,[[-18,6],[-8,12],[1,15],[1,18],[-10,14],[-20,7]],C.light,{w:.7,depth:.5});
+  line(ctx,[[19,4],[18,10],[8,17]],.65);
   // Iron crown is seated on the brow as part of the helmet, not a hovering accessory.
   shape(ctx,[[-21,-12],[-23,-36],[-15,-23],[-11,-37],[-6,-23],[1,-42],
     [7,-24],[12,-36],[16,-23],[23,-38],[21,-13],[11,-11],[4,-7],[-6,-12]],
@@ -144,14 +131,10 @@ function helmet(ctx,rf) {
   shape(ctx,[[-19,-14],[-20,-29],[-15,-19],[-11,-30],[-7,-18],[1,-35],
     [6,-18],[12,-29],[15,-18],[20,-30],[19,-15],[11,-14],[4,-10],[-6,-15]],
   C.dark,{w:.8,depth:1,amp:.13});
-  if(rf.front) {
-    shape(ctx,[[3,-32],[8,-23],[4,-14],[-1,-23]],C.edge,{w:1,depth:.4});
-    shape(ctx,[[3,-29],[6,-23],[4,-17],[1,-23]],C.ruby,{w:.6,depth:.5,speck:0});
-    shape(ctx,[[3,-28],[3,-22],[1.2,-23]],C.glow,{w:0,depth:0,light:0,speck:0});
-    line(ctx,[[3,-22],[5.5,-23]],.5);
-  } else {
-    line(ctx,[[-13,-16],[-6,-16],[3,-12],[12,-16],[18,-17]],.6);
-  }
+  shape(ctx,[[3,-32],[8,-23],[4,-14],[-1,-23]],C.edge,{w:1,depth:.4});
+  shape(ctx,[[3,-29],[6,-23],[4,-17],[1,-23]],C.ruby,{w:.6,depth:.5,speck:0});
+  shape(ctx,[[3,-28],[3,-22],[1.2,-23]],C.glow,{w:0,depth:0,light:0,speck:0});
+  line(ctx,[[3,-22],[5.5,-23]],.5);
   ctx.restore();
 }
 
@@ -200,16 +183,15 @@ export function drawDemonKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const w=keyframes([[0,[0]],[.16,[0]],[.3,[1]],[.47,[1]],[.53,[0]],[1,[0]]],Math.max(0,Math.min(1,t/ATTACK_T)))[0];
     P.right=vlerp(P.right,[-16,-22,41],w);P.blade=nrm3(vlerp(P.blade,[-.95,0,.3],w));
   }
-  if(rf.turn) P.blade=travelDir(rf,P.blade);
+  P.blade=travelDir(rf,P.blade);
   const key=p=>bodyLayerKey(rf,...p),parts=legs(ctx,rf,P);
-  parts.push({id:'cape',d:rf.front?-200:LAYER.cape,draw:()=>cape(ctx,rf,P)});
+  parts.push({id:'cape',d:-200,draw:()=>cape(ctx,rf,P)});
   parts.push({id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf)});
   parts.push({id:'helmet',d:LAYER.head,draw:()=>helmet(ctx,rf)});
   for(const side of [-1,1]) {
     const S=[0,side*15,46],H=side===-1?P.right:P.left;
     const E=ik2(S,H,14,15,[-5,side*2,-8]),s=U(...S),e=U(...E),h=U(...H);
-    const behindCape=!rf.front&&s.d<U(0,0,S[2]).d;
-    const armKey=p=>behindCape?Math.min(key(p),LAYER.cape-1):key(p);
+    const armKey=key;
     parts.push({id:'upper'+side,d:armKey(mid(S,E)),draw:()=>{
       plate(ctx,taperPts(s,e,5.7,4.7),{fill:C.dark});
       shape(ctx,[[s.x-8,s.y-1],[s.x-6,s.y-6],[s.x,s.y-8],[s.x+7,s.y-4],
@@ -226,10 +208,8 @@ export function drawDemonKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
     parts.push({id:'drape'+side,d:armKey(S)+.02,draw:()=>{
       shape(ctx,[[s.x-7,s.y-5],[s.x-1,s.y-9],[s.x+5,s.y-6],
         [s.x+8,s.y-2],[s.x+2,s.y-4],[s.x-6,s.y-2]],C.red,{w:1,depth:1.4});
-      if(rf.front) {
-        oval(ctx,s.x,s.y-5,2.9,3,C.edge,{w:.8,depth:.5});
-        oval(ctx,s.x,s.y-5,1.5,1.8,C.ruby,{w:.5,depth:.2,speck:0});
-      }
+      oval(ctx,s.x,s.y-5,2.9,3,C.edge,{w:.8,depth:.5});
+      oval(ctx,s.x,s.y-5,1.5,1.8,C.ruby,{w:.5,depth:.2,speck:0});
     }});
     if(side===-1) {
       const tip=U(...H.map((v,i)=>v+P.blade[i]*BLADE_LENGTH));

@@ -14,50 +14,39 @@ export const ARCHER_LEGS = { pants: ARC.pants, boot: ARC.boot, cuff: ARC.bootCuf
 // Head shell: 46 × .96 = 44px high, matching the studio humanoid guide.
 export const AH = {
   hoodF: [[-23,15],[-27,4],[-25,-9],[-31,-13],[-25,-23],[-11,-27],[5,-25],[19,-20],[23,-13],[20,3],[17,15],[0,19]],
-  hoodB: [[-23,14],[-26,4],[-25,-10],[-30,-14],[-24,-23],[-11,-27],[5,-25],[19,-20],[24,-10],[23,7],[17,16],[0,19],[-15,17]],
   fringe: [[-20,1],[-18,-10],[-9,-18],[4,-21],[16,-15],[19,-7],[26,-3],[19,-3],[21,4],[15,0],[14,-8],[9,-1],[5,5],[6,-9],[-1,0],[-8,6],[-6,-5],[-15,5],[-14,-1]],
 };
 const elfShape=(ctx,pts,fill,o={})=>paintA(ctx,pts,{fill,w:1.5,depth:1.5,
   speck:.55,speckScale:.32,amp:.25,step:4,...o});
-export function drawArcherHead(ctx,c,sx,front,P) {
+export function drawArcherHead(ctx,c,sx,P) {
   ctx.save();ctx.translate(c.x,c.y);ctx.scale(sx*.96,.96);
   const line=(pts,w=.65)=>cLine(ctx,pts,w);
   const ear=side=>{
     elfShape(ctx,[[-17*side,-1],[-32*side,-3],[-26*side,4],[-18*side,9]],ARC.skin,{w:1.3,depth:.8,speck:0});
     line([[-20*side,2],[-27*side,0],[-23*side,4]],.65);
   };
-  if(front) {
-    elfShape(ctx,AH.hoodF,ARC.cape,{w:2.1,depth:2.1,speck:1.1});
-    elfShape(ctx,[[-21,9],[-20,-5],[-10,-19],[5,-21],[20,-12],[20,12],[10,21],[-10,20]],ARC.capeDark,{w:1,depth:0});
-    ear(-1);
-    elfShape(ctx,[[-17,-5],[-13,-15],[2,-18],[15,-11],[19,1],[18,11],[11,17],[1,19],[-11,15],[-16,8]],ARC.skin,{w:1.7,depth:1,speck:0});
-    ear(1);
-    elfShape(ctx,[[-17,-5],[-12,1],[-15,11],[-15,23],[-11,28],[-20,23],[-22,15],[-20,6]],ARC.hair,{depth:1});
-    elfShape(ctx,[[17,-3],[20,5],[20,16],[16,25],[12,27],[15,17],[13,8]],ARC.hair,{depth:1});
-    elfShape(ctx,AH.fringe,ARC.hair,{w:1.4,depth:1.4,speck:.25});
-    for(const pts of [[[1,-18],[-4,-9],[-14,-1]],[[7,-17],[9,-9],[6,-1]],[[13,-13],[17,-4]],[[-18,10],[-18,20]],[[17,10],[17,18]]])line(pts,.6);
-    inkLine(ctx,[{x:-12,y:-9},{x:-5,y:-15},{x:1,y:-18}],{color:ARC.hairLight,w:1.4,amp:.2});
-    for(const [ex,rx] of [[1,1.7],[13,1.5]]) {
-      const x=ex+P.look*.5,y=5;
-      if(P.blink||(P.focus&&ex===1))line([[x-1.8,y],[x+1.8,y-.3]],1);
-      else {ctx.fillStyle=PAL.ink;ctx.beginPath();ctx.ellipse(x,y,rx,P.focus?2.6:4.1,0,0,TAU);ctx.fill();}
-    }
-    line([[-1,-1],[3,-2]],.7);line([[11,-2],[15,-1]],.7);
-    for(const x of [-8,-6,15])inkLine(ctx,[{x,y:10},{x:x+.6,y:11}],{color:'#c69b76',w:.6,amp:.1});
-    if(P.mouth)elfShape(ctx,[[6,13],[9,13],[8,15],[6,14]],'#80553e',{w:.6,depth:0,speck:0});
-    else line([[6,14],[8,13.8]],.55);
-    // Folded hood edge frames the hair; the pointed ear remains outside it.
-    elfShape(ctx,[[-24,7],[-20,-6],[-9,-18],[5,-24],[19,-19],[22,-14],[17,-16],[5,-20],[-7,-13],[-17,-2],[-20,13]],ARC.cape,{w:1.3,depth:.9,speck:.6});
-    line([[-25,-13],[-21,-21],[-12,-24]],.7);
-  } else {
-    ear(-1);ear(1);
-    elfShape(ctx,[[-20,4],[-21,17],[-16,25],[-12,21],[-8,26],[-5,21],[1,25],[6,21],[12,25],[17,20],[20,7]],ARC.hair,{w:1.4,depth:1.2,speck:.3});
-    elfShape(ctx,AH.hoodB,ARC.cape,{w:2.1,depth:2.2,speck:1.1});
-    line([[-8,-23],[-3,-15],[0,-2],[-3,14]],.75);
-    line([[-21,-14],[-20,-4],[-14,9]],.65);line([[17,-15],[20,-5],[17,7]],.65);
-    line([[-14,13],[-2,16],[12,14]],.75);
-    line([[-17,18],[-15,22]],.55);line([[13,19],[12,22]],.55);
+  elfShape(ctx,AH.hoodF,ARC.cape,{w:2.1,depth:2.1,speck:1.1});
+  elfShape(ctx,[[-21,9],[-20,-5],[-10,-19],[5,-21],[20,-12],[20,12],[10,21],[-10,20]],ARC.capeDark,{w:1,depth:0});
+  ear(-1);
+  elfShape(ctx,[[-17,-5],[-13,-15],[2,-18],[15,-11],[19,1],[18,11],[11,17],[1,19],[-11,15],[-16,8]],ARC.skin,{w:1.7,depth:1,speck:0});
+  ear(1);
+  elfShape(ctx,[[-17,-5],[-12,1],[-15,11],[-15,23],[-11,28],[-20,23],[-22,15],[-20,6]],ARC.hair,{depth:1});
+  elfShape(ctx,[[17,-3],[20,5],[20,16],[16,25],[12,27],[15,17],[13,8]],ARC.hair,{depth:1});
+  elfShape(ctx,AH.fringe,ARC.hair,{w:1.4,depth:1.4,speck:.25});
+  for(const pts of [[[1,-18],[-4,-9],[-14,-1]],[[7,-17],[9,-9],[6,-1]],[[13,-13],[17,-4]],[[-18,10],[-18,20]],[[17,10],[17,18]]])line(pts,.6);
+  inkLine(ctx,[{x:-12,y:-9},{x:-5,y:-15},{x:1,y:-18}],{color:ARC.hairLight,w:1.4,amp:.2});
+  for(const [ex,rx] of [[1,1.7],[13,1.5]]) {
+    const x=ex+P.look*.5,y=5;
+    if(P.blink||(P.focus&&ex===1))line([[x-1.8,y],[x+1.8,y-.3]],1);
+    else {ctx.fillStyle=PAL.ink;ctx.beginPath();ctx.ellipse(x,y,rx,P.focus?2.6:4.1,0,0,TAU);ctx.fill();}
   }
+  line([[-1,-1],[3,-2]],.7);line([[11,-2],[15,-1]],.7);
+  for(const x of [-8,-6,15])inkLine(ctx,[{x,y:10},{x:x+.6,y:11}],{color:'#c69b76',w:.6,amp:.1});
+  if(P.mouth)elfShape(ctx,[[6,13],[9,13],[8,15],[6,14]],'#80553e',{w:.6,depth:0,speck:0});
+  else line([[6,14],[8,13.8]],.55);
+  // Folded hood edge frames the hair; the pointed ear remains outside it.
+  elfShape(ctx,[[-24,7],[-20,-6],[-9,-18],[5,-24],[19,-19],[22,-14],[17,-16],[5,-20],[-7,-13],[-17,-2],[-20,13]],ARC.cape,{w:1.3,depth:.9,speck:.6});
+  line([[-25,-13],[-21,-21],[-12,-24]],.7);
   ctx.restore();
 }
 /** Cream tunic, split leather jerkin, broad belt and one hip pouch. */
@@ -70,25 +59,21 @@ export function drawArcherTorso(ctx,rf,P) {
       {fill:ARC.leather,w:1.4,depth:1.8,speck:.8,speckScale:.3,amp:.25});
     dashedStroke(ctx,Q([[side*11,44],[side*12,33],[side*15,22]],2),.6,[1.3,2]);
   }
-  if(rf.front) {
-    for(const z of [42,36]) {
-      const b=rf.UY(2,0,z);
-      paint(ctx,ellipsePts(b.x,b.y,1,1,10),{fill:ARC.brass,w:.6,depth:0,speck:0});
-    }
-    paint(ctx,Q([[-11,49],[-7,50],[14,31],[11,28]],3),{fill:ARC.leatherDark,w:1,depth:.7,speck:.2});
-    const b=rf.UY(4,0,40);
-    elfShape(ctx,[[b.x,b.y-2.5],[b.x+2.5,b.y],[b.x,b.y+2.5],[b.x-2.5,b.y]],ARC.brass,{w:.8,depth:0,speck:0});
+  for(const z of [42,36]) {
+    const b=rf.UY(2,0,z);
+    paint(ctx,ellipsePts(b.x,b.y,1,1,10),{fill:ARC.brass,w:.6,depth:0,speck:0});
   }
+  paint(ctx,Q([[-11,49],[-7,50],[14,31],[11,28]],3),{fill:ARC.leatherDark,w:1,depth:.7,speck:.2});
+  const b=rf.UY(4,0,40);
+  elfShape(ctx,[[b.x,b.y-2.5],[b.x+2.5,b.y],[b.x,b.y+2.5],[b.x-2.5,b.y]],ARC.brass,{w:.8,depth:0,speck:0});
   paint(ctx,Q([[-17,31],[17,31],[17,26],[-17,26]],4),{fill:ARC.leatherDark,w:1.4,depth:1,speck:.3});
-  if(rf.front) {
-    const b=rf.UY(5,0,28.5);
-    elfShape(ctx,[[b.x-3,b.y-2.6],[b.x+3,b.y-2.6],[b.x+3,b.y+2.6],[b.x-3,b.y+2.6]],ARC.brass,{w:1,depth:.4,speck:0});
-    elfShape(ctx,[[b.x-1.8,b.y-1.4],[b.x+1.8,b.y-1.4],[b.x+1.8,b.y+1.4],[b.x-1.8,b.y+1.4]],ARC.leatherDark,{w:.5,depth:0,speck:0});
-  }
+  const k=rf.UY(5,0,28.5);   // belt buckle
+  elfShape(ctx,[[k.x-3,k.y-2.6],[k.x+3,k.y-2.6],[k.x+3,k.y+2.6],[k.x-3,k.y+2.6]],ARC.brass,{w:1,depth:.4,speck:0});
+  elfShape(ctx,[[k.x-1.8,k.y-1.4],[k.x+1.8,k.y-1.4],[k.x+1.8,k.y+1.4],[k.x-1.8,k.y+1.4]],ARC.leatherDark,{w:.5,depth:0,speck:0});
   paint(ctx,Q([[-8,29],[-17,29],[-18,20],[-9,19]],5),{fill:ARC.leather,w:1.2,depth:1,speck:.3,round:1});
   pLine(ctx,Q([[-9,26],[-13,24],[-17,26]],6),.65);
 }
-/** Long ragged cloak, behind the front body and over the back. */
+/** Long ragged cloak behind the body. */
 export function drawArcherCape(ctx,rf,P) {
   const Q=arr=>arr.map(([b,z])=>{
     const k=Math.max(0,(48-z)/36);
@@ -96,20 +81,18 @@ export function drawArcherCape(ctx,rf,P) {
   });
   paint(ctx,Q([[-12,52],[-21,39],[-30,13],[-26,7],[-22,11],[-18,9],[-13,12],[-7,9],
     [0,12],[8,9],[14,12],[20,9],[24,12],[28,8],[30,15],[21,39],[12,52]]),
-    {fill:rf.front?ARC.capeDark:ARC.cape,w:1.8,depth:2,speck:.8,speckScale:.32,amp:.3});
+    {fill:ARC.capeDark,w:1.8,depth:2,speck:.8,speckScale:.32,amp:.3});
   for(const b of [-17,-7,10,20])pLine(ctx,Q([[b*.6,43],[b,17]]),.65);
 }
-/** Shoulder folds share the rear cloak's centre; a round clasp sits in front. */
+/** Shoulder folds with a round clasp in front. */
 export function drawArcherMantle(ctx,rf) {
-  const a=rf.front?3:-7,Q=arr=>arr.map(([b,z])=>rf.UY(a,b,z));
+  const Q=arr=>arr.map(([b,z])=>rf.UY(3,b,z));
   paint(ctx,Q([[-12,53],[-21,48],[-26,38],[-17,40],[0,46],[17,40],[26,38],[21,48],[12,53],[0,50]]),
     {fill:ARC.cape,w:1.7,depth:1.5,speck:.65,speckScale:.32,amp:.25});
   pLine(ctx,Q([[-22,41],[-9,46],[0,48],[10,45],[22,41]]),.7);
-  if(rf.front) {
-    const c=rf.UY(4,0,48);
-    paint(ctx,ellipsePts(c.x,c.y,3,3,18),{fill:ARC.brass,w:1.1,depth:.6,speck:0});
-    paint(ctx,ellipsePts(c.x,c.y,1.7,1.7,14),{fill:ARC.brass,w:.6,depth:0,speck:0});
-  }
+  const c=rf.UY(4,0,48);
+  paint(ctx,ellipsePts(c.x,c.y,3,3,18),{fill:ARC.brass,w:1.1,depth:.6,speck:0});
+  paint(ctx,ellipsePts(c.x,c.y,1.7,1.7,14),{fill:ARC.brass,w:.6,depth:0,speck:0});
 }
 /** 背中の矢筒: 筒 (革の帯2本)・ケープの上から留める革帯・口の縁・矢羽 (生成り / くすんだ赤 / 緑) */
 export function drawQuiver(ctx, rf, P) {

@@ -53,13 +53,11 @@ function robe(ctx,rf,P) {
     C.dark,{w:0,depth:0,speck:.4});
   for(const x of [-7,8])cLine(ctx,[[x,-31],[x*1.2+s*.5,-22],[x*1.5+s,-12]],.7);
   shape(ctx,[[-14,-35],[14,-35],[14,-31],[-14,-31]],C.leather,{w:1,depth:.6});
-  if(rf.front) {
-    const b=rf.U(10,0,33);
-    shape(ctx,[[b.x-c.x-3,-36],[b.x-c.x+3,-36],[b.x-c.x+3,-30],[b.x-c.x-3,-30]],
-      C.gold,{w:.8,depth:.4});
-    shape(ctx,[[b.x-c.x-1.6,-34.5],[b.x-c.x+1.6,-34.5],
-      [b.x-c.x+1.6,-31.5],[b.x-c.x-1.6,-31.5]],C.leather,{w:.5,depth:0});
-  }
+  const b=rf.U(10,0,33);
+  shape(ctx,[[b.x-c.x-3,-36],[b.x-c.x+3,-36],[b.x-c.x+3,-30],[b.x-c.x-3,-30]],
+    C.gold,{w:.8,depth:.4});
+  shape(ctx,[[b.x-c.x-1.6,-34.5],[b.x-c.x+1.6,-34.5],
+    [b.x-c.x+1.6,-31.5],[b.x-c.x-1.6,-31.5]],C.leather,{w:.5,depth:0});
   ctx.restore();
 }
 
@@ -72,11 +70,9 @@ function mantle(ctx,rf) {
     [18,4],[21,0],[11,-5],[0,-2]],C.cloth,{w:1.2,depth:1.3});
   cLine(ctx,[[-17,5],[-9,6],[-2,3]],.65);
   cLine(ctx,[[3,3],[11,6],[18,5]],.65);
-  if(rf.front) {
-    const q=rf.U(10,0,48);
-    oval(ctx,q.x-p.x,q.y-p.y,2.7,3,C.gold,{w:.8});
-    oval(ctx,q.x-p.x,q.y-p.y,1.4,1.7,C.dark,{w:.5,depth:0});
-  }
+  const q=rf.U(10,0,48);
+  oval(ctx,q.x-p.x,q.y-p.y,2.7,3,C.gold,{w:.8});
+  oval(ctx,q.x-p.x,q.y-p.y,1.4,1.7,C.dark,{w:.5,depth:0});
   ctx.restore();
 }
 
@@ -87,25 +83,18 @@ function hood(ctx,rf,P) {
   shape(ctx,[[-21,-5],[-23,-17],[-29+P.sway,-13],[-25,-24],[-15,-31],
     [-4,-27],[10,-21],[19,-12],[22,3],[24,15],[14,21],[1,22],
     [-12,19],[-23,14],[-25,8]],C.cloth,{w:LW.outline,depth:2.7});
-  if(rf.front) {
-    shape(ctx,[[11,-17],[18,-10],[21,13],[11,18],[-2,18],[-17,12],
-      [-10,0],[1,-9]],C.dark,{w:1.1,depth:.8});
-    shape(ctx,[[12,-14],[16,-8],[18,11],[10,15],[-1,15],[-13,10],
-      [-7,1],[2,-6]],C.void,{w:1,depth:0,light:0,speck:0,amp:.12});
-    // No facial features beyond the small amber eyes inside the hood's shadow.
-    for(const [x,y] of [[0,4],[11,2.5]]) {
-      ctx.save();ctx.globalAlpha=.13;
-      oval(ctx,x,y,2.8,4.7,C.eye,{w:0,depth:0,speck:0});ctx.restore();
-      oval(ctx,x,y,1.5,3.4,C.eye,{w:0,depth:0,speck:0,amp:.05});
-    }
-    cLine(ctx,[[-20,9],[-12,-3],[0,-13],[11,-19]],.75);
-    cLine(ctx,[[-19,14],[-8,19],[4,20]],.65);
-  } else {
-    shape(ctx,[[-20,-17],[-13,-26],[-6,-24],[-12,-9],[-15,8],[-9,17],
-      [-19,13],[-22,3]],C.dark,{w:0,depth:0,speck:.4});
-    cLine(ctx,[[-3,-23],[2,-10],[4,3],[1,16]],.8);
-    cLine(ctx,[[14,-12],[17,1],[15,14]],.65);
+  shape(ctx,[[11,-17],[18,-10],[21,13],[11,18],[-2,18],[-17,12],
+    [-10,0],[1,-9]],C.dark,{w:1.1,depth:.8});
+  shape(ctx,[[12,-14],[16,-8],[18,11],[10,15],[-1,15],[-13,10],
+    [-7,1],[2,-6]],C.void,{w:1,depth:0,light:0,speck:0,amp:.12});
+  // No facial features beyond the small amber eyes inside the hood's shadow.
+  for(const [x,y] of [[0,4],[11,2.5]]) {
+    ctx.save();ctx.globalAlpha=.13;
+    oval(ctx,x,y,2.8,4.7,C.eye,{w:0,depth:0,speck:0});ctx.restore();
+    oval(ctx,x,y,1.5,3.4,C.eye,{w:0,depth:0,speck:0,amp:.05});
   }
+  cLine(ctx,[[-20,9],[-12,-3],[0,-13],[11,-19]],.75);
+  cLine(ctx,[[-19,14],[-8,19],[4,20]],.65);
   cLine(ctx,[[-24,-17],[-18,-17],[-12,-21]],.65);
   ctx.restore();
 }
@@ -163,14 +152,12 @@ function spellbook(ctx,rf,P) {
   cLine(ctx,[[7.5,-7],[7.5,8]],.45);
   shape(ctx,[[-9,-12],[6,-11],[6,12],[-9,12]],C.book,{w:1.2,depth:1});
   cLine(ctx,[[-7,-9],[-7,9]],.65);
-  if(rf.front) {
-    // One ivory skull silhouette, two eye sockets and a short jaw: legible at game size.
-    shape(ctx,[[-5,-4],[-3,-6],[1,-6],[3,-4],[3,0],[1,2],[1,5],
-      [-3,5],[-3,2],[-5,0]],C.bone,{w:.65,depth:0,light:0,speck:0,amp:.06,step:2});
-    for(const x of [-3,1])oval(ctx,x,-1,1.3,1.5,C.book,{w:0,depth:0,speck:0,amp:.03});
-    shape(ctx,[[-1,.8],[-2,2.2],[0,2.2]],C.book,{w:0,depth:0,light:0,speck:0,amp:0,step:1});
-    cLine(ctx,[[-1,3.2],[-1,5]],.5);
-  }
+  // One ivory skull silhouette, two eye sockets and a short jaw: legible at game size.
+  shape(ctx,[[-5,-4],[-3,-6],[1,-6],[3,-4],[3,0],[1,2],[1,5],
+    [-3,5],[-3,2],[-5,0]],C.bone,{w:.65,depth:0,light:0,speck:0,amp:.06,step:2});
+  for(const x of [-3,1])oval(ctx,x,-1,1.3,1.5,C.book,{w:0,depth:0,speck:0,amp:.03});
+  shape(ctx,[[-1,.8],[-2,2.2],[0,2.2]],C.book,{w:0,depth:0,light:0,speck:0,amp:0,step:1});
+  cLine(ctx,[[-1,3.2],[-1,5]],.5);
   ctx.restore();
 }
 
@@ -179,10 +166,10 @@ export function drawDarkMage(ctx,x,y,direction,action,t,scale=1,opts={}) {
   // Side views turn the forward-pointing staff back to the travel direction while it
   // casts (SIDE_VIEW_GUIDE.md 2.3); only then, so its butt never swings through the robe.
   P.staffAxis=nrm3([P.pitch,.32,1]);
-  if(rf.turn&&action==='attack') P.staffAxis=travelDir(rf,P.staffAxis,
+  if(action==='attack') P.staffAxis=travelDir(rf,P.staffAxis,
     keyframes([[0,[0]],[.46,[0]],[.59,[1]],[.72,[1]],[.84,[0]],[1,[0]]],((t%CAST_T)+CAST_T)%CAST_T/CAST_T)[0]);
   // Facing left the staff hand is near: the raised staff passes beside the hood on
-  // the camera side, so draw staff and grip over the hood (as the mage does in SW).
+  // the camera side, so draw staff and grip over the hood (as the mage does).
   const nearStaff=direction==='L';
   const key=p=>bodyLayerKey(rf,...p);
   const parts=legParts2(ctx,rf,P,{pants:C.dark,boot:C.leather,sole:C.dark,footR:3.8,soleR:3.4});

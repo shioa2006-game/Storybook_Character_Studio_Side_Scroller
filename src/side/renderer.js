@@ -6,7 +6,7 @@
  *
  * 1フレームの描画順: 紙と奥の背景の層 → 背景の動き (松明の炎など) → 足元の影 → キャラクター (x の順) → 飛んでいる矢 → 前景の層
  * キャラクターは右向き R / 左向き L で描き、Cached Frames は左右2方向のコマを作る。
- * 描画の入口で描画設定と乱数状態を自分のものに切り替え、終わったら元に戻す (8×8ダンジョンの Renderer と同じ)。
+ * 描画の入口で描画設定と乱数状態を自分のものに切り替え、終わったら元に戻す (isolateDrawing)。
  */
 import { isolateDrawing } from '../core/settings.js';
 import { seed } from '../core/random.js';

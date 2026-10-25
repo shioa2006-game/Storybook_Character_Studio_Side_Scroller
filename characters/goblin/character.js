@@ -63,7 +63,7 @@ function legs(ctx,rf,P) {
     const hip=[-4+P.body[0]*.5,side*8,23+P.body[2]*.5],ank=[ft[0],ft[1],ankleZ];
     const knee=ik2(hip,ank,14,15,[8,side*5,0]);
     const h=rf.W(...hip),k=rf.W(...knee),a=rf.W(...ank);
-    out.push({id:'leg'+side,d:rf.front?1+a.d*.01:-80+a.d*.1,draw:()=>{
+    out.push({id:'leg'+side,d:1+a.d*.01,draw:()=>{
       paint(ctx,taperPts(h,k,5.4,4.4),{fill:C.skin,w:1.5,depth:1.5,speck:.7,speckScale:.3});
       paint(ctx,taperPts(k,a,4,3.2),{fill:C.skin,w:1.5,depth:1.2,speck:.6,speckScale:.3});
       oval(ctx,k,4.3,3.8,C.skin,{w:1});
@@ -82,37 +82,29 @@ function legs(ctx,rf,P) {
 
 // Belt and hips share a pelvis centre behind the planted feet. The upper
 // chest stays forward; changing depth below it makes a hunch, not a translation.
-const waistSurface=(rf,P)=>-4-P.body[0]*.5+(rf.front?5:-5);
+const waistSurface=(rf,P)=>-4-P.body[0]*.5+5;
 function torso(ctx,rf,P) {
   const U=rf.U,waist=waistSurface(rf,P);
   const Q=pts=>pts.map(([b,z])=>{
     const u=Math.max(0,Math.min(1,(z-27)/16));
-    return xy(U(waist+((rf.front?7:-6)-waist)*u,b,z));
+    return xy(U(waist+(7-waist)*u,b,z));
   });
   // Forward shoulders and a low pelvis create the hunch without scaling a human.
   shape(ctx,Q([[-12,43],[-15,37],[-10,27],[-14,22],[0,18],[14,22],[10,28],[14,39],[9,44]]),C.skin);
   shape(ctx,Q([[-11,45],[-15,40],[-11,33],[-13,27],[0,24],[13,27],[11,35],[14,42],[9,44],
     [5,37],[0,34],[-5,38]]),C.leather,{w:1.6});
-  if(rf.front) {
-    shape(ctx,Q([[-12,44],[-8,45],[13,28],[10,25]]),C.dark,{w:1});
-    const [bx,by]=Q([[-1,35]])[0],b={x:bx,y:by};
-    shape(ctx,[[b.x-3,b.y-3],[b.x+3,b.y-2],[b.x+2,b.y+3],[b.x-3,b.y+2]],C.iron,{w:.8});
-    cLine(ctx,[[b.x-1,b.y-1],[b.x+1,b.y+1]],.7);
-  } else {
-    cLine(ctx,Q([[-7,41],[-5,35],[-4,29]]),.7);
-    shape(ctx,Q([[6,43],[17,44],[13,39],[17,36],[7,39]]),C.dark,{w:1});
-  }
+  shape(ctx,Q([[-12,44],[-8,45],[13,28],[10,25]]),C.dark,{w:1});
+  const [bx,by]=Q([[-1,35]])[0],b={x:bx,y:by};
+  shape(ctx,[[b.x-3,b.y-3],[b.x+3,b.y-2],[b.x+2,b.y+3],[b.x-3,b.y+2]],C.iron,{w:.8});
+  cLine(ctx,[[b.x-1,b.y-1],[b.x+1,b.y+1]],.7);
 }
 
 function loincloth(ctx,rf,P,central=false) {
   const waist=waistSurface(rf,P);
   // The centre flap drapes slightly forward between the thighs. Side flaps
-  // stay close to the pelvis and are occluded by the bent knees in front views.
+  // stay close to the pelvis and are occluded by the bent knees.
   const Q=pts=>pts.map(([b,z])=>xy(rf.U(waist+(central?(28-z)*.18:0),b,z)));
-  if(!rf.front) {
-    shape(ctx,Q([[-12,28],[-19,18],[-14,20],[-15,13],[-9,17],[-5,10],[-2,14],
-      [1,9],[5,16],[8,13],[12,18],[18,16],[15,23],[11,29]]),C.cloth,{w:1.6});
-  } else if(central) {
+  if(central) {
     shape(ctx,Q([[-7,28],[7,28],[6,18],[3,14],[1,9],[-2,14],[-5,11],[-7,18]]),C.cloth,{w:1.5});
     cLine(ctx,Q([[-3,25],[-4,19],[-3,16]]),.65);
     cLine(ctx,Q([[4,25],[2,19],[1,15]]),.65);
@@ -123,13 +115,11 @@ function loincloth(ctx,rf,P,central=false) {
 }
 
 function belt(ctx,rf,P) {
-  const U=rf.U,a=waistSurface(rf,P)+ (rf.front?.7:-.7);
+  const U=rf.U,a=waistSurface(rf,P)+.7;
   const Q=pts=>pts.map(([b,z])=>xy(U(a,b,z)));
   shape(ctx,Q([[-14,29],[14,29],[14,25],[-14,25]]),C.dark,{w:1.2,depth:1});
-  if(rf.front) {
-    const p=U(a+.5,0,27);shape(ctx,[[p.x-3,p.y-2.5],[p.x+3,p.y-2.5],[p.x+3,p.y+2.5],[p.x-3,p.y+2.5]],C.iron,{w:.9,depth:0});
-    shape(ctx,[[p.x-1.6,p.y-1],[p.x+1.5,p.y-1],[p.x+1.5,p.y+1],[p.x-1.6,p.y+1]],C.dark,{w:.4,depth:0});
-  }
+  const p=U(a+.5,0,27);shape(ctx,[[p.x-3,p.y-2.5],[p.x+3,p.y-2.5],[p.x+3,p.y+2.5],[p.x-3,p.y+2.5]],C.iron,{w:.9,depth:0});
+  shape(ctx,[[p.x-1.6,p.y-1],[p.x+1.5,p.y-1],[p.x+1.5,p.y+1],[p.x-1.6,p.y+1]],C.dark,{w:.4,depth:0});
 }
 
 function head(ctx,rf,P) {
@@ -145,25 +135,20 @@ function head(ctx,rf,P) {
   }
   shape(ctx,[[-21,-6],[-20,-15],[-14,-22],[-4,-25],[8,-24],[18,-19],[23,-10],
     [23,2],[20,15],[12,20],[-2,20],[-14,17],[-21,8]],C.skin,{w:1.9,depth:2,round:6});
-  if(rf.front) {
-    // Small eyes under sloping brows, a blunt nose and two modest lower fangs.
-    oval(ctx,{x:-3,y:0},2.4,5,C.ink,{w:.6,depth:0,speck:0});
-    oval(ctx,{x:14,y:1},2,4.5,C.ink,{w:.6,depth:0,speck:0});
-    shape(ctx,[[-9,-7],[-4,-5],[2,-2],[3,-6],[4,-1],[1,0],[-5,-3]],C.skin,{w:0,depth:0,speck:0});
-    cLine(ctx,[[-9,-7],[-4,-5],[2,-2],[4,-3]],1.15);
-    cLine(ctx,[[10,-2],[13,-2],[19,-6]],1.1);
-    const nose=oval(ctx,{x:9,y:8},4.3,2.7,C.skin,{w:.8,depth:.7,speck:0});
-    void nose;
-    cLine(ctx,[[7,8],[8,7.6]],.65);cLine(ctx,[[11,8],[12,8.5]],.65);
-    cLine(ctx,[[-9,13],[-5,11.5],[5,12],[15,15]],1);
-    shape(ctx,[[-5,12],[-3,7.6],[-1.5,12]],C.bone,{w:.75,depth:.2,speck:0});
-    shape(ctx,[[11,13.6],[13,10.5],[14.5,15]],C.bone,{w:.75,depth:.2,speck:0});
-    cLine(ctx,[[-15,5],[-12,6]],.55);
-    cLine(ctx,[[5,-11],[6,-8]],.6);
-  } else {
-    cLine(ctx,[[-13,-14],[-7,-18],[-2,-18]],.55);
-    cLine(ctx,[[11,13],[6,15],[2,14]],.55);
-  }
+  // Small eyes under sloping brows, a blunt nose and two modest lower fangs.
+  oval(ctx,{x:-3,y:0},2.4,5,C.ink,{w:.6,depth:0,speck:0});
+  oval(ctx,{x:14,y:1},2,4.5,C.ink,{w:.6,depth:0,speck:0});
+  shape(ctx,[[-9,-7],[-4,-5],[2,-2],[3,-6],[4,-1],[1,0],[-5,-3]],C.skin,{w:0,depth:0,speck:0});
+  cLine(ctx,[[-9,-7],[-4,-5],[2,-2],[4,-3]],1.15);
+  cLine(ctx,[[10,-2],[13,-2],[19,-6]],1.1);
+  const nose=oval(ctx,{x:9,y:8},4.3,2.7,C.skin,{w:.8,depth:.7,speck:0});
+  void nose;
+  cLine(ctx,[[7,8],[8,7.6]],.65);cLine(ctx,[[11,8],[12,8.5]],.65);
+  cLine(ctx,[[-9,13],[-5,11.5],[5,12],[15,15]],1);
+  shape(ctx,[[-5,12],[-3,7.6],[-1.5,12]],C.bone,{w:.75,depth:.2,speck:0});
+  shape(ctx,[[11,13.6],[13,10.5],[14.5,15]],C.bone,{w:.75,depth:.2,speck:0});
+  cLine(ctx,[[-15,5],[-12,6]],.55);
+  cLine(ctx,[[5,-11],[6,-8]],.6);
   ctx.restore();
 }
 
@@ -196,11 +181,11 @@ export function drawGoblin(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=goblinPose(action,t),rf=rigFrame(direction,P.body),U=rf.U;
   // Side views: the chest faces the camera, but the club keeps the travel direction
   // so the swing reaches forward instead of toward the viewer (SIDE_VIEW_GUIDE.md 2.3).
-  if(rf.turn) P.axis=travelDir(rf,P.axis);
+  P.axis=travelDir(rf,P.axis);
   const parts=legs(ctx,rf,P);
   parts.push({id:'torso',d:0,draw:()=>torso(ctx,rf,P)});
-  parts.push({id:'sideCloth',d:rf.front?.5:1,draw:()=>loincloth(ctx,rf,P)});
-  if(rf.front)parts.push({id:'frontCloth',d:2.5,draw:()=>loincloth(ctx,rf,P,true)});
+  parts.push({id:'sideCloth',d:.5,draw:()=>loincloth(ctx,rf,P)});
+  parts.push({id:'frontCloth',d:2.5,draw:()=>loincloth(ctx,rf,P,true)});
   parts.push({id:'belt',d:3,draw:()=>belt(ctx,rf,P)});
   parts.push({id:'neck',d:5,draw:()=>paint(ctx,taperPts(U(4,0,40),U(8,0,51),6.5,7),
     {fill:C.skin,w:1.2,depth:1,speck:.4,speckScale:.3})});

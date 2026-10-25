@@ -9,19 +9,29 @@
  *   「定義そのもの」に依存する。どれかが変われば、次に使うときにその職業のコマを作り直す (古いコマは破棄)。
  * - 容量は幅 × 高さ × 4 (RGBA の理論値)。ブラウザが実際に使うメモリ (GPU 側の複製など) とは別物。
  * - 生成は同期処理 (その間は画面が止まる)。生成にかかった時間を pauses に記録する。
- * - 生成する向きはストアごとに決める (既定: アイソメ4方向。CharacterView は横スクロールの左右2方向)。
+ * - 生成する向きはストアごとに決める (既定: 横スクロールの左右2方向)。
  */
-import { DIR_ORDER } from '../characters/rig.js';
+import { SIDE_DIR_ORDER } from '../characters/rig.js';
 import { frameKeysOf } from '../characters/registry.js';
-import { frameCanvas } from './sprites.js';
 import { SHADOW_BOX, drawUnitShadow } from './effects.js';
+
+/**
+ * キャラのコマ1枚: ローカル座標の箱 box を k 倍 (= キャラの倍率 × カメラ倍率 × DPR) で描く。
+ * 足元 (0, 0) が箱の中の (−box.x0, −box.y0) × k に来る。
+ */
+export function frameCanvas(k, box, draw) {
+  const c = document.createElement('canvas');
+  c.width = Math.ceil((box.x1 - box.x0) * k); c.height = Math.ceil((box.y1 - box.y0) * k);
+  const g = c.getContext('2d'); g.setTransform(k, 0, 0, k, -box.x0 * k, -box.y0 * k); draw(g);
+  return c;
+}
 
 export const modT = (t, p) => ((t % p) + p) % p;
 /** 時刻 → コマ番号 (そのコマの開始位相 ≦ 現在の位相 となる最後のコマ) */
 export function frameIndexOf(keys, u) { let i = 0; while (i + 1 < keys.length && keys[i + 1] <= u) i++; return i; }
 
 /** @param {string[]} [directions] コマを作る向き (DIRS のキー) */
-export function createFrameCacheStore(directions = DIR_ORDER) {
+export function createFrameCacheStore(directions = SIDE_DIR_ORDER) {
   const entries = new Map();   // id → { def, key, k, frames, keys, count, bytes, ms, frameW, frameH }
   const pauses = [];           // 同期生成の記録 [{ id, ms, frames, at }]
   let shadow = null;           // { k, c } 足元の影のスプライト

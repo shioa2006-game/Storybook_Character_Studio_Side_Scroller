@@ -9,13 +9,28 @@ import { isolateDrawing } from '../core/settings.js';
 import { seed } from '../core/random.js';
 import { TW, TH } from '../core/geometry.js';
 import { PAL } from '../core/palette.js';
-import { strokePath } from '../core/ink.js';
+import { fillPoly, roughen, stippleFace, strokePath } from '../core/ink.js';
 import { DIRS, SIDE_DIR_ORDER } from '../characters/rig.js';
 import { createCharacterRegistry, resolveAction, BUILTIN_CHARACTERS } from '../characters/registry.js';
 import { createFrameCacheStore, modT } from './cache.js';
 import { SHADOW_BOX, drawUnitShadow } from './effects.js';
-import { drawTile } from './overlays.js';
 import { defaultDpr } from './camera.js';
+
+/** プレビュー用の足元の下敷き (斜めから見た床の1マス、実験B/D/Eの確認画面より)。dirKey があれば向きの矢印 */
+function drawTile(g, cx, cy, k, dirKey, fill) {
+  seed('tile' + Math.round(cx) + '_' + Math.round(cy));
+  const hw = TW / 2 * k, hh = TH / 2 * k;
+  const pts = [{ x: cx, y: cy - hh }, { x: cx + hw, y: cy }, { x: cx, y: cy + hh }, { x: cx - hw, y: cy }];
+  fillPoly(g, pts, fill || PAL.floorA);
+  stippleFace(g, pts[0], pts[1], pts[3], 1.6, { base: 0.15, edge: 0.8, fall: 8 });
+  strokePath(g, roughen(pts, true, 0.6, 12), 1.4);
+  if (dirKey) {
+    const [fx, fy] = DIRS[dirKey].f, tip = { x: cx + (fx - fy) * hw * 0.36, y: cy + (fx + fy) * hh * 0.36 }, base = { x: cx - (fx - fy) * hw * 0.12, y: cy - (fx + fy) * hh * 0.12 };
+    const ang = Math.atan2(tip.y - base.y, tip.x - base.x), ah = 8 * Math.min(1.4, k);
+    g.save(); g.globalAlpha = 0.55; strokePath(g, [base, tip], 2.2, false, '#4f7442');
+    fillPoly(g, [tip, { x: tip.x - Math.cos(ang - 0.45) * ah, y: tip.y - Math.sin(ang - 0.45) * ah }, { x: tip.x - Math.cos(ang + 0.45) * ah, y: tip.y - Math.sin(ang + 0.45) * ah }], '#4f7442'); g.restore();
+  }
+}
 
 /**
  * @param {object} o

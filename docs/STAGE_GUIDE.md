@@ -1,6 +1,6 @@
 # 横スクロールの背景ガイド
 
-横スクロール (`scroll/index.html`) の鉛筆画の背景を描く・増やすときの手引きです。8×8ダンジョンの部屋は [ROOM_GUIDE.md](ROOM_GUIDE.md)、描画の API は [API_REFERENCE.md](API_REFERENCE.md) §11 を見てください。
+横スクロール (`scroll/index.html`) の鉛筆画の背景を描く・増やすときの手引きです。描画の API は [API_REFERENCE.md](API_REFERENCE.md) §3 を見てください。
 
 ## 1. 仕組み
 
@@ -59,7 +59,7 @@ export const myTheme = Object.freeze({
 | `endFace(g, x, side, top, bottom, o)` | 両端の壁の内側の面 |
 | `wave(x, a, f, p)` | 乱数を使わない滑らかな揺れ |
 
-線・塗り・点描・ハッチングは 8×8ダンジョンと同じ `src/core/ink.js` (`inkLine`・`inkShape`・`stipplePoly`・`hatchPoly`・`faceCracks`) と `src/core/paint.js` (`paint`) を使います。
+線・塗り・点描・ハッチングはキャラクターと同じ `src/core/ink.js` (`inkLine`・`inkShape`・`stipplePoly`・`hatchPoly`・`faceCracks`) と `src/core/paint.js` (`paint`) を使います。
 
 ## 5. 確認
 

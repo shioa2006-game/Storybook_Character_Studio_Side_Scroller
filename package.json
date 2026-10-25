@@ -7,6 +7,7 @@
     "catalog:sync": "node tools/sync-catalog.mjs",
     "catalog:check": "node tools/sync-catalog.mjs --check",
     "baseline:update": "node tools/update-src-baseline.mjs",
+    "drawings:update": "node tools/update-side-drawings.mjs",
     "export:game": "node tools/export-game.mjs",
     "test": "node --test tests/node/*.test.mjs"
   },

@@ -59,9 +59,9 @@ export function drawSword(ctx,hx,hy,dx,dy,len=43) {
   oval(ctx,...P(-11,0),1.1,1.1,C.hollow,{w:.5,depth:0,speck:0});
 }
 
-export function drawRoundShield(ctx,cx,cy,rx,ry,front=true) {
-  const shell=oval(ctx,cx,cy,rx,ry,front?C.steel:C.wood,{w:2,depth:2,speck:.7});
-  const inner=oval(ctx,cx,cy,rx-3,ry-3,front?C.wood:'#765638',{w:1,depth:1.4,speck:.65});
+export function drawRoundShield(ctx,cx,cy,rx,ry) {
+  const shell=oval(ctx,cx,cy,rx,ry,C.steel,{w:2,depth:2,speck:.7});
+  const inner=oval(ctx,cx,cy,rx-3,ry-3,C.wood,{w:1,depth:1.4,speck:.65});
   ctx.save();clipPath(ctx,inner);
   for(let k=-2;k<=2;k++){
     const xx=cx+k*(rx-3)*.37;
@@ -69,16 +69,11 @@ export function drawRoundShield(ctx,cx,cy,rx,ry,front=true) {
     cLine(ctx,[[xx+2,cy-ry*.6],[xx+3,cy],[xx+2,cy+ry*.5]],.45);
   }
   ctx.restore();
-  if(front){
-    for(let i=0;i<8;i++){const a=i*TAU/8;oval(ctx,cx+Math.cos(a)*(rx-1.5),cy+Math.sin(a)*(ry-1.5),.95,1,C.edge,{w:.65,depth:.3,speck:0});}
-    oval(ctx,cx,cy,rx*.29,ry*.27,C.edge,{w:1.4,depth:1.8,speck:.8});
-    cLine(ctx,[[cx-rx*.13,cy-ry*.11],[cx-rx*.08,cy-ry*.2],[cx+rx*.06,cy-ry*.19]],.65);
-    // A few stable gouges, not a noise field.
-    cLine(ctx,[[cx-rx*.6,cy+4],[cx-rx*.45,cy+8]],.8);
-  }else{
-    shape(ctx,[[cx-4,cy-10],[cx+3,cy-9],[cx+4,cy+10],[cx-3,cy+10]],C.leather,{w:1.2});
-    for(const yy of [-7,7])oval(ctx,cx,cy+yy,1,1,C.edge,{w:.6,speck:0});
-  }
+  for(let i=0;i<8;i++){const a=i*TAU/8;oval(ctx,cx+Math.cos(a)*(rx-1.5),cy+Math.sin(a)*(ry-1.5),.95,1,C.edge,{w:.65,depth:.3,speck:0});}
+  oval(ctx,cx,cy,rx*.29,ry*.27,C.edge,{w:1.4,depth:1.8,speck:.8});
+  cLine(ctx,[[cx-rx*.13,cy-ry*.11],[cx-rx*.08,cy-ry*.2],[cx+rx*.06,cy-ry*.19]],.65);
+  // A few stable gouges, not a noise field.
+  cLine(ctx,[[cx-rx*.6,cy+4],[cx-rx*.45,cy+8]],.8);
   void shell;
 }
 
@@ -99,11 +94,10 @@ const rotatePitch = ([a,b,z],angle) => [a*Math.cos(angle)+z*Math.sin(angle),b,-a
 const plus = (a,b) => a.map((v,i)=>v+b[i]);
 const minus = (a,b) => a.map((v,i)=>v-b[i]);
 const actual = ([a,b,z]) => [a,b,statureZ(z)];
-// Side views (R / L) only, physical z: a forward ready guard in front of the chest, with the
+// Physical z: a forward ready guard in front of the chest, with the
 // blade tilted forward and up in both facings (docs/SIDE_VIEW_GUIDE.md 2.9). At its side the
 // right hand projects behind the body facing right, where the resting blade pointed backward.
 const SIDE_READY = [16,-12,33.5,.8,0,.6];
-const sideView = direction => direction==='R'||direction==='L';
 /** Side views: the attack eases out of and back into SIDE_READY, draws back behind the
  * shoulders facing left (far sword hand), and keeps the blade on the travel direction. */
 function sideSlash(P,direction) {
@@ -207,14 +201,9 @@ function pelvis(ctx,rf) {
   // Torn leather skirt, with actual leg gaps instead of a solid robe.
   poly([[5,-12,38],[5,12,38],[5,14,29],[5,9,31],[5,7,25],[5,4,29],[5,0,23],[5,-4,27],[5,-8,24],[5,-10,31],[5,-14,28]],C.cloth,{speck:.6});
   poly([[-5,-11,38],[-5,11,38],[-5,13,29],[-5,7,31],[-5,4,26],[-5,-2,30],[-5,-7,27],[-5,-12,31]],C.leather);
-  const visible=rf.front?6:-6;
-  poly([[visible,-12,41],[visible,12,41],[visible,12,37],[visible,-12,37]],C.leather,{w:1.6});
-  if(rf.front){
-    poly([[7,-3,41.5],[7,3,41.5],[7,3,36.8],[7,-3,36.8]],C.edge,{w:1});
-    poly([[7.1,-1.8,40.4],[7.1,1.8,40.4],[7.1,1.8,38],[7.1,-1.8,38]],C.leather,{w:.7});
-  }else{
-    const p=W(-6,7,39);shape(ctx,[[p.x-3,p.y],[p.x+3,p.y],[p.x+2,p.y+8],[p.x-2,p.y+7]],C.leather,{w:1});
-  }
+  poly([[6,-12,41],[6,12,41],[6,12,37],[6,-12,37]],C.leather,{w:1.6});
+  poly([[7,-3,41.5],[7,3,41.5],[7,3,36.8],[7,-3,36.8]],C.edge,{w:1});
+  poly([[7.1,-1.8,40.4],[7.1,1.8,40.4],[7.1,1.8,38],[7.1,-1.8,38]],C.leather,{w:.7});
 }
 
 function torso(ctx,rf) {
@@ -233,11 +222,10 @@ function torso(ctx,rf) {
     const arc=[[-2,-b,z],[4,-b,z-2],[7,-b*.55,z-4],[7,0,z-3],[7,b*.55,z-4],[4,b,z-2],[-2,b,z]];
     boneStroke(ctx,arc.map(p=>xy(W(...p))),2.3);
   }
-  if(rf.front)boneStroke(ctx,[xy(W(8,0,64)),xy(W(8,0,48))],3);
-  else for(let i=0;i<6;i++){const p=W(-6,0,43+i*4);oval(ctx,p.x,p.y,2.9,1.7,C.bone,{w:1,depth:.5,speck:0});}
+  boneStroke(ctx,[xy(W(8,0,64)),xy(W(8,0,48))],3);
   boneStroke(ctx,[[0,-13,64],[3,-6,65],[2,0,64],[3,6,65],[0,13,64]].map(p=>xy(W(...p))),2.5);
   for(let i=0;i<3;i++){const p=W(0,0,66+i*2.8);oval(ctx,p.x,p.y,3,1.5,C.bone,{w:1,speck:0});}
-  const a=rf.front?8:-7;
+  const a=8;
   paint(ctx,[[a,11,65],[a,14,62],[a,-10,42],[a,-13,45]].map(p=>W(...p)),{fill:C.leather,w:1.4,depth:.7,speck:.3,amp:.2});
   const p=W(a,3,56);
   shape(ctx,[[p.x-3,p.y-2],[p.x,p.y-5],[p.x+4,p.y-1],[p.x+1,p.y+2]],C.edge,{w:1,depth:.5,speck:0});
@@ -252,43 +240,31 @@ function skull(ctx,rf,jaw) {
   const outline=[[-23,4],[-25,-5],[-22,-16],[-14,-23],[-3,-26],[10,-24],[20,-17],[24,-6],[23,5],[19,11],[12,13],[7,17],[-5,17],[-14,13],[-21,10]];
   shape(ctx,outline,C.bone,{w:2.3,depth:2.5,light:.3,speck:2,amp:.3});
   for(let i=0;i<4;i++)cLine(ctx,[[-22+i*1.4,4+i*.8],[-20+i*1.4,7+i*.8]],.45);
-  if(rf.front){
-    // Separate chin and four broad teeth; cheek notches shape the silhouette.
-    seed('skeleton-jaw');ctx.save();ctx.translate(0,jaw);
-    shape(ctx,[[-9,10],[-3,13],[6,14],[17,9],[16,17],[12,18],[11,21],[7,21],
-      [6,19],[3,21],[0,21],[-1,18],[-4,20],[-7,18]],C.bone,{w:1.6,depth:1,speck:.15});
-    for(const [xx,yy] of [[-3,16],[2,17],[7,16],[12,14]]) cLine(ctx,[[xx,yy-1],[xx,yy+3]],.85);
-    ctx.restore();seed('skeleton-face');
-    // Large uneven sockets, no cute white pupils: skull, not a masked human.
-    shape(ctx,[[-12,-1],[-9,-7],[-3,-8],[1,-4],[1,4],[-3,8],[-10,7],[-13,3]],C.hollow,{w:1.4,depth:0,speck:0});
-    shape(ctx,[[12,-6],[16,-11],[20,-10],[21,-5],[20,2],[17,5],[13,4]],C.hollow,{w:1.2,depth:0,speck:0});
-    shape(ctx,[[6,4],[8,8],[7,11],[4,11],[3,9]],C.hollow,{w:.8,depth:0,speck:0});
-    cLine(ctx,[[-20,7],[-15,8],[-14,11],[-9,12]],.9);
-    cLine(ctx,[[-9,-22],[-11,-17],[-7,-13],[-9,-9]],.75);
-    cLine(ctx,[[-11,-17],[-15,-16]],.6);
-  }else{
-    // Occipital plate and sutures, never eye sockets painted on the back.
-    cLine(ctx,[[0,-24],[-2,-18],[1,-14],[-2,-9],[1,-5],[-1,0]],.85);
-    cLine(ctx,[[-20,6],[-14,3],[-10,5],[-5,2],[-1,4],[4,2],[10,5],[18,4]],.8);
-    shape(ctx,[[-7,12],[-3,10],[3,10],[8,13],[4,17],[-2,17]],'#cfb992',{w:1,depth:.7,speck:.2});
-  }
+  // Separate chin and four broad teeth; cheek notches shape the silhouette.
+  seed('skeleton-jaw');ctx.save();ctx.translate(0,jaw);
+  shape(ctx,[[-9,10],[-3,13],[6,14],[17,9],[16,17],[12,18],[11,21],[7,21],
+    [6,19],[3,21],[0,21],[-1,18],[-4,20],[-7,18]],C.bone,{w:1.6,depth:1,speck:.15});
+  for(const [xx,yy] of [[-3,16],[2,17],[7,16],[12,14]]) cLine(ctx,[[xx,yy-1],[xx,yy+3]],.85);
+  ctx.restore();seed('skeleton-face');
+  // Large uneven sockets, no cute white pupils: skull, not a masked human.
+  shape(ctx,[[-12,-1],[-9,-7],[-3,-8],[1,-4],[1,4],[-3,8],[-10,7],[-13,3]],C.hollow,{w:1.4,depth:0,speck:0});
+  shape(ctx,[[12,-6],[16,-11],[20,-10],[21,-5],[20,2],[17,5],[13,4]],C.hollow,{w:1.2,depth:0,speck:0});
+  shape(ctx,[[6,4],[8,8],[7,11],[4,11],[3,9]],C.hollow,{w:.8,depth:0,speck:0});
+  cLine(ctx,[[-20,7],[-15,8],[-14,11],[-9,12]],.9);
+  cLine(ctx,[[-9,-22],[-11,-17],[-7,-13],[-9,-9]],.75);
+  cLine(ctx,[[-11,-17],[-15,-16]],.6);
   ctx.restore();
 }
 
 function armPose(P,side,direction) {
   const S=actual(P['shoulder'+side]),restE=actual(P['elbow'+side]),restH=actual(P['hand'+side]);
   if(P.attack) {
-    // In SE/NW, pulling the left grip inward projects across the torso. Hold its
-    // resting forward/lateral clearance and use the same vertical attack beat;
-    // the elbow still follows with fixed bone lengths. Other views stay intact.
-    const shield=(direction==='SE'||direction==='NW')
-      ?[restH[0],restH[1],P.attack.shield[2]]:P.attack.shield;
-    const H=side==='R'?P.attack.hand:shield;
+    const H=side==='R'?P.attack.hand:P.attack.shield;
     const length=v=>Math.hypot(...v);
     const E=ik2(S,H,length(minus(restE,S)),length(minus(restH,restE)),minus(restE,S));
     return {S,E,H,tip:plus(H,P.attack.dir.map(v=>v*length([3,-29,40])))};
   }
-  if(sideView(direction)&&side==='R') {
+  if(side==='R') {
     const H=plus(SIDE_READY.slice(0,3),[P.pitchR*6,0,0]),length=v=>Math.hypot(...v);
     const E=ik2(S,H,length(minus(restE,S)),length(minus(restH,restE)),minus(restE,S));
     const dir=travelDir({turn:DIRS[direction].turn,yaw:0},nrm3(SIDE_READY.slice(3)));
@@ -296,14 +272,7 @@ function armPose(P,side,direction) {
   }
   const pitch=P['pitch'+side],E=plus(S,rotatePitch(minus(restE,S),pitch));
   const H=plus(E,rotatePitch(minus(restH,restE),side==='R'?P.elbowPitchR:pitch));
-  let blade=rotatePitch(minus(actual([12,-58,97]),actual(P.handR)),P.bladePitch);
-  // From NW/SE the forward cut is almost end-on behind the skull/shield. Cant the same
-  // right-hand blade outward during the strike; never swap hands or mirror it.
-  if(direction==='NW'||direction==='SE') {
-    const angle=(direction==='NW'?-1:-.65)*Math.max(0,Math.min(1,P.bladePitch/1.8)),[a,b,z]=blade;
-    blade=[a*Math.cos(angle)-b*Math.sin(angle),a*Math.sin(angle)+b*Math.cos(angle),z];
-  }
-  const tip=plus(H,blade);
+  const tip=plus(H,rotatePitch(minus(actual([12,-58,97]),actual(P.handR)),P.bladePitch));
   return {S,E,H,tip};
 }
 function shieldAtHand(ctx,rf,H) {
@@ -311,7 +280,7 @@ function shieldAtHand(ctx,rf,H) {
   const v=rf.WU(-.12,1,0),o=rf.WU(0,0,0),tangent={x:v.x-o.x,y:v.y-o.y},k=Math.hypot(tangent.x,tangent.y);
   ctx.save();ctx.translate(H.x,H.y+1);
   ctx.transform(tangent.x/k,tangent.y/k,0,1,0,0);
-  drawRoundShield(ctx,0,0,15.5,21.5,rf.front);ctx.restore();
+  drawRoundShield(ctx,0,0,15.5,21.5);ctx.restore();
 }
 function arm(ctx,rf,P,side,part='all') {
   const joints=armPose(P,side,rf.dir.key),S=rf.JU(...joints.S),E=rf.JU(...joints.E),H=rf.JU(...joints.H);
@@ -345,37 +314,24 @@ function arm(ctx,rf,P,side,part='all') {
     oval(ctx,H.x,H.y,3.6,3.1,C.bone,{w:1.3,speck:.1});
     for(let k=-1;k<=1;k++)cLine(ctx,[[H.x-2,H.y+k*1.6],[H.x+1,H.y+k*1.6+.4]],.6);
   }
-  if(side==='L'&&rf.front) shieldAtHand(ctx,rf,H);
+  if(side==='L') shieldAtHand(ctx,rf,H);
 }
 
-export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1,opts={}) {
+export function drawSkeletonRig(ctx,x,y,direction='R',action='idle',t=0,scale=1,opts={}) {
   const P=skeletonPose(t,action),rf=skeletonFrame(direction,P),parts=[];
-  if(P.attack&&sideView(direction)) sideSlash(P,direction);
+  if(P.attack) sideSlash(P,direction);
   if(action==='walk'||(P.attack&&P.attack.weight>0))walkingLegs(rf,P);
   const pivot=WAIST_Z-P.bob;
   const rotateUpper=()=>{ctx.translate(0,-pivot);ctx.rotate(P.rock);ctx.translate(0,pivot);};
-  // Rear-view overlap rules, shared by idle/walk/attack:
-  // NW: far right arm + sword -> shield -> body + left arm/hand.
-  // NE: shield -> body/arms (the right sword arm is on the near side).
-  // Keep each hand with its equipment; all upper parts use the same transform.
-  if(direction==='NW')parts.push({id:'armR',d:-1000,draw:()=>{
-    ctx.save();rotateUpper();arm(ctx,rf,P,'R');ctx.restore();
-  }});
-  if(!rf.front)parts.push({id:'shield',d:-900,draw:()=>{
-    ctx.save();rotateUpper();
-    shieldAtHand(ctx,rf,rf.JU(...armPose(P,'L',direction).H));ctx.restore();
-  }});
   for(const side of ['L','R'])parts.push({id:'leg'+side,d:rf.W(...P['hip'+side]).d,draw:()=>leg(ctx,rf,P,side)});
   parts.push({id:'pelvis',d:40,draw:()=>pelvis(ctx,rf)});
   renderRig(ctx,x,y,scale,parts,{prefix:'skeleton-legs',boil:0,shadow:opts.shadow});
   const upper=[{id:'ribs',d:0,draw:()=>torso(ctx,rf)},{id:'skull',d:100,draw:()=>skull(ctx,rf,P.jaw)}];
   for(const side of ['L','R']) {
-    if(direction==='NW'&&side==='R')continue; // Already drawn behind the shield.
     const joints=armPose(P,side,direction);
     if(P.attack&&P.attack.weight>0) {
       // Split the sword arm so its hand can pass in front of the skull even
-      // when its elbow is farther away. Keep the left arm in one assembly;
-      // front views include its shield, rear views draw the shield separately.
+      // when its elbow is farther away. Keep the left arm and its shield in one assembly.
       const layer=p=>{
         const q=rf.JU(...p),center=rf.JU(0,0,66),depth=q.d-center.d;
         const dz=Math.max(0,Math.abs(p[2]-66)-3),dx=q.x-center.x;
@@ -395,13 +351,13 @@ export function drawSkeletonRig(ctx,x,y,direction='SE',action='idle',t=0,scale=1
   const screen=p=>({x:x+p.x*scale,y:y+p.y*scale});
   const upperPoint=p=>{const q=rf.JU(...p),c=Math.cos(P.rock),s=Math.sin(P.rock);return screen({x:q.x*c-(q.y+pivot)*s,y:q.x*s+(q.y+pivot)*c-pivot});};
   const right=armPose(P,'R',direction),left=armPose(P,'L',direction);
-  return {pose:P,front:rf.front,rightHand:upperPoint(right.H),leftHand:upperPoint(left.H),
+  return {pose:P,rightHand:upperPoint(right.H),leftHand:upperPoint(left.H),
     swordGrip:upperPoint(right.H),shieldGrip:upperPoint(left.H),
     feet:['L','R'].map(side=>screen(footProj(rf.dir,P['foot'+side][0],side==='L'?13:-13,P['foot'+side][2]))),
     order:[...parts,...upper].map(p=>p.id)};
 }
-// Keep the original direct-draw entry point; default view is the reference-facing SE.
-export function drawSkeleton(ctx,x,y,t=0,scale=1) { return drawSkeletonRig(ctx,x,y,'SE','idle',t,scale); }
+// Keep the original direct-draw entry point; default view faces right.
+export function drawSkeleton(ctx,x,y,t=0,scale=1) { return drawSkeletonRig(ctx,x,y,'R','idle',t,scale); }
 export const skeleton=Object.freeze({
   id:'skeleton',label:'骸骨',kind:'humanoid',directional:true,draw:drawSkeletonRig,
   actions:{idle:{period:TAU/3.1,frames:16,index:'floor'},

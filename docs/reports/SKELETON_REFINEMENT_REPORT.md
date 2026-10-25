@@ -1,5 +1,7 @@
 # 骸骨兵の造形・4方向対応
 
+> この報告は、骸骨を斜め4方向 (NW / NE / SW / SE) と8×8ダンジョンで描いていた時期の記録です。横スクロール化の段階5で4方向のコード・8×8ダンジョン・骸骨の検証ページ (`skeleton-checks.js`) と比較用の原本は削除しました。現在の骸骨は右向き・左向きで描きます ([SIDE_VIEW_GUIDE.md](../SIDE_VIEW_GUIDE.md))。
+
 **現在の造形は第10節の頭身調整後です。第1〜9節の寸法・画像は初回改善時の記録で、最新の比較画像・検証結果は第10節を参照してください。**
 
 動作の追加は第11節、攻撃の最新修正は第12節を参照してください。以前の「歩行・攻撃未対応」という記載は当時の状態です。
@@ -79,7 +81,7 @@ Codex内蔵ブラウザで `http://127.0.0.1:8084/` を配信・確認しまし�
 
 Cachedは16コマの直前フレームを選ぶため、任意の中間時刻にLiveの連続描画と完全一致する仕様ではありません。UI上では倍率と描画原点の丸めによるサブピクセル差もあり得ます。画素完全一致の主張は上表の揃えた条件に限定します。
 
-結果: [骸骨の詳細検査](reports/assets/skeleton/browser-results.json)、[全キャラ検査](reports/assets/skeleton/all-characters-results.json)。
+結果: [骸骨の詳細検査](assets/skeleton/browser-results.json)、[全キャラ検査](assets/skeleton/all-characters-results.json)。
 
 ## 6. 独立エクスポート検証
 
@@ -97,19 +99,19 @@ node tools/export-game.mjs --characters skeleton --out "$env:TEMP/inkstone-skele
 - 出力の静的importを点検し、出力フォルダ外の依存なし（Node組み込みは除外）。元StudioへのHTTP接続・画像依存は実装にありません。
 - ツールの既存仕様により未選択の内蔵剣士・弓使いのソースもsrc/に含まれますが、キャラとしては登録しません。
 
-[ファイル照合](reports/assets/skeleton/export-files.json) / [キットの診断値](reports/assets/skeleton/export-diagnostics.json) / [実画面SE Cached](reports/assets/skeleton/export-cached-SE.jpg)。他の方向・方式の画面も同フォルダの `export-*.jpg` に保存しました。出力は一時フォルダの検証用スナップショットです。
+[ファイル照合](assets/skeleton/export-files.json) / [キットの診断値](assets/skeleton/export-diagnostics.json) / [実画面SE Cached](assets/skeleton/export-cached-SE.jpg)。他の方向・方式の画面も同フォルダの `export-*.jpg` に保存しました。出力は一時フォルダの検証用スナップショットです。
 
 ## 7. 確認画像と起動方法
 
-![4方向を同倍率で比較](reports/assets/skeleton/four-directions.png)
+![4方向を同倍率で比較](assets/skeleton/four-directions.png)
 
-[参考に近いSEの4倍画像](reports/assets/skeleton/reference-angle.png) / [変更前後を同倍率で比較](reports/assets/skeleton/before-after.png) / [StudioのCached一覧](reports/assets/skeleton/studio-four-cached.jpg) / [通常サイズ](reports/assets/skeleton/studio-normal.jpg) / [8×8](reports/assets/skeleton/dungeon.jpg)。
+[参考に近いSEの4倍画像](assets/skeleton/reference-angle.png) / [変更前後を同倍率で比較](assets/skeleton/before-after.png) / [StudioのCached一覧](assets/skeleton/studio-four-cached.jpg) / [通常サイズ](assets/skeleton/studio-normal.jpg) / [8×8](assets/skeleton/dungeon.jpg)。
 
 `start-studio.bat` をダブルクリックすると、現在のフォルダのギャラリーを開きます。ターミナルでは `npm start` を実行して表示されたURLを開きます。「骸骨の番兵」→「全方向を見る」で4方向を確認できます。通常サイズ/拡大、Live/Cached、再生/一時停止と位相スライダーを使用してください。ソース変更後はブラウザを再読込してください。
 
 初回の造形検証は8084で実施しました。8081が旧版（`directional:false`）を配信しており、旧起動ツールが同じindex.htmlを持つ別コピーを誤って再利用したためです。利用者からの起動不具合の指摘を受け、下記の起動処理を修正しました。
 
-検証の再実行: [既存描画検証ページ](../tests/browser/check.html) の「検証する」「骸骨兵を検証する」。
+検証の再実行: [既存描画検証ページ](../../tests/browser/check.html) の「検証する」「骸骨兵を検証する」。
 
 ## 8. 残る課題・未確認
 
@@ -126,7 +128,7 @@ node tools/export-game.mjs --characters skeleton --out "$env:TEMP/inkstone-skele
 - `tools/lib/studio-launch.mjs`、`tools/start-studio.mjs`: 識別値がこのフォルダと一致するサーバーだけ再利用します。旧版や別フォルダのサーバーが使っているポートは避け、8081〜8090の空きポートで起動してそのURLを開きます。
 - `tests/node/launcher.test.mjs`: 同じHTMLの別コピー・識別情報のない旧サーバー・HTTP以外の使用中ポートを再現し、誤再利用と既存サーバーの停止がないことを検査します。
 - 実行結果: `npm test` **23/23成功**。`cmd.exe /d /c start-studio.bat` の実行結果は `http://127.0.0.1:8082/`。同じ起動処理の再実行でもこのURLを再利用しました。配信された骸骨ソースと作業フォルダのファイル内容の一致を照合済みです。
-- 実ブラウザで8082のギャラリーと骸骨詳細を開き、新造形と4方向ボタンを確認しました。[起動先の確認画像](reports/assets/skeleton/launcher-gallery.jpg)。8081の旧サーバーは停止していません。
+- 実ブラウザで8082のギャラリーと骸骨詳細を開き、新造形と4方向ボタンを確認しました。[起動先の確認画像](assets/skeleton/launcher-gallery.jpg)。8081の旧サーバーは停止していません。
 
 ## 10. 衛士に合わせた頭身調整（2026-10-12）
 
@@ -156,11 +158,11 @@ node tools/export-game.mjs --characters skeleton --out "$env:TEMP/inkstone-skele
 - 今回の頭身調整後の独立エクスポート起動は再実施していません。第6節のキットは前の頭身のスナップショットです。最新形状を持ち出す際は再エクスポートしてください。出力ツールの自動テストは今回も成功しています。
 - 美術上の利用者の承認は未実施。歩行・攻撃は引き続き未対応です。
 
-![衛士と骸骨の同倍率比較](reports/assets/skeleton/humanoid-proportions.png)
+![衛士と骸骨の同倍率比較](assets/skeleton/humanoid-proportions.png)
 
 点線は設計上の頭頂・顎・接地原点の目安です。足裏の外形は奥行き投影で接地原点より下にも現れます。
 
-[最新4方向](reports/assets/skeleton/proportions-four-directions.png) / [通常サイズCached](reports/assets/skeleton/proportions-studio-normal.jpg) / [骸骨検証](reports/assets/skeleton/proportions-results.json) / [全キャラ検証](reports/assets/skeleton/proportions-all-characters.json)。確認は `start-studio.bat` →「骸骨の番兵」。既に開いている場合は再読込してください。
+[最新4方向](assets/skeleton/proportions-four-directions.png) / [通常サイズCached](assets/skeleton/proportions-studio-normal.jpg) / [骸骨検証](assets/skeleton/proportions-results.json) / [全キャラ検証](assets/skeleton/proportions-all-characters.json)。確認は `start-studio.bat` →「骸骨の番兵」。既に開いている場合は再読込してください。
 
 ## 11. 4方向の歩行・攻撃追加（2026-10-12）
 

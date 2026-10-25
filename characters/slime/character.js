@@ -50,7 +50,6 @@ export function slimePose(action,t) {
 export function drawSlime(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const p=slimePose(action,t),dir=DIRS[direction];
   const f=groundDirScreen(...dir.f),length=Math.hypot(f.x,f.y),fx=f.x/length,fy=f.y/length;
-  const front=dir.f[0]+dir.f[1]>0;
   const parts=[];
   if(opts.shadow!==false) parts.push({id:'shadow',d:0,draw:()=>{
     ctx.save();ctx.globalAlpha=.18-p.lift*.007;
@@ -80,17 +79,15 @@ export function drawSlime(ctx,x,y,direction,action,t,scale=1,opts={}) {
     // Small skirt folds, never spikes on the head.
     for(const line of [[[-30,-2],[-26,-3],[-23,-1]],[[-20,4],[-15,5],[-11,4]],[[11,4],[16,5],[21,3]]])
       inkLine(ctx,line.map(([x,y])=>({x,y})),{w:.55*DRAW.lw,amp:.12,color:'#526d70'});
-    if(front) {
-      const faceX=fx*8;
-      for(const [dx,dy,rx] of [[-7,0,1.5],[7,-2,1.35]])
-        paint(ctx,ellipsePts(faceX+dx,-23+dy,rx,3.1,20),{fill:PAL.ink,w:.6,depth:0,speck:0,amp:.1});
-      const mouth=[];
-      for(let i=0;i<=12;i++) {
-        const a=Math.PI*i/12;
-        mouth.push({x:faceX+Math.cos(a)*2.6,y:-16+Math.sin(a)*1.5});
-      }
-      strokePath(ctx,mouth,.95*DRAW.lw,false,PAL.ink);
+    const faceX=fx*8;
+    for(const [dx,dy,rx] of [[-7,0,1.5],[7,-2,1.35]])
+      paint(ctx,ellipsePts(faceX+dx,-23+dy,rx,3.1,20),{fill:PAL.ink,w:.6,depth:0,speck:0,amp:.1});
+    const mouth=[];
+    for(let i=0;i<=12;i++) {
+      const a=Math.PI*i/12;
+      mouth.push({x:faceX+Math.cos(a)*2.6,y:-16+Math.sin(a)*1.5});
     }
+    strokePath(ctx,mouth,.95*DRAW.lw,false,PAL.ink);
     ctx.restore();
   }});
   renderRig(ctx,x,y,scale,parts,{prefix:'slime',boil:0,shadow:false});

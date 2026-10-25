@@ -1,4 +1,4 @@
-/* Shared typography and controls come from studio/style.css; layout mirrors game/style.css. */
+/* Shared typography and controls come from studio/style.css; layout: a scene frame beside a character panel. */
 main,.site-header,footer{max-width:1600px}
 button,select,.button{min-height:54px}
 nav [aria-current=page]{font-weight:800;border-bottom:3px solid var(--green);text-decoration:none}

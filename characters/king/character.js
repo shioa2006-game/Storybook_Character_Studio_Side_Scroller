@@ -80,24 +80,20 @@ function torso(ctx, rf) {
     plate(ctx, Q([[side*5,27],[side*15,29],[side*19,18],[side*9,15]]));
     line(ctx, Q([[side*8,23],[side*16,24]]), .6);
   }
-  if (rf.front) {
-    // Cream under-panel makes the edging visible even at the normal 1.25x scale.
-    plate(ctx, [U(9,-9,48),U(9,9,48),U(10,10,29),U(10,13,14),U(10,0,10),U(10,-13,14),U(10,-10,29)],
-      { fill: C.cream, depth: 1, w: LW.part });
-    plate(ctx, [U(10,-6,47),U(10,6,47),U(11,7,29),U(11,9,16),U(11,0,13),U(11,-9,16),U(11,-7,29)],
-      { fill: C.red, depth: 1.3, w: LW.detail });
-    const crest = U(12,0,39);
-    shape(ctx, [[crest.x,crest.y-4],[crest.x+2,crest.y-1],[crest.x+3,crest.y-2],
-      [crest.x+2,crest.y+2],[crest.x,crest.y+4],[crest.x-2,crest.y+2],
-      [crest.x-3,crest.y-2],[crest.x-2,crest.y-1]], C.gold, { w: .6, depth: 0, speck: 0 });
-  }
+  // Cream under-panel makes the edging visible even at the normal 1.25x scale.
+  plate(ctx, [U(9,-9,48),U(9,9,48),U(10,10,29),U(10,13,14),U(10,0,10),U(10,-13,14),U(10,-10,29)],
+    { fill: C.cream, depth: 1, w: LW.part });
+  plate(ctx, [U(10,-6,47),U(10,6,47),U(11,7,29),U(11,9,16),U(11,0,13),U(11,-9,16),U(11,-7,29)],
+    { fill: C.red, depth: 1.3, w: LW.detail });
+  const crest = U(12,0,39);
+  shape(ctx, [[crest.x,crest.y-4],[crest.x+2,crest.y-1],[crest.x+3,crest.y-2],
+    [crest.x+2,crest.y+2],[crest.x,crest.y+4],[crest.x-2,crest.y+2],
+    [crest.x-3,crest.y-2],[crest.x-2,crest.y-1]], C.gold, { w: .6, depth: 0, speck: 0 });
   plate(ctx, [U(11,-15,31),U(11,15,31),U(11,15,27),U(11,-15,27)],
     { fill: C.leather, w: LW.detail, depth: .8 });
-  if (rf.front) {
-    const b = U(12,0,29);
-    shape(ctx, [[b.x-3.4,b.y-2.8],[b.x+3.4,b.y-2.8],[b.x+3.4,b.y+2.8],[b.x-3.4,b.y+2.8]], C.gold, { w: .9, depth: .5 });
-    shape(ctx, [[b.x-1.8,b.y-1.4],[b.x+1.8,b.y-1.4],[b.x+1.8,b.y+1.4],[b.x-1.8,b.y+1.4]], C.leather, { w: .5, depth: 0, speck: 0 });
-  }
+  const b = U(12,0,29);
+  shape(ctx, [[b.x-3.4,b.y-2.8],[b.x+3.4,b.y-2.8],[b.x+3.4,b.y+2.8],[b.x-3.4,b.y+2.8]], C.gold, { w: .9, depth: .5 });
+  shape(ctx, [[b.x-1.8,b.y-1.4],[b.x+1.8,b.y-1.4],[b.x+1.8,b.y+1.4],[b.x-1.8,b.y+1.4]], C.leather, { w: .5, depth: 0, speck: 0 });
   // The collar bridges the chin at z=49.5 to the shoulders; no floating head.
   const c = rf.U(1.5,0,49);
   shape(ctx, [[c.x-14,c.y-3],[c.x-7,c.y-5],[c.x,c.y-1],[c.x+8,c.y-5],
@@ -113,29 +109,23 @@ function head(ctx, rf) {
   shape(ctx, [[-20,-13],[-15,-21],[-5,-23],[9,-22],[19,-15],[22,-5],[21,6],
     [23,11],[19,10],[18,17],[12,16],[9,20],[-3,19],[-12,20],[-18,15],
     [-22,16],[-20,9],[-23,7],[-21,0],[-24,-2]], C.hair, { w: LW.outline, depth: 2 });
-  if (rf.front) {
-    oval(ctx, 2,1,18,19,C.skin,{ w: LW.outline, speck: 0, depth: 1.1 });
-    oval(ctx,-15,7,4.4,5,C.skin,{ w: LW.detail, speck: 0, depth: .6 });
-    line(ctx,[[-17,7],[-14,6],[-13,9]],.6);
-    // Unbearded open face, simple dark eyes and a quiet expression.
-    for (const [x,y] of [[-1,3],[12,1.5]]) {
-      oval(ctx,x,y,1.55,3.6,PAL.ink,{ w: 0, depth: 0, speck: 0, light: 0, amp: .08 });
-    }
-    line(ctx,[[-4,-4],[-1,-5],[1,-4.5]],.65);
-    line(ctx,[[10,-6],[13,-6.5],[15,-5.7]],.65);
-    line(ctx,[[5,13],[7.5,13.4],[9,12.8]],.6);
-    shape(ctx, [[-21,-9],[-15,-20],[-3,-23],[11,-21],[19,-15],[22,-5],[20,1],
-      [16,-5],[14,-11],[11,-14],[8,-5],[5,-1],[6,-12],[0,-5],[-7,-1],
-      [-12,0],[-9,-7],[-17,2],[-16,10],[-21,7],[-19,0],[-24,1]], C.hair, { w: LW.part });
-    shape(ctx,[[-17,-13],[-7,-19],[3,-19],[-3,-14],[-11,-10]],C.hairLight,{ w: 0, depth: 0, speck: .3 });
-    line(ctx,[[-13,-14],[-10,-9],[-16,-3]],.55);
-    line(ctx,[[7,-19],[3,-12],[-3,-7]],.6);
-    line(ctx,[[15,-16],[18,-10],[19,-5]],.6);
-  } else {
-    shape(ctx,[[-16,-13],[-9,-20],[2,-21],[8,-18],[1,-14],[-10,-10]],C.hairLight,{ w: 0, depth: 0, speck: .3 });
-    for (const x of [-13,-4,7,15]) line(ctx,[[x,-13],[x+2,-3],[x-2,8],[x-3,14]],.6);
-    line(ctx,[[-18,3],[-16,12],[-11,15]],.6);
+  oval(ctx, 2,1,18,19,C.skin,{ w: LW.outline, speck: 0, depth: 1.1 });
+  oval(ctx,-15,7,4.4,5,C.skin,{ w: LW.detail, speck: 0, depth: .6 });
+  line(ctx,[[-17,7],[-14,6],[-13,9]],.6);
+  // Unbearded open face, simple dark eyes and a quiet expression.
+  for (const [x,y] of [[-1,3],[12,1.5]]) {
+    oval(ctx,x,y,1.55,3.6,PAL.ink,{ w: 0, depth: 0, speck: 0, light: 0, amp: .08 });
   }
+  line(ctx,[[-4,-4],[-1,-5],[1,-4.5]],.65);
+  line(ctx,[[10,-6],[13,-6.5],[15,-5.7]],.65);
+  line(ctx,[[5,13],[7.5,13.4],[9,12.8]],.6);
+  shape(ctx, [[-21,-9],[-15,-20],[-3,-23],[11,-21],[19,-15],[22,-5],[20,1],
+    [16,-5],[14,-11],[11,-14],[8,-5],[5,-1],[6,-12],[0,-5],[-7,-1],
+    [-12,0],[-9,-7],[-17,2],[-16,10],[-21,7],[-19,0],[-24,1]], C.hair, { w: LW.part });
+  shape(ctx,[[-17,-13],[-7,-19],[3,-19],[-3,-14],[-11,-10]],C.hairLight,{ w: 0, depth: 0, speck: .3 });
+  line(ctx,[[-13,-14],[-10,-9],[-16,-3]],.55);
+  line(ctx,[[7,-19],[3,-12],[-3,-7]],.6);
+  line(ctx,[[15,-16],[18,-10],[19,-5]],.6);
   // Five broad gold points and a single blue stone remain clear at game size.
   // Seat the entire crown into the hair, including the band and its side rims.
   ctx.translate(0,3.5);
@@ -144,9 +134,7 @@ function head(ctx, rf) {
     [10,-18],[-1,-17],[-12,-17]], C.gold, { w: LW.outline, depth: 1.4, amp: .18 });
   shape(ctx,[[-20,-23],[-10,-22],[1,-22],[11,-24],[20,-25],[20,-20],
     [10,-18],[-1,-17],[-12,-17],[-20,-19]], C.goldLight, { w: LW.detail, depth: .6 });
-  if (rf.front) {
-    shape(ctx,[[5,-31],[8,-27],[5,-23],[2,-27]],C.jewel,{ w: .8, depth: .4, speck: 0 });
-  }
+  shape(ctx,[[5,-31],[8,-27],[5,-23],[2,-27]],C.jewel,{ w: .8, depth: .4, speck: 0 });
   for (const [x,y] of [[-21,-34],[-9,-37],[4,-42],[20,-37]]) oval(ctx,x,y,1.5,1.7,C.goldLight,{ w: .7, depth: .3, speck: 0 });
   ctx.restore();
 }
@@ -188,20 +176,16 @@ export function drawKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
     const w=keyframes([[0,[0]],[.12,[0]],[.22,[1]],[.38,[1]],[.46,[0]],[1,[0]]],Math.max(0,Math.min(1,t/ATTACK_T)))[0];
     P.right=vlerp(P.right,[-16,-22,40],w);P.blade=nrm3(vlerp(P.blade,[-.95,0,.3],w));
   }
-  if(rf.turn) P.blade=travelDir(rf,P.blade);
+  P.blade=travelDir(rf,P.blade);
   const key=p=>bodyLayerKey(rf,...yawToBody(rf,p[0],p[1]),p[2]);
   const parts=legs(ctx,rf,P);
-  parts.push({ id:'cape',d:rf.front?-200:LAYER.cape,draw:()=>cape(ctx,rf,P) });
+  parts.push({ id:'cape',d:-200,draw:()=>cape(ctx,rf,P) });
   parts.push({ id:'torso',d:LAYER.torso,draw:()=>torso(ctx,rf) });
   parts.push({ id:'head',d:LAYER.head,draw:()=>head(ctx,rf) });
   for (const side of [-1,1]) {
     const H=side===-1?P.right:P.left,S=[0,side*14,46];
     const E=ik2(S,H,14,15,[-5,side*2,-8]),s=U(...S),e=U(...E),h=U(...H);
-    // bodyLayerKey describes the torso, not the wider cape. In rear views the
-    // entire far arm (including shoulder, grip and sword) must sit behind cloth.
-    // Drawing it first still exposes any portion extending beyond the cape edge.
-    const behindCape=!rf.front && s.d<U(0,0,S[2]).d;
-    const armKey=p=>behindCape?Math.min(key(p),LAYER.cape-1):key(p);
+    const armKey=key;
     parts.push({ id:'upper'+side,d:armKey(mid(S,E)),draw:()=>{
       plate(ctx,taperPts(s,e,5.4,4.4),{ fill:C.silverShade });
       oval(ctx,s.x,s.y,7.2,6.2,C.silver,{ w:LW.part });
@@ -215,7 +199,7 @@ export function drawKing(ctx,x,y,direction,action,t,scale=1,opts={}) {
     parts.push({ id:'drape'+side,d:armKey(S)+.02,draw:()=>{
       shape(ctx,[[s.x-6,s.y-3],[s.x-2,s.y-7],[s.x+4,s.y-5],[s.x+7,s.y+1],
         [s.x+2,s.y-1],[s.x-4,s.y+1]],C.red,{ w:1, depth:1 });
-      if(rf.front) oval(ctx,s.x,s.y-3,2.3,2.6,C.gold,{ w:.8, depth:.5, speck:0 });
+      oval(ctx,s.x,s.y-3,2.3,2.6,C.gold,{ w:.8, depth:.5, speck:0 });
     } });
     if(side===-1) {
       const tip=U(...H.map((v,i)=>v+P.blade[i]*37));

@@ -7,8 +7,8 @@
  */
 import { seed, R, chance } from '../../core/random.js';
 import { PAL } from '../../core/palette.js';
-import { fillPath, fillPoly, hatchPoly, inkLine, inkShape, roughen, stippleFace, stipplePoly, strokePath, rimWeight } from '../../core/ink.js';
-import { drawFlame } from '../../dungeon/architecture.js';
+import { fillPath, fillPoly, hatchPoly, inkLine, inkShape, roughen, stipplePoly, strokePath, rimWeight } from '../../core/ink.js';
+import { TAU } from '../../core/geometry.js';
 import { FLOOR, each, stoneCourse, frontStone, periodicSpans, stageEnds, endFace } from './pencil.js';
 
 const WALL_TOP = -300, WALL_BASE = FLOOR.back + 6, COURSE = 30;
@@ -93,6 +93,39 @@ function wall(g, view) {
     const cup = inkShape(g, [{ x: cx - 9, y: y - 9 }, { x: cx + 9, y: y - 9 }, { x: cx + 5, y: y + 6 }, { x: cx - 5, y: y + 6 }], { fill: '#5c5854', w: 1.8, amp: .4, round: 2 });
     hatchPoly(g, cup, { angle: 1.3, gap: 2.5, w: .7, alpha: .6 });
   }, TORCH.offset);
+}
+
+/** 炎: 外側オレンジ→内側黄色の涙形を重ね、インク線で縁取る。time で揺らぐ (動的) */
+function drawFlame(ctx, x, y, time) {
+  const f = 1 + 0.08 * Math.sin(time * 11) + 0.05 * Math.sin(time * 17.3 + 1);
+  const sw = Math.sin(time * 6.5) * 2.2;
+  const tear = (w, h, s, oy = 0) => {
+    const tip = { x: x + s, y: y + oy - h };
+    return [
+      { x: x - w, y: y + oy - h * 0.18 }, { x: x - w * 0.95, y: y + oy - h * 0.5 },
+      { x: x - w * 0.4 + s * 0.5, y: y + oy - h * 0.8 }, tip, tip,          // 先端は点を重ねて尖らせる
+      { x: x + w * 0.45 + s * 0.4, y: y + oy - h * 0.66 },
+      { x: x + w * 0.95 + s * 0.6, y: y + oy - h * 0.86 }, { x: x + w * 0.95 + s * 0.6, y: y + oy - h * 0.86 }, // 横の舌
+      { x: x + w * 0.8, y: y + oy - h * 0.52 }, { x: x + w, y: y + oy - h * 0.3 },
+      { x: x + w * 0.75, y: y + oy - h * 0.02 }, { x: x, y: y + oy + h * 0.07 }, { x: x - w * 0.7, y: y + oy + h * 0.02 },
+    ];
+  };
+  // ふんわりした光
+  const g = ctx.createRadialGradient(x, y - 14, 2, x, y - 14, 40);
+  g.addColorStop(0, 'rgba(255,200,110,0.45)'); g.addColorStop(1, 'rgba(255,200,110,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - 40, y - 54, 80, 80);
+  const outer = tear(11, 36 * f, sw);
+  fillPath(ctx, outer, PAL.flameOut);
+  fillPath(ctx, tear(7.5, 27 * f, sw * 0.8, 1), PAL.flameMid);
+  fillPath(ctx, tear(4, 16 * f, sw * 0.5, 1), PAL.flameIn);
+  strokePath(ctx, outer, 1.6);
+  ctx.fillStyle = PAL.flameOut; // 火の粉
+  for (let k = 0; k < 3; k++) {
+    const ph = (time * 0.9 + k * 0.33) % 1;
+    ctx.globalAlpha = 1 - ph;
+    ctx.beginPath(); ctx.arc(x + Math.sin(k * 2.1 + time * 3) * 6, y - 38 - ph * 26, 1.3, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 }
 
 function wallFlames(g, view, time) {

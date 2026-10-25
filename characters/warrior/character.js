@@ -7,7 +7,7 @@
 import {
   TAU, WALK_HZ, DRAW, PAL, LW, KX, KY, LAYER,
   rigFrame, renderRig, walkFeet, footProj, legParts2, ik2, keyframes,
-  nrm3, vlerp, yawToBody, bodyLayerKey, bodyToWorld,
+  nrm3, yawToBody, bodyLayerKey, bodyToWorld,
   paint, paintA, taperPts, ellipsePts, cLine, mittenHand, bbox,
   clipPath, fillPath, fillPoly, strokePath, roughen, stipplePoly, rimWeight, seed,
 } from '../../src/authoring.js';
@@ -157,14 +157,10 @@ function drawTorso(ctx, rf, P) {
   }
   metal(ctx,Q([[13,47],[-13,47],[-17,40],[-13,29],[-5,27],[5,27],[13,29],[17,40]]),
     {w:LW.outline,depth:3.4,light:.65});
-  const panel = Q(rf.front ? [[11,44],[-1,46],[-1,30],[8,31],[13,39]] : [[9,45],[-1,46],[-2,30],[9,32],[13,41]]);
+  const panel = Q([[11,44],[-1,46],[-1,30],[8,31],[13,39]]);
   paint(ctx,panel,{fill:C.light,w:0,depth:0,speck:.35,amp:.2});
   line(ctx,Q([[0,45],[0,33],[-2,29]]),.75);
   line(ctx,Q([[11,32],[5,30],[-5,30],[-11,32]]),.85);
-  if (!rf.front) {
-    line(ctx,Q([[-12,40],[0,36],[12,40]]),.8);
-    for (const b of [-11,11]) { const p=U(0,b,42);dot(ctx,p.x,p.y,.7); }
-  }
   // Two overlapping fauld lames and split tassets make the short body read as armour.
   metal(ctx,Q([[15,29],[-15,29],[-17,24],[0,22],[17,24]]),{fill:C.mid,depth:1.8});
   metal(ctx,Q([[17,24],[-17,24],[-18,20],[-7,18],[7,18],[18,20]]),{depth:1.7});
@@ -173,12 +169,10 @@ function drawTorso(ctx, rf, P) {
     line(ctx,Q([[sign*6,17],[sign*15,18]]),.65);
   }
   paint(ctx,Q([[16,29],[-16,29],[-16,25.3],[16,25.3]]),{fill:C.leather,w:LW.part,depth:.9,speck:.5});
-  if (rf.front) {
-    const b=U(3,1,27.1);
-    metalA(ctx,[[b.x-3.4,b.y-2.7],[b.x+3.4,b.y-2.7],[b.x+3.4,b.y+2.7],[b.x-3.4,b.y+2.7]],{fill:C.gold,w:LW.detail,depth:.7,speck:0});
-    paintA(ctx,[[b.x-1.8,b.y-1.4],[b.x+1.8,b.y-1.4],[b.x+1.8,b.y+1.4],[b.x-1.8,b.y+1.4]],{fill:C.leather,w:0,depth:0,speck:0});
-  }
-  // Scarf drapes sit beneath the helmet and keep the red visible in rear views.
+  const b=U(3,1,27.1);
+  metalA(ctx,[[b.x-3.4,b.y-2.7],[b.x+3.4,b.y-2.7],[b.x+3.4,b.y+2.7],[b.x-3.4,b.y+2.7]],{fill:C.gold,w:LW.detail,depth:.7,speck:0});
+  paintA(ctx,[[b.x-1.8,b.y-1.4],[b.x+1.8,b.y-1.4],[b.x+1.8,b.y+1.4],[b.x-1.8,b.y+1.4]],{fill:C.leather,w:0,depth:0,speck:0});
+  // Scarf drapes sit beneath the helmet.
   paint(ctx,[U(-2,-12,48),U(-4,-8,46),U(-8,-11,32),U(-7,-18,34+P.scarf),U(-5,-14,39)],
     {fill:C.redDark,w:LW.part,depth:2,speck:1});
 }
@@ -203,58 +197,44 @@ function drawGorget(ctx, rf, head) {
   for(const b of [-11,11]) { const p=Q(b,47);dot(ctx,p.x,p.y,.6); }
 }
 
-function drawHelmet(ctx, c, sx, front, P) {
+function drawHelmet(ctx, c, sx, P) {
   const M = points => points.map(([x,y]) => [c.x+x*sx,c.y+y]);
   const steel = (points,o={}) => metalA(ctx,M(points),o);
   const cloth = (points,fill,o={}) => paintA(ctx,M(points),{fill,w:LW.part,depth:2,speck:1,...o});
-  // Soft scarf above the breastplate. All front/back heads share the same envelope.
+  // Soft scarf above the breastplate.
   cloth([[-16,13],[-9,12],[10,12],[18,16],[13,24],[3,27],[-8,22],[-17,20]],C.redDark);
   cloth([[-15,14],[-4,18],[10,16],[17,14],[14,21],[3,24],[-9,19]],C.red,{w:LW.detail,depth:1.2});
   line(ctx,M([[-7,17],[3,20],[11,18]]),.75);
-  if (front) {
-    // Face remains an open, warm shape below the raised vented brow.
-    cloth([[-14,-4],[15,-7],[19,0],[17,12],[9,18],[-2,18],[-13,10]],C.skin,{w:LW.outline,depth:1.6,speck:0});
-    steel([[-22,-5],[-20,-18],[-10,-27],[3,-29],[15,-23],[22,-12],[22,-4],[7,-8],[-7,-4]],{w:LW.outline,depth:3.2,light:.65});
-    cloth([[-17,-16],[-9,-24],[-1,-26],[1,-16],[-6,-10]],C.light,{w:0,depth:0,speck:.5});
-    line(ctx,M([[-3,-27],[-4,-18],[-8,-10]]),.8);
-    line(ctx,M([[3,-27],[13,-20],[18,-12]]),.75);
-    // A heavy raised visor, with six separate elongated ventilation slots.
-    steel([[-23,-8],[-12,-15],[5,-18],[23,-10],[24,1],[9,-3],[-8,1],[-21,8]],{w:LW.outline,depth:2.3,light:.55});
-    steel([[-21,5],[-8,-1],[9,-5],[23,-1],[23,2],[9,-2],[-7,2],[-21,9]],{fill:C.dark,w:LW.detail,depth:.5,speck:.3});
-    const vents=[[-16,-8,5],[-10,-11,7],[-3,-12,8],[5,-13,8],[12,-10,7],[18,-7,6]];
-    for (const [x,y,len] of vents) {
-      // Common paint uses quadratic smoothing. Use its public polygon primitive
-      // here so narrow ventilation cuts retain forged, square corners.
-      const slot=M([[x-1.1,y],[x+1.1,y-.2],[x+1.6,y+len],[x-.8,y+len+.2]]).map(([x,y])=>({x,y}));
-      fillPoly(ctx,roughen(slot,true,.08,1.4),C.black);
-    }
-    // Side hinge and cheek plates articulate around the clear face opening.
-    steel([[-21,-1],[-15,2],[-12,11],[-16,16],[-24,12],[-20,6]],{depth:1.8});
-    steel([[20,-1],[23,2],[22,10],[18,12],[17,7]],{fill:C.mid,w:LW.detail,depth:1});
-    for (const [x,y] of [[-18,3],[-19,11],[-14,-18],[11,-21],[20,-4]]) {
-      const p=M([[x,y]])[0]; dot(ctx,p[0],p[1],.8); dot(ctx,p[0]-.35,p[1]-.4,.28,C.light);
-    }
-    for (const [x,y,rx] of [[3,7.2,1.6],[13,5.7,1.5]]) {
-      const p=M([[x,y]])[0]; ctx.fillStyle=PAL.ink;
-      if(P.blink) line(ctx,[[p[0]-1.7,p[1]],[p[0]+1.7,p[1]]],1);
-      else {ctx.beginPath();ctx.ellipse(p[0],p[1],rx,3,0,0,TAU);ctx.fill();}
-    }
-    // Short mouth and tiny cheek marks, not a realistic facial rendering.
-    line(ctx,M(P.exert?[[6,13],[9,12.5],[10,14]]:[[6,13.7],[9,14],[10.5,13.2]]),.75);
-    line(ctx,M([[-4,11],[-2,11.4]]),.5);
-  } else {
-    steel([[-22,-4],[-20,-18],[-10,-27],[3,-29],[15,-23],[22,-12],[22,5],[14,13],[1,17],[-12,13],[-21,6]],{w:LW.outline,depth:3.2,light:.65});
-    cloth([[-17,-16],[-8,-24],[-1,-26],[-2,-4],[-9,8],[-16,4]],C.light,{w:0,depth:0,speck:.6});
-    line(ctx,M([[0,-27],[-1,-14],[-1,8]]),.95);
-    line(ctx,M([[5,-26],[14,-19],[18,-9],[18,2]]),.7);
-    // Rear neck lames make the back unmistakably a helmet, not a rounded hair mass.
-    steel([[-21,2],[-12,7],[2,9],[17,4],[22,1],[22,7],[10,14],[-4,16],[-18,11],[-23,7]],{fill:C.mid,depth:1.8});
-    steel([[-20,8],[-8,13],[6,14],[18,8],[19,13],[7,20],[-6,21],[-19,15]],{depth:1.5});
-    line(ctx,M([[-15,13],[-6,17],[6,17],[15,12]]),.65);
-    for (const [x,y] of [[-16,-15],[-15,7],[16,4],[-11,15],[10,14]]) {const p=M([[x,y]])[0];dot(ctx,p[0],p[1],.75);}
-    // A sliver of the front visor visible beyond the far rim.
-    steel([[19,-10],[24,-6],[24,1],[21,4]],{fill:C.dark,w:LW.detail,depth:1});
+  // Face remains an open, warm shape below the raised vented brow.
+  cloth([[-14,-4],[15,-7],[19,0],[17,12],[9,18],[-2,18],[-13,10]],C.skin,{w:LW.outline,depth:1.6,speck:0});
+  steel([[-22,-5],[-20,-18],[-10,-27],[3,-29],[15,-23],[22,-12],[22,-4],[7,-8],[-7,-4]],{w:LW.outline,depth:3.2,light:.65});
+  cloth([[-17,-16],[-9,-24],[-1,-26],[1,-16],[-6,-10]],C.light,{w:0,depth:0,speck:.5});
+  line(ctx,M([[-3,-27],[-4,-18],[-8,-10]]),.8);
+  line(ctx,M([[3,-27],[13,-20],[18,-12]]),.75);
+  // A heavy raised visor, with six separate elongated ventilation slots.
+  steel([[-23,-8],[-12,-15],[5,-18],[23,-10],[24,1],[9,-3],[-8,1],[-21,8]],{w:LW.outline,depth:2.3,light:.55});
+  steel([[-21,5],[-8,-1],[9,-5],[23,-1],[23,2],[9,-2],[-7,2],[-21,9]],{fill:C.dark,w:LW.detail,depth:.5,speck:.3});
+  const vents=[[-16,-8,5],[-10,-11,7],[-3,-12,8],[5,-13,8],[12,-10,7],[18,-7,6]];
+  for (const [x,y,len] of vents) {
+    // Common paint uses quadratic smoothing. Use its public polygon primitive
+    // here so narrow ventilation cuts retain forged, square corners.
+    const slot=M([[x-1.1,y],[x+1.1,y-.2],[x+1.6,y+len],[x-.8,y+len+.2]]).map(([x,y])=>({x,y}));
+    fillPoly(ctx,roughen(slot,true,.08,1.4),C.black);
   }
+  // Side hinge and cheek plates articulate around the clear face opening.
+  steel([[-21,-1],[-15,2],[-12,11],[-16,16],[-24,12],[-20,6]],{depth:1.8});
+  steel([[20,-1],[23,2],[22,10],[18,12],[17,7]],{fill:C.mid,w:LW.detail,depth:1});
+  for (const [x,y] of [[-18,3],[-19,11],[-14,-18],[11,-21],[20,-4]]) {
+    const p=M([[x,y]])[0]; dot(ctx,p[0],p[1],.8); dot(ctx,p[0]-.35,p[1]-.4,.28,C.light);
+  }
+  for (const [x,y,rx] of [[3,7.2,1.6],[13,5.7,1.5]]) {
+    const p=M([[x,y]])[0]; ctx.fillStyle=PAL.ink;
+    if(P.blink) line(ctx,[[p[0]-1.7,p[1]],[p[0]+1.7,p[1]]],1);
+    else {ctx.beginPath();ctx.ellipse(p[0],p[1],rx,3,0,0,TAU);ctx.fill();}
+  }
+  // Short mouth and tiny cheek marks, not a realistic facial rendering.
+  line(ctx,M(P.exert?[[6,13],[9,12.5],[10,14]]:[[6,13.7],[9,14],[10.5,13.2]]),.75);
+  line(ctx,M([[-4,11],[-2,11.4]]),.5);
   // Plume socket: a steel fork with a dark slit.
   steel([[-6,-27],[-6,-32],[-4,-35],[2,-35],[5,-32],[4,-27]],{depth:1.2,w:LW.detail});
   line(ctx,M([[-3,-32],[2,-32]]),.7);
@@ -288,24 +268,15 @@ function drawSword(ctx, hand, tip) {
 }
 
 function shieldGeometry(rf,P) {
-  // Choose a modest cant for readability in each view, without swapping hands.
-  const candidates=[[.87,-.5],[.87,.5]].map(([a,b])=>({a,b,w:bodyToWorld(rf.dir,a,b)}));
-  if(rf.turn) {
-    // Side views turn the chest toward the camera; the strapped shield turns with it.
-    const c=Math.cos(rf.turn),s=Math.sin(rf.turn);
-    for(const n of candidates) n.w=bodyToWorld(rf.dir,n.a*c+n.b*s,-n.a*s+n.b*c);
-  }
-  let n=candidates.reduce((a,b)=>Math.abs(b.w.X+b.w.Y)>Math.abs(a.w.X+a.w.Y)?b:a);
-  if(P.shieldCant) {
-    // NE's near shield otherwise covers the entire far-hand sword at impact.
-    // Rotate the strapped shield inward during the strike, never move its hand.
-    const b=n.b-P.shieldCant*.8;
-    n={a:n.a,b,w:bodyToWorld(rf.dir,n.a,b)};
-  }
+  // Choose a modest cant for readability, without swapping hands. The chest turns
+  // toward the camera (rf.turn); the strapped shield turns with it.
+  const c=Math.cos(rf.turn),s=Math.sin(rf.turn);
+  const candidates=[[.87,-.5],[.87,.5]].map(([a,b])=>({a,b,w:bodyToWorld(rf.dir,a*c+b*s,-a*s+b*c)}));
+  const n=candidates.reduce((a,b)=>Math.abs(b.w.X+b.w.Y)>Math.abs(a.w.X+a.w.Y)?b:a);
   const hx=-n.w.Y,hy=n.w.X,hl=Math.hypot(hx,hy);
   const h={x:(hx-hy)/hl*KX,y:(hx+hy)/hl*KY};
-  const hand=rf.UY(...P.shield.hand), c={x:hand.x+(n.w.X-n.w.Y)*KX*3,y:hand.y+(n.w.X+n.w.Y)*KY*3};
-  return {c,h,front:n.w.X+n.w.Y>0,thick:{x:-(n.w.X-n.w.Y)*KX*2.5,y:-(n.w.X+n.w.Y)*KY*2.5}};
+  const hand=rf.UY(...P.shield.hand), centre={x:hand.x+(n.w.X-n.w.Y)*KX*3,y:hand.y+(n.w.X+n.w.Y)*KY*3};
+  return {c:centre,h,front:n.w.X+n.w.Y>0,thick:{x:-(n.w.X-n.w.Y)*KX*2.5,y:-(n.w.X+n.w.Y)*KY*2.5}};
 }
 
 function drawShield(ctx,geo) {
@@ -373,59 +344,35 @@ function armParts(ctx,rf,P,side) {
 
 export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=warriorPose(action,t);
-  if(direction==='R'||direction==='L') {
-    // The rig already turns the chest toward the camera in side views. The
-    // swing's own twist would turn it back toward a thin profile on one half
-    // of the swing (L strike, R wind-up): damp only that half.
-    const toward=direction==='R'?1:-1;
-    if(P.yaw*toward<0) P.yaw*=SIDE_TWIST_AWAY;
-  }
-  if(direction==='R'||direction==='L') {
-    // Both facings hold the same ready stance: elbow bent, grip in front of
-    // the body, blade tilted forward and up. Idle breathing and walk sway stay
-    // as offsets on top of it.
-    const ready=SIDE_SWORD_READY[direction];
-    if(action==='attack') {
-      // The side swing has its own path. Chibi arms cannot lift the grip over
-      // the helmet, so the sword travels around the body instead of through
-      // it: grip out beside the shoulder with the blade upright, a draw-back
-      // behind the back, up over the shoulder again, then SWING's chop, a
-      // follow-through that stops the tip just above the floor (SWING's own
-      // dips it below), and back to the stance. Chest (UY) coordinates.
-      const keys=[[0,ready],[.1,[3,22,50,.2,.05,.98]],[.2,[-10,18,50,-.6,.03,.8]],
-        [.3,[-18,10,47,-.9,0,.45]],[.45,[-17,11,49,-.82,0,.57]],[.49,[2,21,56,.45,.05,.89]],
-        [.55,SWING.find(([q])=>q===.55)[1]],[.62,[17,15,29,.8,-.12,-.58]],[.72,[15,16,30,.7,.15,-.68]],[1,ready]];
-      const at=q=>{const k=keyframes(keys,q);return {hand:k.slice(0,3),dir:nrm3(k.slice(3))};};
-      Object.assign(P.sword,at(phase(t,WARRIOR_ATTACK_T)));
-      for(const sw of P.trail?.samples??[])Object.assign(sw,at(sw.u));
-    } else {
-      const idleDir=nrm3(SWORD_IDLE.slice(3)),readyDir=nrm3(ready.slice(3));
-      P.sword.hand=P.sword.hand.map((v,i)=>v+ready[i]-SWORD_IDLE[i]);
-      P.sword.dir=nrm3(P.sword.dir.map((v,i)=>v+readyDir[i]-idleDir[i]));
-    }
-  }
+  // The rig already turns the chest toward the camera. The swing's own twist
+  // would turn it back toward a thin profile on one half of the swing
+  // (L strike, R wind-up): damp only that half.
+  const toward=direction==='R'?1:-1;
+  if(P.yaw*toward<0) P.yaw*=SIDE_TWIST_AWAY;
+  // Both facings hold the same ready stance: elbow bent, grip in front of
+  // the body, blade tilted forward and up. Idle breathing and walk sway stay
+  // as offsets on top of it.
+  const ready=SIDE_SWORD_READY[direction];
   if(action==='attack') {
-    const u=phase(t,WARRIOR_ATTACK_T);
-    const correctSword=(sw,q)=>{
-      if(direction==='SE'||direction==='NW') {
-        // The large helmet hides the far-side wind-up in SE (and the blade
-        // points through the helmet in NW). Flare the same left forearm a little
-        // and cant the blade outward; the common two-bone arm stays in reach.
-        const w=sample([[0,[0]],[.1,[0]],[.2,[.7]],[.3,[1]],[.45,[1]],[.49,[.65]],[.55,[0]],[1,[0]]],q);
-        sw.hand=vlerp(sw.hand,[12,29,sw.hand[2]],w);
-        sw.dir=nrm3(vlerp(sw.dir,nrm3([-.06,.92,.74]),w));
-      }
-      if(direction==='NE') {
-        const w=sample([[0,[0]],[.48,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],q);
-        sw.dir=nrm3([sw.dir[0],sw.dir[1],sw.dir[2]-.16*w]);
-      }
-    };
-    correctSword(P.sword,u);
-    for(const sw of P.trail?.samples??[])correctSword(sw,sw.u);
-    if(direction==='NE')P.shieldCant=sample([[0,[0]],[.45,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],u);
+    // The side swing has its own path. Chibi arms cannot lift the grip over
+    // the helmet, so the sword travels around the body instead of through
+    // it: grip out beside the shoulder with the blade upright, a draw-back
+    // behind the back, up over the shoulder again, then SWING's chop, a
+    // follow-through that stops the tip just above the floor (SWING's own
+    // dips it below), and back to the stance. Chest (UY) coordinates.
+    const keys=[[0,ready],[.1,[3,22,50,.2,.05,.98]],[.2,[-10,18,50,-.6,.03,.8]],
+      [.3,[-18,10,47,-.9,0,.45]],[.45,[-17,11,49,-.82,0,.57]],[.49,[2,21,56,.45,.05,.89]],
+      [.55,SWING.find(([q])=>q===.55)[1]],[.62,[17,15,29,.8,-.12,-.58]],[.72,[15,16,30,.7,.15,-.68]],[1,ready]];
+    const at=q=>{const k=keyframes(keys,q);return {hand:k.slice(0,3),dir:nrm3(k.slice(3))};};
+    Object.assign(P.sword,at(phase(t,WARRIOR_ATTACK_T)));
+    for(const sw of P.trail?.samples??[])Object.assign(sw,at(sw.u));
+  } else {
+    const idleDir=nrm3(SWORD_IDLE.slice(3)),readyDir=nrm3(ready.slice(3));
+    P.sword.hand=P.sword.hand.map((v,i)=>v+ready[i]-SWORD_IDLE[i]);
+    P.sword.dir=nrm3(P.sword.dir.map((v,i)=>v+readyDir[i]-idleDir[i]));
   }
   const rf=rigFrame(direction,P.body,P.yaw),U=rf.UY;
-  if(rf.turn&&action==='attack') {
+  if(action==='attack') {
     // The chest faces the camera, but the chop should travel along the walking
     // direction: during the strike, turn only the blade back by the chest's
     // turn and twist. The gauntlet stays where the arm can reach it.
@@ -446,7 +393,7 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
   parts.push({id:'gorget',d:LAYER.torso+1,draw:()=>drawGorget(ctx,rf,head)});
   parts.push({id:'helmet',d:LAYER.head,draw:()=>{
     ctx.save();ctx.translate(head.x,head.y);ctx.scale(.9,.9);
-    drawHelmet(ctx,{x:0,y:0},rf.sx,rf.front,P);ctx.restore();
+    drawHelmet(ctx,{x:0,y:0},rf.sx,P);ctx.restore();
   }});
   const left=armParts(ctx,rf,P,'L'),right=armParts(ctx,rf,P,'R');
   parts.push(...left.parts,...right.parts);

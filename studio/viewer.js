@@ -11,7 +11,7 @@ export function mountViewer(root,entry) {
   <div class="mode-row"><fieldset><legend>表示サイズ</legend><div class="button-row" id="sizes"></div></fieldset><fieldset><legend>描画方式</legend><div class="button-row" id="modes"></div></fieldset></div></div>
   <div class="controls"><fieldset id="direction-field"><legend>向き</legend><div class="button-row" id="directions"></div></fieldset><fieldset><legend>動作</legend><div class="button-row" id="actions"></div></fieldset></div>
   <p id="capability-note" class="notice" hidden></p><p id="busy" role="status" aria-live="polite"></p>
-  <div class="extra-actions"><button id="show-directions">左右を見る</button><button id="show-all">左右・全動作を見る</button><a id="scroll-link" class="button" hidden>横スクロールで見る</a><a id="demo-link" class="button" hidden>ダンジョンで見る</a></div>
+  <div class="extra-actions"><button id="show-directions">左右を見る</button><button id="show-all">左右・全動作を見る</button><a id="scroll-link" class="button" hidden>横スクロールで見る</a></div>
   <section class="sheet-section" id="sheet" hidden><div class="sheet-controls"><h2 id="sheet-title"></h2><button id="close-sheet">一覧を閉じる</button></div><p>上の再生・位相・描画方式と連動します。</p><div class="sheet-grid"></div></section>
   <details id="technical"><summary>開発者向け情報・ゲームへの持ち出し</summary><p>RGBA理論容量は画像の幅×高さ×4です。ブラウザーやGPUの実メモリ使用量ではありません。</p><p>Cached Framesは選択した1体の左右・全動作を初回に生成します。大きな表示ほど容量が増えます。</p><pre id="export-command"></pre><a href="./docs/EXPORT_GUIDE.md">持ち出し手順を読む</a><pre id="diagnostics"></pre></details>`;
   const $=id=>root.querySelector('#'+id),def=entry.definition;
@@ -20,8 +20,6 @@ export function mountViewer(root,entry) {
   root.querySelector('.viewer-shell').insertBefore(root.querySelector('.controls'),root.querySelector('.playback'));
   root.querySelector('h1').textContent=entry.name;root.querySelector('.category').textContent=entry.category;root.querySelector('.description').textContent=entry.description;
   $('export-command').textContent=`node tools/export-game.mjs --characters ${entry.id}`;
-  $('demo-link').href=`./game/index.html?character=${encodeURIComponent(entry.id)}`;
-  $('demo-link').hidden=false;
   $('scroll-link').href=`./scroll/index.html?character=${encodeURIComponent(entry.id)}`;$('scroll-link').hidden=false;
   const state={direction:entry.preview.direction||'R',action:'idle',phase:entry.preview.phase,playing:!matchMedia('(prefers-reduced-motion: reduce)').matches,speed:1,mode:'live',size:'large'};
   const view=createCharacterView({canvas:$('hero'),width:700,height:440,dpr:1,characters:[def],lineBoil:true,footFix:true,lineScale:.82});
