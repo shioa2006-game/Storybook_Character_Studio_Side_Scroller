@@ -39,6 +39,7 @@ export const ARMED = {
   'eb-arcanist': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
   'eb-oracle': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
   'dark-mage': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 40, floor: false }] },
+  'eb-geomancer': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 54, floor: false }] },
 };
 
 

@@ -139,5 +139,36 @@ export function drawCreature(ctx, x, y, f, scale, parts, prefix, tilt = 0, fall 
 
 export { TAU };
 
+/** Crystal colors shared by the cave creatures (area 3). */
+export const CRYSTAL = Object.freeze({ lilac: '#c6aee9', blue: '#b9e0ee', pink: '#f0c0d6', white: '#f4f2fa', deep: '#9677c6', rock: '#7d7383', rockDark: '#5f5766', rockLight: '#a69bab' });
+
+/**
+ * A crystal: a hexagonal prism from its base (x, y) toward angle `a` (local radians, −π/2 = straight up), length
+ * `len`, width `w`, with a pale upper-left face and facet lines. `o.glow` (0–1) brightens it.
+ */
+export function crystal(ctx, f, x, y, a, len, w, fill = CRYSTAL.lilac, o = {}) {
+  const c = Math.cos(a), s = Math.sin(a), P = (u, v) => [x + c * u - s * v, y + s * u + c * v];
+  const k = o.shoulder ?? .7;
+  blob(ctx, f, [P(-2, -w / 2), P(len * k, -w / 2), P(len, 0), P(len * k, w / 2), P(-2, w / 2)], fill, { w: o.w ?? 1.4, depth: .9, light: .35, speck: .25, amp: .05 });
+  ctx.save(); ctx.globalAlpha = .55 + (o.glow ?? 0) * .4;
+  blob(ctx, f, [P(0, -w / 2), P(len * k, -w / 2), P(len - 1, -.5), P(len * k * .85, -w * .08), P(0, -w * .12)], CRYSTAL.white, { w: 0, depth: 0, speck: 0, amp: .04 });
+  ctx.restore();
+  line(ctx, f, [P(len * k, -w / 2), P(len * k * .9, 0), P(len * k, w / 2)], .5);
+  line(ctx, f, [P(len * k * .9, 0), P(len - 1, 0)], .45);
+  line(ctx, f, [P(len * .15, w * .1), P(len * k * .85, w * .05)], .4);
+}
+
+/** An angular rock plate: a jittered polygon around (x, y), radii rx × ry, with a few pale specks. */
+export function rock(ctx, f, x, y, rx, ry, fill = CRYSTAL.rock, seed = 0, o = {}) {
+  const n = o.n ?? 7, list = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i + .5 * Math.sin(seed + i * 2.1)) / n * Math.PI * 2 + (o.rot ?? 0), j = .82 + .18 * Math.sin(seed * 1.7 + i * 3.3);
+    list.push([x + Math.cos(a) * rx * j, y + Math.sin(a) * ry * j]);
+  }
+  blob(ctx, f, list, fill, { w: o.w ?? 1.6, depth: o.depth ?? 2, light: .25, speck: 1.2, amp: .08 });
+  for (let i = 0; i < 2; i++) disc(ctx, f, x + Math.sin(seed + i * 4) * rx * .4, y + Math.cos(seed * 2 + i) * ry * .35, 1.1, .9, CRYSTAL.rockLight, { w: 0, depth: 0, speck: 0 });
+  return list;
+}
+
 /** Charred bark colors shared by the tree creatures (Cinder Sapling, Gnarlwood). */
 export const TREE = Object.freeze({ bark: '#5d4636', barkDark: '#3f3027', barkLight: '#7d6150', hollow: '#2a1f19', glow: '#ef8a3a', ink: PAL.ink });
