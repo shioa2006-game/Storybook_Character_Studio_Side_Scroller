@@ -37,6 +37,8 @@ const SWING = [
   [.72, [15, 16, 28, .63, .18, -.76]],
   [1, SWORD_IDLE],
 ];
+// Right-facing only: how far the resting sword grip moves forward (local a).
+const SIDE_GRIP_FORWARD = 9;
 const sample = (keys, u) => keyframes(keys, u)[0];
 const phase = (t, period) => ((t % period) + period) % period / period;
 const metal = (ctx, points, o = {}) => {
@@ -364,6 +366,13 @@ function armParts(ctx,rf,P,side) {
 
 export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=warriorPose(action,t);
+  if(direction==='R') {
+    // Facing right, the near shield hides the far sword hand and the blade
+    // seems to grow out of the rim. Carry the resting grip forward past the
+    // rim; the attack eases out of and back into the same rest offset.
+    const rest=action==='attack'?sample([[0,[1]],[.12,[0]],[.8,[0]],[1,[1]]],phase(t,WARRIOR_ATTACK_T)):1;
+    P.sword.hand=[P.sword.hand[0]+SIDE_GRIP_FORWARD*rest,P.sword.hand[1],P.sword.hand[2]];
+  }
   if(action==='attack') {
     const u=phase(t,WARRIOR_ATTACK_T);
     const correctSword=(sw,q)=>{
@@ -374,6 +383,15 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
         const w=sample([[0,[0]],[.1,[0]],[.2,[.7]],[.3,[1]],[.45,[1]],[.49,[.65]],[.55,[0]],[1,[0]]],q);
         sw.hand=vlerp(sw.hand,[12,29,sw.hand[2]],w);
         sw.dir=nrm3(vlerp(sw.dir,nrm3([-.06,.92,.74]),w));
+      }
+      if(direction==='R') {
+        // Facing right, the left sword hand is on the far side: the overhead
+        // wind-up sits entirely behind the helmet and shield. Draw it back past
+        // the shoulders instead, below the rearward plume, so the blade reads
+        // behind the back before the chop sweeps over the head.
+        const w=sample([[0,[0]],[.1,[0]],[.2,[.8]],[.3,[1]],[.45,[1]],[.48,[.3]],[.51,[0]],[1,[0]]],q);
+        sw.hand=vlerp(sw.hand,[-13,20,45],w);
+        sw.dir=nrm3(vlerp(sw.dir,nrm3([-.82,.12,.56]),w));
       }
       if(direction==='NE') {
         const w=sample([[0,[0]],[.48,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],q);
