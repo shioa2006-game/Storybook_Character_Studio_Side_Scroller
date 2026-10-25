@@ -19,16 +19,16 @@ export const SIREN_HYMN_T = .6;     // Tidal Hymn: a loop
 
 export function sirenPose(action, t) {
   const s = Math.sin(TAU * phase(t, IDLE_T));
-  const P = { bob: s * 1.5, sway: s, lean: 0, near: [[14, -70], [24, -79]], far: [[3, -55], [9, -62]], splay: 0, sing: .4, ball: -1, notes: -1, t };
+  const P = { bob: s * 1.5, sway: s, lean: 0, front: [[14, -70], [24, -79]], back: [[3, -55], [9, -62]], splay: 0, sing: .4, ball: -1, notes: -1, t };
   if (action === 'attack') {
     const u = phase(t, SIREN_ATTACK_T);
     const k = sample([[0, [0]], [.1, [1]], [.45, [1]], [1, [0]]], u);
-    P.near = [[16 + 2 * k, -68 + 2 * k], [24 + 8 * k, -79 + 13 * k]]; P.lean = sample([[0, [0]], [.1, [3]], [.5, [2]], [1, [0]]], u);
+    P.front = [[16 + 2 * k, -68 + 2 * k], [24 + 8 * k, -79 + 13 * k]]; P.lean = sample([[0, [0]], [.1, [3]], [.5, [2]], [1, [0]]], u);
     P.sing = .4 + .4 * k; P.ball = u >= .15 && u < .75 ? (u - .15) / .6 : -1;
   } else if (action === 'cast') {
     // Tidal Hymn: arms open and raised, singing; periodic in u.
     const u = phase(t, SIREN_HYMN_T), w = Math.sin(TAU * u);
-    P.near = [[15, -74], [26, -88 + w]]; P.far = [[-10, -72], [-18, -84 - w]]; P.splay = .3;
+    P.front = [[15, -74], [26, -88 + w]]; P.back = [[-10, -72], [-18, -84 - w]]; P.splay = .3;
     P.sing = .9; P.bob = w * 1.2; P.sway = w; P.notes = u;
   } else if (action === 'hurt') {
     P.sing = 0;
@@ -59,7 +59,9 @@ export function drawSiren(ctx, x, y, direction, action, t, scale = 1, opts = {})
     const end = r.out[r.out.length - 1];
     fanFin(ctx, f, end, -2.1 + P.sway * .1, 28, 1.5, C.fin, C.finLight);
   } });
-  parts.push({ id: 'farArm', d: -4, draw: () => arm(ctx, f, U([-3, -64]), U(P.far[0]), U(P.far[1]), C.skin, { hand: 3.4, splay: P.splay }) });
+  // The arm on the facing side (front) is the far one, behind the body; the arm on the back side is the near one,
+  // in front of the body (its hand rests on the chest).
+  parts.push({ id: 'frontArm', d: -4, draw: () => arm(ctx, f, U([6, -64]), U(P.front[0]), U(P.front[1]), C.skin, { hand: 3.4, splay: P.splay }) });
   parts.push({ id: 'torso', d: 0, draw: () => {
     blob(ctx, f, [[-8, -44], [8, -44], [9, -55], [8, -66], [-7, -66], [-9, -55]].map(U), C.skin, { w: 1.8, depth: 1.8, speck: .4 });
     // Shell top: two scallops with ribs.
@@ -94,7 +96,7 @@ export function drawSiren(ctx, x, y, direction, action, t, scale = 1, opts = {})
     if (hurt) line(ctx, f, [[m[0] - 2, m[1]], [m[0], m[1] - 1], [m[0] + 2, m[1]]], .9);
     else disc(ctx, f, m[0], m[1], 1.2 + P.sing, 1.4 + P.sing * 1.2, '#7a3b38', { w: .7, depth: 0, speck: 0 });
   } });
-  parts.push({ id: 'nearArm', d: 8, draw: () => arm(ctx, f, U([6, -64]), U(P.near[0]), U(P.near[1]), C.skin, { hand: 3.6, splay: P.splay }) });
+  parts.push({ id: 'backArm', d: 8, draw: () => arm(ctx, f, U([-3, -64]), U(P.back[0]), U(P.back[1]), C.skin, { hand: 3.6, splay: P.splay }) });
   parts.push({ id: 'hairFront', d: 4.5, draw: () => {
     // A strand falling from behind the ear, under the shell ornament, down over the back of the shoulder.
     const sw = P.sway;
@@ -103,7 +105,7 @@ export function drawSiren(ctx, x, y, direction, action, t, scale = 1, opts = {})
   parts.push({ id: 'magic', d: 12, draw: () => {
     if (P.ball >= 0) {
       // The water ball flies forward and fades.
-      const u = P.ball, h = U(P.near[1]), bx = h[0] + 8 + u * 46, byy = h[1] - u * 2, r = 7 * (1 - u * .3);
+      const u = P.ball, h = U(P.front[1]), bx = h[0] + 8 + u * 46, byy = h[1] - u * 2, r = 7 * (1 - u * .3);
       ctx.save(); ctx.globalAlpha = 1 - u * .6;
       disc(ctx, f, bx, byy, r, r * .9, C.water, { w: 1.3, depth: .6, speck: .2 });
       disc(ctx, f, bx - r * .3, byy - r * .3, r * .35, r * .3, C.waterLight, { w: 0, depth: 0, speck: 0 });
