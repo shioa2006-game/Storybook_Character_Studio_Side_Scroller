@@ -66,6 +66,13 @@ export function footProj(dir, a, b, z) {
  */
 export const SIDE_VIEW_ANGLE = 25 * Math.PI / 180;
 
+/**
+ * 横向きだけ上半身 (U / UY) をカメラ側へひねる角度 (カメラに向けるごまかし)。脚と足運び (W・footProj) は進行方向のまま。
+ * 胴・ベルトなどは前後の厚みのない板として描くので、真横に近いと板の幅が細く見える。
+ * 25° + 20° = 45° で、4方向で調整した絵と同じ幅に戻す。
+ */
+export const SIDE_CHEST_TURN = 20 * Math.PI / 180;
+
 /** 横向き (sign = +1 右 / −1 左) の前ベクトル。左右反転ではなく投影で描くので、持ち手は体の左右のまま保たれる */
 const sideForward = sign => {
   const c = Math.cos(SIDE_VIEW_ANGLE) * Math.SQRT1_2, n = Math.sin(SIDE_VIEW_ANGLE) * Math.SQRT1_2;
@@ -77,8 +84,8 @@ export const DIRS = {
   NE: { key: 'NE', arrow: '↗', name: '右上', axis: '−y', f: [0, -1] },
   SW: { key: 'SW', arrow: '↙', name: '左下', axis: '+y', f: [0, 1] },
   SE: { key: 'SE', arrow: '↘', name: '右下', axis: '+x', f: [1, 0] },
-  R: { key: 'R', arrow: '→', name: '右', axis: 'side+', f: sideForward(1) },
-  L: { key: 'L', arrow: '←', name: '左', axis: 'side−', f: sideForward(-1) },
+  R: { key: 'R', arrow: '→', name: '右', axis: 'side+', f: sideForward(1), turn: SIDE_CHEST_TURN },
+  L: { key: 'L', arrow: '←', name: '左', axis: 'side−', f: sideForward(-1), turn: -SIDE_CHEST_TURN },
 };
 
 /** アイソメの4方向 (8×8ダンジョンの Renderer が使う) */
@@ -135,20 +142,22 @@ export function walkFeet(t) {
 
 /**
  * キャラ1体ぶんの座標フレーム。
- *  W(a,b,z)  : 体の座標系 → ローカル画面座標 (d = 奥行き X+Y)
- *  U(a,b,z)  : 上半身の揺れ (body) を加えた W
+ *  W(a,b,z)  : 体の座標系 → ローカル画面座標 (d = 奥行き X+Y)。脚・足はこれで描く
+ *  U(a,b,z)  : 上半身の揺れ (body) を加えた W。横向き (R / L) では、さらに上半身を SIDE_CHEST_TURN だけカメラ側へひねる (turn)
  *  UY(a,b,z) : さらに上半身のひねり yaw (ラジアン, +で左肩が前へ) を加えたもの
  *  vs, vt    : 視点方向 (ワールドの (1,1)) を体の座標系の a, b 成分で表したもの
  */
 export function rigFrame(dirKey, body, yaw = 0) {
   const dir = DIRS[dirKey];
+  // 横向きは上半身 (U / UY) だけカメラ側へひねる (dir.turn。+ で胸の正面が体の右側 −b へ回る)。W (脚・足) は進行方向のまま
+  const turn = dir.turn || 0, ct = Math.cos(turn), st = Math.sin(turn);
   const W = (a, b, z) => { const w = bodyToWorld(dir, a, b); return { ...proj(w.X, w.Y, z), d: w.X + w.Y }; };
-  const U = (a, b, z) => W(a + body[0], b + body[1], z + body[2]);
+  const U = (a, b, z) => { const a1 = a + body[0], b1 = b + body[1]; return W(a1 * ct + b1 * st, -a1 * st + b1 * ct, z + body[2]); };
   const cy = Math.cos(yaw), sy = Math.sin(yaw);
   const UY = (a, b, z) => U(a * cy + b * sy, -a * sy + b * cy, z);
-  const [fx, fy] = dir.f, Lx = fy, Ly = -fx;
-  const fU = [cy * fx - sy * Lx, cy * fy - sy * Ly], LU = [sy * fx + cy * Lx, sy * fy + cy * Ly];
-  return { dir, W, U, UY, yaw, fU, LU, sx: W(1, 0, 0).x >= 0 ? 1 : -1, front: fx + fy > 0, vs: fx + fy, vt: fy - fx };
+  const [fx, fy] = dir.f, Lx = fy, Ly = -fx, cT = Math.cos(yaw + turn), sT = Math.sin(yaw + turn);
+  const fU = [cT * fx - sT * Lx, cT * fy - sT * Ly], LU = [sT * fx + cT * Lx, sT * fy + cT * Ly];
+  return { dir, W, U, UY, yaw, turn, fU, LU, sx: W(1, 0, 0).x >= 0 ? 1 : -1, front: fx + fy > 0, vs: fx + fy, vt: fy - fx };
 }
 
 /** ひねった上半身の座標 (a,b) → ひねっていない体の座標 (a,b) */
@@ -190,11 +199,13 @@ export const BODY_SHAPE = { A: 9, B: 16, head: { a: 1.5, z: 67, r: 17, hz: 6, rF
 export const LAYER = { torso: 500, cape: 600, head: 1500 };
 
 export function bodyLayerKey(rf, a, b, z) {
-  const w = bodyToWorld(rf.dir, a, b);
+  // a, b は上半身 (U) の座標。横向きのひねり rf.turn を戻して脚の座標系 (W) にする
+  const c = Math.cos(rf.turn || 0), s = Math.sin(rf.turn || 0);
+  const w = bodyToWorld(rf.dir, a * c + b * s, -a * s + b * c);
   const at = w.X * rf.fU[0] + w.Y * rf.fU[1], bt = w.X * rf.LU[0] + w.Y * rf.LU[1];
   const vs = rf.fU[0] + rf.fU[1], vt = rf.LU[0] + rf.LU[1];
   const torsoFront = vs * at / (BODY_SHAPE.A ** 2) + vt * bt / (BODY_SHAPE.B ** 2) > 0;
-  const H = BODY_SHAPE.head, hw = bodyToWorld(rf.dir, H.a, 0);
+  const H = BODY_SHAPE.head, hw = bodyToWorld(rf.dir, H.a * c, -H.a * s);
   const dX = w.X - hw.X, dY = w.Y - hw.Y, dz = z - H.z;
   const ez = Math.max(0, Math.abs(dz) - H.hz);
   const depth = (dX + dY) / Math.SQRT2, lat = (dY - dX) / Math.SQRT2, q = (lat * lat + ez * ez) / (H.r * H.r);

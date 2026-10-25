@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DIRS, SIDE_DIR_ORDER, SIDE_VIEW_ANGLE, footProj, rigFrame, walkFeet, WALK_HZ } from '../../src/characters/rig.js';
+import { DIRS, SIDE_DIR_ORDER, SIDE_VIEW_ANGLE, bodyLayerKey, footProj, rigFrame, walkFeet, WALK_HZ } from '../../src/characters/rig.js';
 import { SIDE_DIRECTIONS, sideWalkSecondsPerPixel } from '../../src/index.js';
 import { createFrameCacheStore } from '../../src/rendering/cache.js';
 import { catalog } from '../../characters/catalog.js';
@@ -19,6 +19,21 @@ test('side directions face screen right / left without mirroring the body', () =
     // Right-facing shows the right side nearest; left-facing shows the left side nearest.
     assert.equal(left.d > 0, key === 'L');
   }
+});
+
+test('side views turn only the upper body toward the camera', () => {
+  for (const key of SIDE_DIR_ORDER) {
+    const rf = rigFrame(key, [0, 0, 0]), iso = rigFrame('SE', [0, 0, 0]);
+    // The torso is drawn as a card across b: its screen width matches the 45° isometric art.
+    const width = f => Math.abs(f(0, 10, 0).x - f(0, -10, 0).x);
+    assert.ok(Math.abs(width(rf.U) - width(iso.U)) < 1e-9, key);
+    assert.ok(Math.abs(width(rf.W) - 20 * Math.sin(SIDE_VIEW_ANGLE)) < 1e-9, key);
+    assert.equal(Math.sign(rf.turn), SIDE_DIRECTIONS[key].sign);
+    // A point on the turned chest sorts in the same torso layer as its leg-frame counterpart.
+    const chest = rf.U(10, 0, 30), key0 = bodyLayerKey(rf, 10, 0, 30);
+    assert.ok(Math.abs(key0 % 1000 - chest.d) < 1e-9, key);
+  }
+  assert.equal(rigFrame('SE', [0, 0, 0]).turn, 0);
 });
 
 test('side walk speed keeps the planted foot fixed on the ground', () => {

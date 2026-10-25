@@ -20,7 +20,7 @@ export { archer, ARCHER_ATTACK_KEYS } from './characters/archer.js';
 export { skeleton } from './characters/skeleton.js';
 export { ROOM_DEFAULTS, normalizeRoom } from './dungeon/room.js';
 export { PROP_TYPES } from './dungeon/props.js';
-export { walkSecondsPerTile, sideWalkSecondsPerPixel, SIDE_VIEW_ANGLE } from './characters/rig.js';
+export { walkSecondsPerTile, sideWalkSecondsPerPixel, SIDE_VIEW_ANGLE, SIDE_CHEST_TURN } from './characters/rig.js';
 export { PAL as PALETTE } from './core/palette.js';
 export { TW as TILE_WIDTH, TH as TILE_HEIGHT, ZH as HEIGHT_UNIT } from './core/geometry.js';
 

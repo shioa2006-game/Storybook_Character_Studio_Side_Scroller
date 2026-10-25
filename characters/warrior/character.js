@@ -39,6 +39,8 @@ const SWING = [
 ];
 // Right-facing only: how far the resting sword grip moves forward (local a).
 const SIDE_GRIP_FORWARD = 9;
+// Side views only: how much of the swing's twist away from the camera is kept.
+const SIDE_TWIST_AWAY = .3;
 const sample = (keys, u) => keyframes(keys, u)[0];
 const phase = (t, period) => ((t % period) + period) % period / period;
 const metal = (ctx, points, o = {}) => {
@@ -288,6 +290,11 @@ function drawSword(ctx, hand, tip) {
 function shieldGeometry(rf,P) {
   // Choose a modest cant for readability in each view, without swapping hands.
   const candidates=[[.87,-.5],[.87,.5]].map(([a,b])=>({a,b,w:bodyToWorld(rf.dir,a,b)}));
+  if(rf.turn) {
+    // Side views turn the chest toward the camera; the strapped shield turns with it.
+    const c=Math.cos(rf.turn),s=Math.sin(rf.turn);
+    for(const n of candidates) n.w=bodyToWorld(rf.dir,n.a*c+n.b*s,-n.a*s+n.b*c);
+  }
   let n=candidates.reduce((a,b)=>Math.abs(b.w.X+b.w.Y)>Math.abs(a.w.X+a.w.Y)?b:a);
   if(P.shieldCant) {
     // NE's near shield otherwise covers the entire far-hand sword at impact.
@@ -366,6 +373,13 @@ function armParts(ctx,rf,P,side) {
 
 export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
   const P=warriorPose(action,t);
+  if(direction==='R'||direction==='L') {
+    // The rig already turns the chest toward the camera in side views. The
+    // swing's own twist would turn it back toward a thin profile on one half
+    // of the swing (L strike, R wind-up): damp only that half.
+    const toward=direction==='R'?1:-1;
+    if(P.yaw*toward<0) P.yaw*=SIDE_TWIST_AWAY;
+  }
   if(direction==='R') {
     // Facing right, the near shield hides the far sword hand and the blade
     // seems to grow out of the rim. Carry the resting grip forward past the
@@ -390,8 +404,11 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
         // the shoulders instead, below the rearward plume, so the blade reads
         // behind the back before the chop sweeps over the head.
         const w=sample([[0,[0]],[.1,[0]],[.2,[.8]],[.3,[1]],[.45,[1]],[.48,[.3]],[.51,[0]],[1,[0]]],q);
-        sw.hand=vlerp(sw.hand,[-13,20,45],w);
-        sw.dir=nrm3(vlerp(sw.dir,nrm3([-.82,.12,.56]),w));
+        // Chest coordinates: the rig turns the chest toward the camera, which
+        // swings the far (+b) side forward on screen. Keep the grip close to
+        // the body's centre line so the blade clears the back, not the chest.
+        sw.hand=vlerp(sw.hand,[-20,8,46],w);
+        sw.dir=nrm3(vlerp(sw.dir,nrm3([-.9,0,.45]),w));
       }
       if(direction==='NE') {
         const w=sample([[0,[0]],[.48,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],q);
@@ -403,6 +420,17 @@ export function drawWarriorRig(ctx,x,y,direction,action,t,scale=1,opts={}) {
     if(direction==='NE')P.shieldCant=sample([[0,[0]],[.45,[0]],[.55,[1]],[.67,[1]],[.8,[0]],[1,[0]]],u);
   }
   const rf=rigFrame(direction,P.body,P.yaw),U=rf.UY;
+  if(rf.turn&&action==='attack') {
+    // The chest faces the camera, but the chop should travel along the walking
+    // direction: during the strike, turn only the blade back by the chest's
+    // turn and twist. The gauntlet stays where the arm can reach it.
+    const back=(sw,q)=>{
+      const k=sample([[0,[0]],[.45,[0]],[.53,[1]],[.74,[1]],[.9,[0]],[1,[0]]],q)*(rf.turn+rf.yaw);
+      const c=Math.cos(k),s=Math.sin(k),[a,b,z]=sw.dir; sw.dir=[a*c-b*s,a*s+b*c,z];
+    };
+    back(P.sword,phase(t,WARRIOR_ATTACK_T));
+    for(const sw of P.trail?.samples??[])back(sw,sw.u);
+  }
   const parts=armoredLegs(ctx,rf,P);
   parts.push({id:'torso',d:LAYER.torso,draw:()=>drawTorso(ctx,rf,P)});
   // Lower the whole head six local pixels so the scarf gently overlaps the
