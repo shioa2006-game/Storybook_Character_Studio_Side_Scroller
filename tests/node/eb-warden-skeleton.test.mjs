@@ -15,6 +15,9 @@ export function wardenProblems(action, t) {
     const reach = dist(rig.S[side], rig.H[side]);
     if (reach > UPPER + FORE - .5) out.push(`${side} hand out of reach (${reach.toFixed(1)} > ${UPPER + FORE})`);
     if (Math.abs(dist(rig.S[side], rig.E[side]) - UPPER) > .5 || Math.abs(dist(rig.E[side], rig.H[side]) - FORE) > .5) out.push(`${side} arm bones stretched`);
+    // With the hand below the shoulder the elbow bends back (behind the line shoulder → hand), never forward.
+    const [S, E, H] = [rig.S[side], rig.E[side], rig.H[side]];
+    if (H[1] > S[1] && (H[0] - S[0]) * (E[1] - S[1]) - (H[1] - S[1]) * (E[0] - S[0]) < 0) out.push(`${side} elbow bent forward`);
   }
   // The visor box moves with the lean (uniformly at its height).
   const o = rig.U([0, -170]), fb = SKELETON.face, box = { x0: fb.x0 + o[0], x1: fb.x1 + o[0], y0: fb.y0 + o[1] + 170, y1: fb.y1 + o[1] + 170 };
@@ -28,10 +31,10 @@ export function wardenProblems(action, t) {
     if (inFace([a[0] + (c[0] - a[0]) * v, a[1] + (c[1] - a[1]) * v])) { out.push('hammer head over the visor'); break outer; }
   }
   for (const p of rig.hammer.head) if (p[1] > 2) { out.push(`hammer head below the floor (${p[1].toFixed(1)})`); break; }
-  // Hands drawn in front of the helm (those not raised above the shoulders) and their forearms.
+  // Hands drawn in front of the helm (those not raised, see SKELETON.raisedY) and their forearms.
   for (const side of ['lead', 'rear']) {
     const H = rig.H[side], E = rig.E[side];
-    if (H[1] < -150) continue;
+    if (H[1] < SKELETON.raisedY) continue;
     if (inFace(H, 9)) out.push(`${side} hand over the visor`);
     for (let k = 0; k <= 10; k++) if (inFace([E[0] + (H[0] - E[0]) * k / 10, E[1] + (H[1] - E[1]) * k / 10], 9)) { out.push(`${side} forearm over the visor`); break; }
   }
