@@ -1,236 +1,214 @@
 /**
- * EMBERBOUND EXPEDITION — Rimequeen Isveil (game id `rimequeen`, area 4 boss), the Oracle's robed body (from the
- * mage) after the user's reference image: long wavy silver-lavender hair, pointed ears, a pale face with dark
- * stern eyes, a tall crown of ice spikes, a deep blue gown flaring wide to the ground with white fur trim and a
- * pale blue front panel patterned with ice diamonds, a fur collar with a snowflake brooch, wide bell sleeves
- * hung with ice drops, an open hand, and a silver staff crowned with a great snowflake.
- * Actions (plan/EMBERBOUND_PRODUCTION.md): `attack` is the ice spear (a quick thrust of the staff; the shard is
- * released at u = .12), `cast` = the Frozen Tomb / Absolute Zero wind-up the game loops (staff raised, palm out,
- * the snowflake glowing, snow circling), and the shared hurt. She does not walk.
- * Anatomical +b is LEFT (staff), −b RIGHT (open hand).
+ * EMBERBOUND EXPEDITION — Rimequeen Isveil (game id `rimequeen`, area 4 boss), after the user's reference image:
+ * a tall queen with a small head — long wavy silver-lavender hair, pointed ears, a pale oval face with dark stern
+ * eyes, a tall crown of ice spikes — in a deep blue gown that flares wide to the ground, opening over a pale blue
+ * panel patterned with ice diamonds, trimmed with white fur; a fitted bodice with a snowflake brooch and a fur
+ * collar, wide bell sleeves hung with ice drops, an open hand reaching forward, and a silver staff crowned with a
+ * great snowflake.
+ * Drawn by hand in a right-facing local frame (like the other non-rig bodies), so the boss can have a long body and
+ * a small head. She holds the staff in her left hand and opens her right whichever way she faces, so the arms swap
+ * depth with the facing (see HANDS); elbows always bend down and back.
+ * Actions (plan/EMBERBOUND_PRODUCTION.md): `attack` is the ice spear (the staff swung forward, light bursting from
+ * the snowflake at u = .12), `cast` = the Frozen Tomb / Absolute Zero wind-up the game loops (staff raised, palm
+ * out, the snowflake glowing, snow circling), and the shared hurt. She does not walk.
  */
-import {
-  TAU, rigFrame, renderRig, ik2, keyframes, nrm3, travelDir,
-  paint, paintA, ellipsePts, taperPts, cLine, mittenHand, legParts2,
-  strokePath, DRAW, PAL,
-} from '../../src/authoring.js';
-import { hurtAction, phase, sample, hurtAmount, fallTilt, withTilt } from '../shared/emberbound/actions.js';
+import { TAU, PAL, keyframes } from '../../src/authoring.js';
+import { hurtAction, phase, sample, fallTilt } from '../shared/emberbound/actions.js';
+import { face, blob, disc, line, limb, tufted, drawCreature } from '../shared/emberbound/creature.js';
 
 const C = {
-  gown:'#3f6596', gownDark:'#2d4c78', panel:'#a9cbe6', panelDark:'#7ea8cf', fur:'#f3f1ec', furShade:'#d3d8de',
-  hair:'#e9e4f1', hairShade:'#c4bad9', hairLight:'#ffffff', skin:'#e9eef3', skinShade:'#cfd8e2',
-  silver:'#dde4ec', silverDark:'#97a3b3', ice:'#cde8f5', iceDark:'#8dbbdb', glow:'#dff6ff', eye:'#262d3b', ink:PAL.ink,
+  gown: '#3f6596', gownDark: '#2d4c78', panel: '#a9cbe6', panelDark: '#7ea8cf', fur: '#f3f1ec', furShade: '#d3d8de',
+  hair: '#e9e4f1', hairShade: '#c4bad9', skin: '#e9eef3', silver: '#dde4ec', silverDark: '#97a3b3',
+  ice: '#cde8f5', iceDark: '#8dbbdb', glow: '#dff6ff', eye: '#262d3b', ink: PAL.ink,
 };
-const IDLE_T=3.4;
-// Game timing (seconds).
-export const QUEEN_ATTACK_T=.3;   // ice spear: the thrust peaks and the shard leaves at u = .12
-export const QUEEN_WINDUP_T=.6;   // Frozen Tomb / Absolute Zero wind-up: a loop
-const KEYS=Object.freeze({ attack:[0,.06,.12,.2,.3,.45,.6,.8] });
-const blend=(keys,u)=>keyframes(keys,u);
-const mid=(a,b)=>a.map((v,i)=>(v+b[i])/2);
-const shape=(ctx,pts,fill,o={})=>paintA(ctx,pts,{fill,w:1.5,depth:1.7,
-  speck:.55,speckScale:.3,amp:.22,...o});
-const oval=(ctx,x,y,rx,ry,fill,o={})=>paint(ctx,ellipsePts(x,y,rx,ry,28),
-  {fill,w:1.2,depth:1,speck:.35,speckScale:.3,amp:.2,...o});
-/** A small crystal drop hanging from (x, y). */
-const drop=(ctx,x,y,l=6)=>{shape(ctx,[[x,y],[x+1.8,y+l*.45],[x,y+l],[x-1.8,y+l*.45]],C.ice,{w:.8,depth:.2,speck:0,amp:.05});};
+const IDLE_T = 3.4;
+export const QUEEN_ATTACK_T = .3;   // ice spear: the staff points ahead and the light bursts at u = .12
+export const QUEEN_WINDUP_T = .6;   // Frozen Tomb / Absolute Zero wind-up: a loop
+const SH_FRONT = [12, -146], SH_BACK = [-10, -146], ARM = 22;   // shoulders, upper arm = forearm length
+// The staff is always in her left hand and the open hand is her right, whichever way she faces. Facing left (the
+// reference and the game) her left side is toward us, so the staff arm is the near arm and holds it at her back;
+// facing right it is the far arm, so she holds the staff out in front, behind the body, and the open right hand is
+// the near arm — the same hands as the shared rig keeps (docs/SIDE_VIEW_GUIDE.md, 左右反転しない).
+// Staff: [hand x, y, angle] (angle −π/2 = straight up, toward 0 = leaning forward); palm: [x, y].
+const HANDS = {
+  L: { staff: [-22, -108, -1.6], palm: [44, -142], spear: [-34, -160, -1.0], spearPalm: [48, -148], castStaff: [-14, -146, -1.72], castPalm: [46, -158] },
+  R: { staff: [30, -110, -1.48], palm: [6, -118], spear: [40, -128, -.95], spearPalm: [8, -122], castStaff: [30, -150, -1.5], castPalm: [-24, -160] },
+};
+const STAFF_UP = 112, STAFF_DOWN = 100;   // staff length above and below the hand
 
-// The free right hand held out open in front of the chest.
-const REST={staff:[0,39,43],palm:[13,-19,33]};
-export function queenPose(action,t) {
-  const P={body:[0,0,0],footL:[0,6,0],footR:[0,-6,0],
-    staff:REST.staff.slice(),palm:REST.palm.slice(),pitch:.07,sway:0,glow:0,snow:-1,t,blink:false};
-  if(action==='attack') {
-    // Ice spear: a quick thrust that points the snowflake ahead, a flash and a shard, then back to rest.
-    const u=phase(t,QUEEN_ATTACK_T);
-    P.staff=blend([[0,REST.staff],[.12,[25,20,42]],[.45,[24,21,42]],[1,REST.staff]],u);
-    P.palm=blend([[0,REST.palm],[.12,[15,-17,38]],[.45,[15,-17,38]],[1,REST.palm]],u);
-    const a=blend([[0,[0,.07,0]],[.12,[2,2.4,1.2]],[.45,[2,2.4,1.2]],[1,[0,.07,0]]],u);
-    P.body=[a[0],0,0];P.pitch=a[1];P.sway=a[2];
-    P.glow=sample([[0,[.3]],[.1,[1]],[.3,[.6]],[.6,[0]],[1,[0]]],u);
-  } else if(action==='cast') {
-    // The wind-up: the staff raised high beside the head, the palm out, the snowflake pulsing; periodic in u.
-    const u=phase(t,QUEEN_WINDUP_T),w=Math.sin(TAU*u);
-    P.staff=[4,30,68+w*.6];P.palm=[24,-23,46+w*.6];P.pitch=-.15;P.sway=-.5+w*.3;P.body=[-1,0,.5];
-    P.glow=.8+.2*w;P.snow=u;
-  } else if(action==='hurt') {
-    const k=hurtAmount(t);
-    P.body=[-2.5*k,0,-1.2*k];P.staff=[REST.staff[0]-2*k,REST.staff[1],REST.staff[2]+3*k];
-    P.palm=[REST.palm[0]-2*k,REST.palm[1],REST.palm[2]+5*k];P.sway=1.5*k;P.blink=k>.5;
-  } else {
-    const s=Math.sin(TAU*phase(t,IDLE_T));P.body[2]=s*.55;P.sway=s*.6;
-    P.glow=.35+.12*Math.sin(t*2.6);
+export function queenPose(action, t, direction = 'L') {
+  const s = Math.sin(TAU * phase(t, IDLE_T)), Q = HANDS[direction === 'R' ? 'R' : 'L'];
+  const P = { sway: s * 1.2, staff: Q.staff.slice(), palm: Q.palm.slice(), glow: .35 + .12 * Math.sin(t * 2.6), burst: -1, snow: -1, lean: 0, blink: false };
+  if (action === 'attack') {
+    // Ice spear: the staff turned to point ahead, light bursting from the snowflake, then back. Facing left it is
+    // raised over and past the crown (it never crosses the face); facing right it is already in front.
+    const u = phase(t, QUEEN_ATTACK_T), hold = [Q.spear[0], Q.spear[1] + 2, Q.spear[2] - .04];
+    P.staff = keyframes([[0, Q.staff], [.12, Q.spear], [.45, hold], [1, Q.staff]], u);
+    P.palm = keyframes([[0, Q.palm], [.12, Q.spearPalm], [.45, Q.spearPalm], [1, Q.palm]], u);
+    P.lean = sample([[0, [0]], [.12, [4]], [.45, [3.5]], [1, [0]]], u);
+    P.glow = sample([[0, [.3]], [.1, [1]], [.3, [.6]], [.6, [.2]], [1, [.3]]], u);
+    P.burst = u >= .1 && u < .6 ? (u - .1) / .5 : -1;
+  } else if (action === 'cast') {
+    // The wind-up: the staff raised high beside her, the palm out, the snowflake pulsing; periodic in u.
+    const u = phase(t, QUEEN_WINDUP_T), w = Math.sin(TAU * u);
+    P.staff = [Q.castStaff[0], Q.castStaff[1] + w * .6, Q.castStaff[2]]; P.palm = [Q.castPalm[0], Q.castPalm[1] + w * .6]; P.lean = -2; P.glow = .8 + .2 * w; P.snow = u; P.sway = w;
+  } else if (action === 'hurt') {
+    P.blink = t < .2;
   }
   return P;
 }
 
-function gown(ctx,rf,P) {
-  const p=rf.U(0,0,0),sw=P.sway;
-  ctx.save();ctx.translate(p.x,p.y);
-  // A deep blue gown flaring wide to the ground, a white fur trim along the hem.
-  const hem=[[-38+sw,1],[-24,3],[-8,2],[8,3],[24,2],[38+sw,1]];
-  shape(ctx,[[-12,-51],[-17,-44],[-16,-34],[-24+sw,-18],[-34+sw,-5],...hem,[34+sw,-5],[24+sw,-18],[16,-34],[15,-43],[11,-51]],C.gown,{w:1.9,depth:2.2});
-  shape(ctx,[...hem.map(([x,y])=>[x,y+.5]),...hem.slice().reverse().map(([x,y])=>[x*.97,y-5])],C.fur,{w:1.3,depth:.8,speck:.6,amp:.5,step:3});
-  const Q=pts=>pts.map(([b,z])=>{const q=rf.U(9,b,z);return[q.x-p.x,q.y-p.y];});
-  // Pale blue front panel widening to the hem, edged with fur, patterned with ice diamonds.
-  shape(ctx,Q([[-5,34],[-8,18],[-12,4],[-14,-1],[14,-1],[12,4],[8,18],[5,34]]),C.panel,{w:1.2,depth:1});
-  for(const side of [-1,1]) strokePath(ctx,Q([[side*5,34],[side*8,18],[side*12,4],[side*14,-1]]).map(([x,y])=>({x,y})),2.4,false,C.fur);
-  for(const z of [26,16,7]){const d=rf.U(9.5,0,z);shape(ctx,[[d.x-p.x,d.y-p.y-3.4],[d.x-p.x+2,d.y-p.y],[d.x-p.x,d.y-p.y+3.4],[d.x-p.x-2,d.y-p.y]],C.panelDark,{w:.6,depth:0,speck:0});}
-  // A silver girdle with a hanging ice drop.
-  shape(ctx,[[-14,-36],[14,-36],[14,-32.5],[-14,-32.5]],C.silver,{w:1,depth:.6});
-  const g=rf.U(10,0,34);drop(ctx,g.x-p.x,g.y-p.y,8);
-  // Fur collar round the shoulders with a snowflake brooch.
-  shape(ctx,[[-15,-52],[-21,-45],[-20,-39],[-8,-41],[0,-39],[8,-41],[20,-39],[21,-45],[15,-52],[0,-48]],C.fur,{w:1.4,depth:1.4,speck:.6,amp:.5,step:3});
-  const b=rf.U(10,0,45);
-  for(let i=0;i<3;i++){const a=i*Math.PI/3;cLine(ctx,[[b.x-p.x-Math.cos(a)*3.4,b.y-p.y-Math.sin(a)*3.4],[b.x-p.x+Math.cos(a)*3.4,b.y-p.y+Math.sin(a)*3.4]],.9);}
-  oval(ctx,b.x-p.x,b.y-p.y,1.4,1.4,C.ice,{w:.5,depth:0,speck:0});
-  cLine(ctx,[[-18+sw,-14],[-12,-28],[-9,-35]],.6);
-  cLine(ctx,[[19+sw,-13],[13,-27],[11,-34]],.6);
-  ctx.restore();
+/** Two-bone reach from shoulder S to hand H. Of the two possible elbows it takes the natural one, lower and further
+ *  back: an elbow never bends forward or up. */
+function elbow(S, H) {
+  const dx = H[0] - S[0], dy = H[1] - S[1], L = Math.hypot(dx, dy) || 1, d = Math.min(L, ARM * 2 - .01);
+  const h = Math.sqrt(Math.max(0, ARM * ARM - (d / 2) ** 2)), m = [S[0] + dx / 2, S[1] + dy / 2];
+  const a = [m[0] - dy / L * h, m[1] + dx / L * h], b = [m[0] + dy / L * h, m[1] - dx / L * h];
+  return a[1] - a[0] * .5 >= b[1] - b[0] * .5 ? a : b;
+}
+/** A small crystal drop hanging from (x, y). */
+const drop = (ctx, f, x, y, l = 7) => blob(ctx, f, [[x, y], [x + 2, y + l * .45], [x, y + l], [x - 2, y + l * .45]], C.ice, { w: .9, depth: .2, speck: 0, amp: .05 });
+
+export function drawQueen(ctx, x, y, direction, action, t, scale = 1, opts = {}) {
+  const P = queenPose(action, t, direction), f = face(direction), sw = P.sway, R = direction === 'R';
+  // Upper points lean with the gesture, in proportion to their height above the hem.
+  const U = ([px, py]) => [px + P.lean * Math.max(0, -py - 60) / 140, py];
+  const parts = [];
+  parts.push({ id: 'hairBack', d: -8, draw: () => {
+    // Long wavy hair falling down her back.
+    const hair = [[4, -190], [-10, -192], [-22, -184], [-30, -168], [-32, -150], [-38, -136], [-34, -122], [-42, -108], [-36, -94], [-44 + sw, -80], [-36 + sw, -70],
+      [-28 + sw, -78], [-22, -92], [-18, -108], [-12, -126], [-6, -150], [-2, -172]];
+    blob(ctx, f, hair.map(U), C.hair, { w: 1.8, depth: 2.2, light: .25, speck: 1 });
+    for (const pts of [[[-20, -178], [-28, -156], [-32, -132], [-38, -110], [-40 + sw, -86]], [[-10, -180], [-14, -156], [-18, -130], [-24, -104]]]) line(ctx, f, pts.map(U), .6);
+    blob(ctx, f, [[-28, -150], [-34, -130], [-38, -112], [-30, -118], [-24, -138]].map(U), C.hairShade, { w: 0, depth: 0, speck: .4 });
+  } });
+  // A wide bell sleeve from shoulder S through the elbow to the wrist, hanging low below the forearm.
+  const sleeve = (S, E, H, col) => {
+    const dx = H[0] - E[0], dy = H[1] - E[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, cuff = [H[0] - ux * 5, H[1] - uy * 5];
+    // The lower edge of the forearm (perpendicular toward +y): the bell drapes down from it.
+    const sg = ux >= 0 ? 1 : -1, nx = -uy * sg, ny = ux * sg, R = 10;
+    const lo = [cuff[0] + nx * R, cuff[1] + ny * R], hi = [cuff[0] - nx * R, cuff[1] - ny * R], tip = [lo[0] - ux * 4, lo[1] + 18];
+    limb(ctx, f, [S, E], 7, 6.5, col, { w: 1.6, depth: 1.6 });
+    blob(ctx, f, [[E[0] - nx * 6, E[1] - ny * 6], hi, lo, tip, [E[0] + nx * 6 + ux * L * .3, E[1] + ny * 6 + uy * L * .3 + 8], [E[0] + nx * 6, E[1] + ny * 6]], col, { w: 1.6, depth: 1.8, speck: .6 });
+    disc(ctx, f, E[0], E[1], 6.4, 6.4, col, { w: 0, depth: 0, speck: 0 });
+    limb(ctx, f, [hi, lo, tip], 2.6, 2.6, C.fur, { w: 1.1, depth: .4 });
+    drop(ctx, f, tip[0], tip[1] + 1, 7); drop(ctx, f, (lo[0] + tip[0]) / 2 - 3, (lo[1] + tip[1]) / 2 + 2, 5);
+  };
+  parts.push({ id: 'gown', d: 0, draw: () => {
+    // The gown flares from the waist to a wide hem that trails behind; fur along its hem and front opening.
+    const hem = [[60, -2], [36, 1], [10, 2], [-20, 1], [-48, 0], [-74 + sw, -1]];
+    blob(ctx, f, [[14, -112], [24, -76], [42, -34], [60, -4], ...hem, [-62 + sw, -24], [-40, -60], [-22, -94], [-16, -112]].map(U), C.gown, { w: 2.2, depth: 3, light: .2, speck: 1.2 });
+    blob(ctx, f, [[-22, -94], [-40, -60], [-62 + sw, -24], [-74 + sw, -1], [-48, 0], [-34, -34]].map(U), C.gownDark, { w: 0, depth: .6, speck: .6 });
+    // The pale panel in front, with ice diamonds, between fur edges.
+    blob(ctx, f, [[8, -110], [16, -110], [46, -2], [4, -2]].map(U), C.panel, { w: 1.4, depth: 1, speck: .5 });
+    for (const [px, py] of [[16, -84], [22, -58], [26, -30]]) blob(ctx, f, [[px, py - 6], [px + 3.4, py], [px, py + 6], [px - 3.4, py]].map(U), C.panelDark, { w: .7, depth: 0, speck: 0 });
+    for (const pts of [[[8, -110], [4, -2]], [[16, -110], [46, -2]]]) limb(ctx, f, pts.map(U), 3.4, 4.2, C.fur, { w: 1.1, depth: .5 });
+    blob(ctx, f, tufted([...hem.map(([px, py]) => [px, py + 1]), ...hem.slice().reverse().map(([px, py]) => [px * .98, py - 7])].map(U), 6, 1.8), C.fur, { w: 1.3, depth: .8, speck: .5 });
+    for (const pts of [[[28, -70], [40, -30]], [[-28, -70], [-46, -20]], [[-8, -80], [-14, -10]]]) line(ctx, f, pts.map(U), .6);
+    // The fitted bodice with a silver girdle and a hanging ice drop, the snowflake brooch.
+    blob(ctx, f, [[-17, -112], [16, -112], [18, -130], [14, -150], [-12, -152], [-19, -132]].map(U), C.gown, { w: 2, depth: 2, speck: .8 });
+    blob(ctx, f, [[-17, -116], [16, -116], [16, -110], [-17, -110]].map(U), C.silver, { w: 1.2, depth: .5 });
+    const g = U([10, -112]); drop(ctx, f, g[0], g[1], 10);
+    const br = U([9, -138]);
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; line(ctx, f, [[br[0] - Math.cos(a) * 4.4, br[1] - Math.sin(a) * 4.4], [br[0] + Math.cos(a) * 4.4, br[1] + Math.sin(a) * 4.4]], 1); }
+    disc(ctx, f, br[0], br[1], 1.8, 1.8, C.ice, { w: .5, depth: 0, speck: 0 });
+  } });
+  parts.push({ id: 'collar', d: 2, draw: () => {
+    blob(ctx, f, tufted([[-24, -146], [-16, -158], [0, -156], [14, -158], [24, -146], [14, -140], [0, -142], [-14, -140]].map(U), 5, 2.4), C.fur, { w: 1.6, depth: 1.2, speck: .5 });
+    limb(ctx, f, [U([2, -154]), U([6, -160])], 4.2, 4, C.skin, { w: 1.4, depth: .6 });
+  } });
+  parts.push({ id: 'head', d: 4, draw: () => {
+    // Crown spikes (behind the hair top), the hair mass, the oval face with a softly pointed chin, a pointed ear.
+    for (const [cx, h, w] of [[-4, 12, 3.4], [2, 17, 3.8], [9, 24, 4.4], [16, 17, 3.8], [22, 12, 3.4]])
+      blob(ctx, f, [[cx - w, -184], [cx - w * .4, -184 - h * .7], [cx, -184 - h], [cx + w * .4, -184 - h * .7], [cx + w, -184]].map(U), C.ice, { w: 1.3, depth: .8, light: .35, speck: .2, amp: .06 });
+    blob(ctx, f, [[-8, -176], [-4, -188], [8, -192], [20, -186], [24, -174], [22, -160], [18, -158], [16, -170], [6, -178], [-2, -170], [-6, -160]].map(U), C.hair, { w: 1.7, depth: 1.4 });
+    blob(ctx, f, [[-2, -176], [3, -184], [12, -186], [20, -180], [22, -170], [20, -160], [14, -152], [8, -149], [2, -153], [-1, -162]].map(U), C.skin, { w: 1.7, depth: 1.1, speck: 0 });
+    blob(ctx, f, [[-1, -168], [-14, -174], [-8, -164], [-1, -162]].map(U), C.skin, { w: 1.1, depth: .5, speck: 0 });
+    // Bangs sweeping over the brow; a lock falling behind the cheek.
+    blob(ctx, f, [[-4, -180], [2, -188], [14, -190], [22, -182], [23, -174], [18, -178], [12, -182], [6, -176], [0, -178]].map(U), C.hair, { w: 1.3, depth: 1 });
+    blob(ctx, f, [[-4, -176], [-8, -160], [-6, -140], [-2, -150], [-1, -166]].map(U), C.hair, { w: 1.2, depth: .8 });
+    // Dark, stern almond eyes under slanted brows, a small flat mouth.
+    for (const [ex, ey] of [[9, -168], [17, -167]]) {
+      const [qx, qy] = U([ex, ey]);
+      if (P.blink) { line(ctx, f, [[qx - 2.4, qy], [qx + 2.4, qy]], .9); continue; }
+      blob(ctx, f, [[qx - 2.6, qy + .6], [qx - 1, qy - 2.6], [qx + 2.4, qy - 1.6], [qx + 2, qy + 2.4], [qx - .8, qy + 2.8]], C.eye, { w: .5, depth: 0, speck: 0, amp: .05 });
+      disc(ctx, f, qx + .4, qy - 1, .7, .9, '#ffffff', { w: 0, depth: 0, speck: 0 });
+    }
+    line(ctx, f, [U([5, -173]), U([11, -172])], .8); line(ctx, f, [U([15, -172]), U([20, -173])], .8);
+    line(ctx, f, [U([12, -158]), U([15, -158])], .65);
+    // The crown band with a central ice gem and two drops.
+    blob(ctx, f, [[-6, -186], [24, -186], [24, -182], [-6, -182]].map(U), C.silver, { w: 1.1, depth: .5 });
+    const gm = U([9, -184]); blob(ctx, f, [[gm[0], gm[1] - 3], [gm[0] + 2.2, gm[1]], [gm[0], gm[1] + 3], [gm[0] - 2.2, gm[1]]], C.ice, { w: .7, depth: 0, speck: 0 });
+    for (const ex of [-5, 23]) { const [qx, qy] = U([ex, -182]); drop(ctx, f, qx, qy, 6); }
+  } });
+  parts.push({ id: 'staff', d: R ? -6 : 6, draw: () => {
+    // The silver staff in the left hand, wound with an ice ribbon, crowned with a great snowflake: in front of the
+    // body facing left, behind it facing right.
+    const [hx, hy] = U(P.staff), a = P.staff[2], ux = Math.cos(a), uy = Math.sin(a);
+    const at = s => [hx + ux * s, hy + uy * s], top = at(STAFF_UP), bot = at(-STAFF_DOWN);
+    limb(ctx, f, [bot, top], 2.6, 2.4, C.silver, { w: 1.4, depth: .4 });
+    for (let s2 = -90; s2 < 100; s2 += 12) line(ctx, f, [at(s2), [at(s2 + 6)[0] + 2, at(s2 + 6)[1]]], .7);
+    blob(ctx, f, [[bot[0] - 2.4, bot[1]], [bot[0] - ux * 7, bot[1] - uy * 7], [bot[0] + 2.4, bot[1]]], C.ice, { w: .9, depth: 0, speck: 0 });
+    const c = at(STAFF_UP - 2), g = P.glow;
+    if (g > 0) { ctx.save(); ctx.globalAlpha = g * .35; disc(ctx, f, c[0], c[1], 16 + g * 6, 16 + g * 6, C.glow, { w: 0, depth: 0, speck: 0 }); ctx.restore(); }
+    for (let i = 0; i < 6; i++) {
+      const b = a + i * TAU / 6, vx = Math.cos(b), vy = Math.sin(b), px = -vy, py = vx, R = 16;
+      const Q = (s2, w) => [c[0] + vx * s2 + px * w, c[1] + vy * s2 + py * w];
+      blob(ctx, f, [Q(2, -2.4), Q(R - 4, -2.8), Q(R + 3, 0), Q(R - 4, 2.8), Q(2, 2.4)], C.ice, { w: 1.2, depth: .4, light: .3, speck: 0, amp: .05 });
+      for (const sg of [-1, 1]) blob(ctx, f, [Q(R * .5, sg * 2), Q(R * .7, sg * 6.4), Q(R * .78, sg * 2)], C.ice, { w: .9, depth: 0, speck: 0, amp: .04 });
+    }
+    disc(ctx, f, c[0], c[1], 4.6, 4.6, C.silver, { w: 1.1, depth: .4, speck: 0 });
+    disc(ctx, f, c[0], c[1], 2.4, 2.4, C.iceDark, { w: 0, depth: 0, speck: 0 });
+  } });
+  parts.push({ id: 'staffArm', d: R ? -5 : 8, draw: () => {
+    // The left arm holds the staff: the near arm facing left, the far arm facing right.
+    const S = U(R ? SH_FRONT : SH_BACK), H = U(P.staff), E = elbow(S, H);
+    sleeve(S, E, H, R ? C.gownDark : C.gown);
+    disc(ctx, f, H[0], H[1], 4.6, 4.2, C.skin, { w: 1.4, depth: .5, speck: 0 });
+  } });
+  parts.push({ id: 'openArm', d: R ? 9 : -4, draw: () => {
+    // The right arm, palm open: facing left it is the far arm (behind the body) reaching forward; facing right it is
+    // the near arm, resting in front of the waist.
+    const S = U(R ? SH_BACK : SH_FRONT), H = U(P.palm), E = elbow(S, H);
+    sleeve(S, E, H, R ? C.gown : C.gownDark);
+    const dx = H[0] - E[0], dy = H[1] - E[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    disc(ctx, f, H[0] + ux * 2, H[1] + uy * 2, 4.4, 3.8, C.skin, { w: 1.3, depth: .5, speck: 0 });
+    for (const d of [-.8, -.3, .2, .7]) { const a = Math.atan2(uy, ux) + d - .3; limb(ctx, f, [[H[0] + ux * 4, H[1] + uy * 4], [H[0] + ux * 4 + Math.cos(a) * 7, H[1] + uy * 4 + Math.sin(a) * 7]], 1.4, 1, C.skin, { w: 1, depth: .2 }); }
+  } });
+  parts.push({ id: 'magic', d: 12, draw: () => {
+    const [hx, hy] = U(P.staff), a = P.staff[2], c = [hx + Math.cos(a) * (STAFF_UP - 2), hy + Math.sin(a) * (STAFF_UP - 2)];
+    if (P.burst >= 0) {
+      // Light bursting from the snowflake as the ice spear is cast.
+      const u = P.burst, r = 10 + u * 18;
+      ctx.save(); ctx.globalAlpha = (1 - u) * .85;
+      disc(ctx, f, c[0], c[1], r, r, C.glow, { w: .9, depth: 0, speck: 0 });
+      for (let i = 0; i < 8; i++) { const b = i / 8 * TAU + .2; line(ctx, f, [[c[0] + Math.cos(b) * (r + 2), c[1] + Math.sin(b) * (r + 2)], [c[0] + Math.cos(b) * (r + (i % 2 ? 6 : 10)), c[1] + Math.sin(b) * (r + (i % 2 ? 6 : 10))]], .8); }
+      ctx.restore();
+    }
+    if (P.snow >= 0) {
+      // Snow circling her as the spell gathers (positions cycle with the loop).
+      for (let i = 0; i < 8; i++) {
+        const u = (P.snow + i / 8) % 1, b = TAU * u + i, r = 56 + (i % 3) * 12, fx = Math.cos(b) * r - 6, fy = -110 + Math.sin(b) * r * .4 - u * 24;
+        ctx.save(); ctx.globalAlpha = Math.sin(Math.PI * u);
+        for (let k = 0; k < 3; k++) { const e = k * Math.PI / 3; line(ctx, f, [[fx - Math.cos(e) * 4.5, fy - Math.sin(e) * 4.5], [fx + Math.cos(e) * 4.5, fy + Math.sin(e) * 4.5]], .7); }
+        disc(ctx, f, fx, fy, 1.4, 1.4, '#ffffff', { w: 0, depth: 0, speck: 0 });
+        ctx.restore();
+      }
+    }
+  } });
+  drawCreature(ctx, x, y, f, scale, parts, 'eb-rimequeen', fallTilt(action, t), { pivot: 60, toe: 60, shift: 0 });
+  return { pose: P, order: parts.map(p => p.id) };
 }
 
-/** Long wavy silver hair falling well past the shoulders: its own part, behind the gown. */
-function backHair(ctx,h,rf) {
-  ctx.save();ctx.translate(h.x,h.y);ctx.scale(rf.sx,1);
-  shape(ctx,[[-22,-10],[-27,4],[-26,16],[-31,26],[-27,36],[-32,46],[-24,52],[-17,46],[-10,52],[-2,46],[4,50],[10,44],[16,48],[22,40],[24,26],[23,8],[19,-8]],C.hair,{w:1.6,depth:1.6});
-  for(const pts of [[[-24,12],[-27,26],[-25,40]],[[-16,20],[-16,34],[-12,46]],[[14,18],[18,30],[16,42]]]) cLine(ctx,pts,.55);
-  shape(ctx,[[-24,20],[-27,34],[-24,44],[-20,34]],C.hairShade,{w:0,depth:0,speck:.4});
-  ctx.restore();
-}
-
-function head(ctx,h,rf,P) {
-  ctx.save();ctx.translate(h.x,h.y);ctx.scale(rf.sx,1);
-  // A tall crown of ice spikes (behind the hair's top), then the hair mass.
-  for(const [x,hgt,w] of [[-14,12,4],[-7,18,4.6],[1,26,5.2],[9,18,4.6],[16,12,4]]) {
-    shape(ctx,[[x-w,-20],[x-w*.4,-20-hgt*.7],[x,-20-hgt],[x+w*.4,-20-hgt*.7],[x+w,-20]],C.ice,{w:1.3,depth:.8,light:.35,speck:.2,amp:.06});
-    cLine(ctx,[[x,-21],[x,-20-hgt*.8]],.45);
-  }
-  shape(ctx,[[-19,-19],[-11,-23],[7,-23],[18,-17],[22,-4],[21,15],[15,22],
-    [12,17],[7,23],[-1,21],[-9,23],[-14,18],[-20,20],[-23,9],[-21,-4]],C.hair,{w:1.7});
-  shape(ctx,[[-18,-2],[-15,6],[-16,16],[-12,25],[-18,23],[-22,14],[-21,3]],C.hair,{w:1});
-  shape(ctx,[[19,-4],[22,9],[19,19],[16,22],[18,11],[15,2]],C.hair,{w:1});
-  oval(ctx,2,1,18.4,20,C.skin,{w:1.6,speck:0,depth:1.1});
-  // A long pointed ear.
-  shape(ctx,[[-13,4],[-27,-2],[-20,8],[-14,11]],C.skin,{w:1.1,depth:.6,speck:0});
-  cLine(ctx,[[-15,6],[-22,2]],.5);
-  // Dark, stern almond eyes, a small flat mouth.
-  if(P.blink) for(const x of [-2,12]) cLine(ctx,[[x-2.4,5],[x+2.4,5]],.9);
-  else for(const [x,y] of [[-2,5],[12,3]]) {
-    shape(ctx,[[x-2.6,y+1],[x-1,y-3],[x+2.4,y-1.6],[x+2,y+2.6],[x-1,y+3]],C.eye,{w:.5,depth:0,speck:0,amp:.05});
-    oval(ctx,x+.4,y-1,.7,.9,'#ffffff',{w:0,depth:0,speck:0});
-  }
-  cLine(ctx,[[-6,-1],[0,-2]],.8);cLine(ctx,[[9,-2.5],[15,-2]],.8);
-  cLine(ctx,[[3,15],[7,15]],.65);
-  shape(ctx,[[-21,-8],[-14,-20],[1,-24],[15,-19],[21,-9],[23,4],[17,-3],
-    [19,9],[13,4],[10,-7],[6,1],[4,-12],[-2,-1],[-2,-14],[-9,-3],[-14,2],[-13,-9],[-20,5]],C.hair,{w:1.2});
-  cLine(ctx,[[-12,-16],[-16,-6],[-18,2]],.55);
-  cLine(ctx,[[3,-20],[1,-13],[-3,-7]],.55);
-  // The crown band across the brow with a central ice gem.
-  shape(ctx,[[-19,-17],[19,-17],[19,-13],[-19,-13]],C.silver,{w:1,depth:.5});
-  shape(ctx,[[1,-19],[3.4,-15],[1,-11],[-1.4,-15]],C.ice,{w:.7,depth:0,speck:0});
-  for(const x of [-17,19]) drop(ctx,x,-13,6);
-  ctx.restore();
-}
-
-function sleeve(ctx,rf,j) {
-  const s=rf.U(...j.S),e=rf.U(...j.E),h=rf.U(...j.H);
-  paint(ctx,taperPts(s,e,6,5.6),{fill:C.gown,w:1.5,depth:1.6,speck:.5,speckScale:.3});
-  const dx=h.x-e.x,dy=h.y-e.y,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
-  const cuff={x:h.x-dx/L*3,y:h.y-dy/L*3};
-  // A wide bell sleeve hanging low below the forearm, a fur cuff, two ice drops.
-  paint(ctx,[{x:e.x+nx*5,y:e.y+ny*5},{x:cuff.x+nx*8,y:cuff.y+ny*8},{x:cuff.x+nx*4,y:cuff.y+ny*4+14},
-    {x:cuff.x-nx*7,y:cuff.y-ny*7},{x:e.x-nx*4,y:e.y-ny*4}],{fill:C.gown,w:1.5,depth:1.8,speck:.5,speckScale:.3});
-  paint(ctx,taperPts({x:cuff.x-nx*7,y:cuff.y-ny*7},{x:cuff.x+nx*8,y:cuff.y+ny*8},2.2,2.2),{fill:C.fur,w:.9,depth:.4,speck:.3,amp:.4});
-  for(const k of [.3,.9]) drop(ctx,cuff.x+nx*(8*k-1)+1,cuff.y+ny*(8*k-1)+6+k*8,6);
-  cLine(ctx,[[e.x,e.y+2],[cuff.x-dx/L*5,cuff.y-dy/L*5]],.6);
-}
-
-function staff(ctx,rf,P) {
-  const axis=P.staffAxis,at=z=>rf.U(...P.staff.map((v,i)=>v+axis[i]*z));
-  // A silver shaft wound with a thin ice ribbon.
-  const shaft=[-38,-30,-22,-14,-6,2,10,18,26,33].map(z=>at(z));
-  strokePath(ctx,shaft,5*DRAW.lw,false,C.ink);strokePath(ctx,shaft,3.1,false,C.silver);
-  for(let z=-30;z<26;z+=7){const a=at(z),b=at(z+4);cLine(ctx,[[a.x-2.6,a.y+1],[b.x+2.6,b.y-1]],.9);strokePath(ctx,[{x:a.x-2.2,y:a.y+.8},{x:b.x+2.2,y:b.y-.8}],1.1,false,C.iceDark);}
-  const bt=at(-38);shape(ctx,[[bt.x-2,bt.y],[bt.x,bt.y+6],[bt.x+2,bt.y]],C.ice,{w:.8,depth:0,speck:0});
-  // The snowflake head: six crystal arms with side barbs round a gem.
-  const c=at(46),glow=P.glow;
-  if(glow>0){ctx.save();ctx.globalAlpha=glow*.35;oval(ctx,c.x,c.y,14+glow*6,14+glow*6,C.glow,{w:0,depth:0,speck:0});ctx.restore();}
-  const top=at(60),ang0=Math.atan2(top.y-c.y,top.x-c.x);
-  for(let i=0;i<6;i++){
-    const a=ang0+i*TAU/6,ux=Math.cos(a),uy=Math.sin(a),px=-uy,py=ux,R=13;
-    const P2=(s,w)=>[c.x+ux*s+px*w,c.y+uy*s+py*w];
-    shape(ctx,[P2(2,-2),P2(R-3,-2.4),P2(R+2,0),P2(R-3,2.4),P2(2,2)],C.ice,{w:1.1,depth:.4,light:.3,speck:0,amp:.05});
-    for(const sgn of [-1,1]) shape(ctx,[P2(R*.5,sgn*1.6),P2(R*.68,sgn*5.4),P2(R*.75,sgn*1.6)],C.ice,{w:.8,depth:0,speck:0,amp:.04});
-  }
-  oval(ctx,c.x,c.y,4,4,C.silver,{w:1,depth:.4,speck:0});
-  oval(ctx,c.x,c.y,2.2,2.2,C.iceDark,{w:0,depth:0,speck:0});
-  const c0=at(31.5),c1=at(36);
-  strokePath(ctx,[c0,c1],5*DRAW.lw,false,C.ink);strokePath(ctx,[c0,c1],3.4,false,C.silverDark);
-  if(glow>.5) for(let i=0;i<6;i++){const a=i*TAU/6+.5;cLine(ctx,[[c.x+Math.cos(a)*17,c.y+Math.sin(a)*17],[c.x+Math.cos(a)*21,c.y+Math.sin(a)*21]],.55);}
-}
-
-function magic(ctx,rf,P,direction) {
-  if(P.snow<0) return;
-  // Snow circling her as the spell gathers (positions cycle with the loop).
-  const c=rf.U(0,0,40);
-  for(let i=0;i<8;i++){
-    const u=(P.snow+i/8)%1,a=TAU*u+i,r=30+(i%3)*8,x=c.x+Math.cos(a)*r,y=c.y+Math.sin(a)*r*.45-u*20;
-    ctx.save();ctx.globalAlpha=Math.sin(Math.PI*u);
-    for(let k=0;k<3;k++){const b=k*Math.PI/3,ln=[{x:x-Math.cos(b)*3.6,y:y-Math.sin(b)*3.6},{x:x+Math.cos(b)*3.6,y:y+Math.sin(b)*3.6}];
-      strokePath(ctx,ln,2.6*DRAW.lw,false,PAL.ink);strokePath(ctx,ln,1.3,false,'#ffffff');}
-    ctx.restore();
-  }
-  void direction;
-}
-
-/** The open right hand, palm out. */
-function openHand(ctx,h,e,sx) {
-  mittenHand(ctx,h,h.x-e.x,h.y-e.y-4,3.4,C.skin,{thumbSide:-sx});
-}
-
-export function drawRimequeen(ctx,x,y,direction,action,t,scale=1,opts={}) {
-  const P=queenPose(action,t),rf=rigFrame(direction,P.body),U=rf.U;
-  // Facing left (staff hand near) the forward point aims the staff at the viewer: turn it back to the travel
-  // direction while it strikes (SIDE_VIEW_GUIDE.md 2.3). Facing right it already points ahead.
-  P.staffAxis=nrm3([P.pitch,.35,1]);
-  if(direction==='L'&&action==='attack') P.staffAxis=travelDir(rf,P.staffAxis,
-    keyframes([[0,[0]],[.08,[1]],[.45,[1]],[.7,[0]],[1,[0]]],phase(t,QUEEN_ATTACK_T))[0]);
-  // The gown reaches the ground, so only the shoes would show; the legs stay as the Oracle's for the stance.
-  const parts=legParts2(ctx,rf,P,{pants:C.gownDark,boot:C.silverDark,cuff:C.silver,footR:3.7,soleR:3.3});
-  const headCenter=U(1.5,0,71);
-  const layer=p=>U(...p).d>0?40:-20;
-  parts.push({id:'hairBack',d:-5,draw:()=>backHair(ctx,headCenter,rf)});
-  parts.push({id:'gown',d:0,draw:()=>gown(ctx,rf,P)});
-  parts.push({id:'head',d:100,draw:()=>head(ctx,headCenter,rf,P)});
-  for(const [side,H] of [[1,P.staff],[-1,P.palm]]) {
-    const S=[0,side*13,49],E=ik2(S,H,14,15,[-3,side*4,-14]),j={S,E,H};
-    const d=side===-1?25:layer(mid(S,H));
-    // Facing left the left-hand staff is nearest; raised for the spell it passes beside the head in both facings.
-    const staffInFront=side===1&&(direction==='L'||H[2]>58);
-    parts.push({id:'sleeve'+side,d,draw:()=>sleeve(ctx,rf,j)});
-    if(side===1) parts.push({id:'staff',d:staffInFront?101:d+1,draw:()=>staff(ctx,rf,P)});
-    parts.push({id:'hand'+side,d:staffInFront?102:d+(side===-1?.5:2),draw:()=>{
-      const h=U(...H),e=U(...E);
-      if(side===1) mittenHand(ctx,h,h.x-e.x,h.y-e.y,3.2,C.skin,{thumbSide:side*rf.sx});
-      else openHand(ctx,h,e,rf.sx);
-    }});
-  }
-  parts.push({id:'magic',d:110,draw:()=>magic(ctx,rf,P,direction)});
-  withTilt(ctx,x,y,scale,rf.sx,fallTilt(action,t),false,
-    ()=>renderRig(ctx,x,y,scale,parts,{prefix:'eb-rimequeen',boil:0,shadow:opts.shadow}));
-  return {pose:P,order:parts.map(p=>p.id)};
-}
-
-export const character=Object.freeze({
-  id:'eb-rimequeen',label:'Rimequeen Isveil — EMBERBOUND',kind:'humanoid',directional:true,draw:drawRimequeen,
-  actions:{idle:{period:IDLE_T,frames:16},
-    attack:{period:QUEEN_ATTACK_T,keys:KEYS.attack,once:true,releaseAt:.12},
-    cast:{period:QUEEN_WINDUP_T,frames:8},
-    hurt:hurtAction},
-  frameBox:{x0:-120,x1:120,y0:-170,y1:30},
-  equipment:{leftHand:'staff',rightHand:'open hand'},
-  emberbound:{gameId:'rimequeen',heightPx:68,facing:'L'},
+export const character = Object.freeze({
+  id: 'eb-rimequeen', label: 'Rimequeen Isveil — EMBERBOUND', kind: 'creature', directional: true, draw: drawQueen,
+  actions: { idle: { period: IDLE_T, frames: 16 },
+    attack: { period: QUEEN_ATTACK_T, keys: [0, .06, .12, .2, .3, .45, .6, .8], once: true, releaseAt: .12 },
+    cast: { period: QUEEN_WINDUP_T, frames: 8 },
+    hurt: hurtAction },
+  frameBox: { x0: -200, x1: 200, y0: -290, y1: 14 },
+  emberbound: { gameId: 'rimequeen', heightPx: 68, facing: 'L' },
 });
-export const studio=Object.freeze({order:29,name:"Rimequeen Isveil（霧氷の女王イスヴェイル）",category:"EMBERBOUND 第4エリア",
-  description:"第4エリアのボス。白銀の長い髪、氷の冠、裾の広がった青いドレス、雪の結晶の杖。Frozen Tomb と Absolute Zero を使う。",
-  preview:{direction:'L',phase:0}});
+export const studio = Object.freeze({ order: 29, name: 'Rimequeen Isveil（霧氷の女王イスヴェイル）', category: 'EMBERBOUND 第4エリア',
+  description: '第4エリアのボス。白銀の長い髪、氷の冠、裾の広がった青いドレス、雪の結晶の杖。Frozen Tomb と Absolute Zero を使う。',
+  preview: { direction: 'L', phase: 0 } });

@@ -56,9 +56,9 @@ export function rimePose(action, t) {
 /** The hood: deep blue with a white fur rim around a dark face opening and two glowing eyes. */
 function drawFrostHead(ctx, c, sx, P) {
   ctx.save(); ctx.translate(c.x, c.y); ctx.scale(sx * .96, .96);
-  // Hood with its pointed tip falling back.
-  fshape(ctx, [[-24, 16], [-28, 2], [-26, -12], [-30, -20], [-36, -26], [-26, -27], [-12, -30], [4, -28], [18, -21], [24, -10], [22, 6], [18, 18], [0, 22]], R.hood, { w: 2.1, depth: 2.1, speck: 1.1 });
-  fshape(ctx, [[-30, -20], [-40, -22], [-46, -16], [-38, -18], [-30, -12]], R.hoodDark, { w: 1.4, depth: .8 });
+  // Hood: one outline whose pointed tip runs out of the crown and droops back (no separate tip piece).
+  fshape(ctx, [[-24, 16], [-28, 2], [-27, -10], [-32, -15], [-42, -18], [-50, -15], [-47, -22], [-38, -28], [-24, -30], [-12, -31], [4, -28], [18, -21], [24, -10], [22, 6], [18, 18], [0, 22]], R.hood, { w: 2.1, depth: 2.1, speck: 1.1 });
+  cLine(ctx, [[-26, -24], [-38, -23], [-46, -19]], .6);
   // The fur rim and the dark opening.
   // One fluffy ring of fur: a pale shape a little larger than the opening, the opening drawn over it.
   fshape(ctx, [[-16, 20], [-19, 6], [-16, -10], [-7, -21], [7, -23], [19, -15], [24, -2], [23, 12], [15, 21], [0, 23]], R.fur, { w: 1.4, depth: 1, speck: .5, amp: .7, step: 2.5 });
