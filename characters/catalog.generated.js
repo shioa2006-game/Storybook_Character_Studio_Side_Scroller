@@ -34,14 +34,23 @@ import { character as c31, studio as m31 } from "./eb-hollow-knight/character.js
 import { character as c32, studio as m32 } from "./eb-lantern-eater/character.js";
 import { character as c33, studio as m33 } from "./eb-abyssal-herald/character.js";
 import { character as c34, studio as m34 } from "./eb-hollow-sovereign/character.js";
-import { character as c35, studio as m35 } from "./dark-mage/character.js";
-import { character as c36, studio as m36 } from "./demon-king/character.js";
-import { character as c37, studio as m37 } from "./goblin/character.js";
-import { character as c38, studio as m38 } from "./king/character.js";
-import { character as c39, studio as m39 } from "./mage/character.js";
-import { character as c40, studio as m40 } from "./skeleton-archer/character.js";
-import { character as c41, studio as m41 } from "./slime/character.js";
-import { character as c42, studio as m42 } from "./warrior/character.js";
+import { character as c35, studio as m35 } from "./eb-ashen-echo/character.js";
+import { character as c36, studio as m36 } from "./eb-flame-construct/character.js";
+import { character as c37, studio as m37 } from "./eb-cinder-phoenix/character.js";
+import { character as c38, studio as m38 } from "./eb-ember-acolyte/character.js";
+import { character as c39, studio as m39 } from "./eb-ember-tyrant/character.js";
+import { character as c40, studio as m40 } from "./eb-shadow-guardian/character.js";
+import { character as c41, studio as m41 } from "./eb-shadow-ranger/character.js";
+import { character as c42, studio as m42 } from "./eb-shadow-arcanist/character.js";
+import { character as c43, studio as m43 } from "./eb-shadow-oracle/character.js";
+import { character as c44, studio as m44 } from "./dark-mage/character.js";
+import { character as c45, studio as m45 } from "./demon-king/character.js";
+import { character as c46, studio as m46 } from "./goblin/character.js";
+import { character as c47, studio as m47 } from "./king/character.js";
+import { character as c48, studio as m48 } from "./mage/character.js";
+import { character as c49, studio as m49 } from "./skeleton-archer/character.js";
+import { character as c50, studio as m50 } from "./slime/character.js";
+import { character as c51, studio as m51 } from "./warrior/character.js";
 export const additions = [
   { definition: c0, studio: m0, source: "characters/eb-guardian/character.js", exportName: 'character', builtin: false },
   { definition: c1, studio: m1, source: "characters/eb-ranger/character.js", exportName: 'character', builtin: false },
@@ -78,12 +87,21 @@ export const additions = [
   { definition: c32, studio: m32, source: "characters/eb-lantern-eater/character.js", exportName: 'character', builtin: false },
   { definition: c33, studio: m33, source: "characters/eb-abyssal-herald/character.js", exportName: 'character', builtin: false },
   { definition: c34, studio: m34, source: "characters/eb-hollow-sovereign/character.js", exportName: 'character', builtin: false },
-  { definition: c35, studio: m35, source: "characters/dark-mage/character.js", exportName: 'character', builtin: false },
-  { definition: c36, studio: m36, source: "characters/demon-king/character.js", exportName: 'character', builtin: false },
-  { definition: c37, studio: m37, source: "characters/goblin/character.js", exportName: 'character', builtin: false },
-  { definition: c38, studio: m38, source: "characters/king/character.js", exportName: 'character', builtin: false },
-  { definition: c39, studio: m39, source: "characters/mage/character.js", exportName: 'character', builtin: false },
-  { definition: c40, studio: m40, source: "characters/skeleton-archer/character.js", exportName: 'character', builtin: false },
-  { definition: c41, studio: m41, source: "characters/slime/character.js", exportName: 'character', builtin: false },
-  { definition: c42, studio: m42, source: "characters/warrior/character.js", exportName: 'character', builtin: false },
+  { definition: c35, studio: m35, source: "characters/eb-ashen-echo/character.js", exportName: 'character', builtin: false },
+  { definition: c36, studio: m36, source: "characters/eb-flame-construct/character.js", exportName: 'character', builtin: false },
+  { definition: c37, studio: m37, source: "characters/eb-cinder-phoenix/character.js", exportName: 'character', builtin: false },
+  { definition: c38, studio: m38, source: "characters/eb-ember-acolyte/character.js", exportName: 'character', builtin: false },
+  { definition: c39, studio: m39, source: "characters/eb-ember-tyrant/character.js", exportName: 'character', builtin: false },
+  { definition: c40, studio: m40, source: "characters/eb-shadow-guardian/character.js", exportName: 'character', builtin: false },
+  { definition: c41, studio: m41, source: "characters/eb-shadow-ranger/character.js", exportName: 'character', builtin: false },
+  { definition: c42, studio: m42, source: "characters/eb-shadow-arcanist/character.js", exportName: 'character', builtin: false },
+  { definition: c43, studio: m43, source: "characters/eb-shadow-oracle/character.js", exportName: 'character', builtin: false },
+  { definition: c44, studio: m44, source: "characters/dark-mage/character.js", exportName: 'character', builtin: false },
+  { definition: c45, studio: m45, source: "characters/demon-king/character.js", exportName: 'character', builtin: false },
+  { definition: c46, studio: m46, source: "characters/goblin/character.js", exportName: 'character', builtin: false },
+  { definition: c47, studio: m47, source: "characters/king/character.js", exportName: 'character', builtin: false },
+  { definition: c48, studio: m48, source: "characters/mage/character.js", exportName: 'character', builtin: false },
+  { definition: c49, studio: m49, source: "characters/skeleton-archer/character.js", exportName: 'character', builtin: false },
+  { definition: c50, studio: m50, source: "characters/slime/character.js", exportName: 'character', builtin: false },
+  { definition: c51, studio: m51, source: "characters/warrior/character.js", exportName: 'character', builtin: false },
 ];

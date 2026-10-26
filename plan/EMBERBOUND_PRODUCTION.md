@@ -106,11 +106,17 @@
 | 33 | lantern_eater | C | 新規 (蛾)。Gem Bat から | 受領 (大きな黒い目、羽毛の触角、黄緑の斑点の紫の羽) | **作成済み** (`eb-lantern-eater`。横向きでゆっくり羽ばたく。噛みつきでランタンの光を吸う) |
 | 34 | abyssal_herald | B大 | dark-mage の体 (eb-geomancer から) | 受領 (長い角、棘の肩当て、黄緑の目と杖の結晶) | **作成済み** (`eb-abyssal-herald`。杖を振り下ろす強打 Abyssal Rend、溜め=Shadow Pulse で暗い輪が広がるループ) |
 | 35 | hollow_sovereign | B大 → 新規 | 手描き (Rimequeen の体から) | 受領 (高い冠、フードの奥の巨大な眼、裂けたマント、眼の玉の杖) | **作成済み** (`eb-hollow-sovereign`。頭の小さい長身。杖は左手。杖を突き下ろす強打と地をはう暗い波、溜め=Eclipse で杖の上に暗い円と黄緑の光輪が膨らむループ) |
-| 36〜 | 第6エリアの人型の派生 (B) | B | 流用計画のとおり | 必要 | |
-| 〜40 | 非人型の系統 (C) | C | 流用計画の系統順 | 必要 | |
-| 41〜44 | shadow_* | D | 完成した味方4人 | 不要 | |
+| 36 | ashen_echo | B小 | warrior の体 (eb-frost-revenant から) | 受領 (灰色のフードとマント、橙の目、燃える裾、剣) | **作成済み** (`eb-ashen-echo`。剣の振り下ろし。マントは後ろへ流れ、裾が燃えて火の粉になる) |
+| 37 | flame_construct | C | Geode Colossus から | 受領 (鉄と石の巨体、胸の格子の炉、燃える頭頂と拳) | **作成済み** (`eb-flame-construct`。拳の振り下ろし、溜め=Furnace Slam で両拳を掲げ炉が燃え上がるループ) |
+| 38 | cinder_phoenix | C | 新規 (鳥) | 受領 (燃える翼、炎の冠羽、長い炎の尾羽) | **作成済み** (`eb-cinder-phoenix`。横向きの大きな羽ばたき、火の玉を吐く (u = .15 で放つ)。灰からの復活はゲームの演出) |
+| 39 | ember_acolyte | B中 | dark-mage の体 (eb-gloom-caster から) | 受領 (金の縁の赤いフードと長衣、金の仮面、金の灯火) | **作成済み** (`eb-ember-acolyte`。灯火から火の粉を飛ばす攻撃 (u = .15)、溜め=Kindle で灯火を掲げ光の輪が昇るループ) |
+| 40 | ember_tyrant | B中 | warrior の体 (eb-frost-revenant から) | 受領 (小さな冠、赤熱の裂け目の黒い鎧、赤いマント、燃える剣) | **作成済み** (`eb-ember-tyrant`。剣の振り下ろし、溜め=Flame Wave / Searing Brand で燃える剣を肩に振りかぶるループ) |
+| 41 | shadow_guardian | D | eb-guardian | 不要 | **作成済み** (`eb-shadow-guardian`。Guardian と同じ形と動作で、濃紫の鎧、橙の盾の縁・紋章・兜飾り、桃色に光る目。歩き・戦闘不能は外した) |
+| 42 | shadow_ranger | D | eb-ranger | 不要 | **作成済み** (`eb-shadow-ranger`。紫の衣、橙の矢、桃色の目。Ranger の部品は共通の配色 `ARC` を読むので、描く間だけ影の配色に差し替える) |
+| 43 | shadow_arcanist | D | eb-arcanist | 不要 | **作成済み** (`eb-shadow-arcanist`。紫黒の帽子とローブに橙の線、桃色に光る杖と目) |
+| 44 | shadow_oracle | D | eb-oracle | 不要 | **作成済み** (`eb-shadow-oracle`。黒紫の法衣、桃色の光輪、橙の杖と飾り、桃色の目) |
 
-第6エリア以降の細かい順番は、流用計画の段階3・4に沿って決める。
+44体すべてを作成済み。
 
 ## 6. レビューで分かったこと (ノウハウ)
 
