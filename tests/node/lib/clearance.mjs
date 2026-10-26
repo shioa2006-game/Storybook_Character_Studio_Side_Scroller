@@ -22,6 +22,10 @@ export const ARMED = {
   'eb-guardian': { head: [1.5, 0, 66, 18], weapons: P => [
     ...[P.sword, ...(P.trail?.samples ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 41 })),
   ] },
+  // The Hollow Knight keeps the Guardian's body and sword.
+  'eb-hollow-knight': { head: [1.5, 0, 66, 18], weapons: P => [
+    ...[P.sword, ...(P.trail?.samples ?? [])].map(s => ({ name: 'sword', base: s.hand, dir: s.dir, from: 6, to: 41 })),
+  ] },
   // The Coral Knight keeps the Guardian's body; the trident is held mid-shaft (butt to prong tips).
   'eb-coral-knight': { head: [1.5, 0, 66, 18], weapons: P => [{ name: 'trident', base: P.trident.hand, dir: P.trident.dir, from: -26, to: 59 }] },
   'eb-frost-revenant': { head: [1.5, 0, 66, 18], weapons: P => [{ name: 'sword', base: P.sword.hand, dir: P.sword.dir, from: -9, to: 46 }] },
@@ -41,6 +45,7 @@ export const ARMED = {
   'eb-oracle': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -38, to: 54, floor: false }] },
   'dark-mage': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 40, floor: false }] },
   'eb-geomancer': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 54, floor: false }] },
+  'eb-abyssal-herald': { head: [1.5, 0, 71, 17], weapons: P => [{ name: 'staff', base: P.staff, dir: P.staffAxis, from: -36, to: 54, floor: false }] },
 };
 
 
