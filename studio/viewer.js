@@ -1,11 +1,13 @@
 import { createCharacterView } from '../src/index.js';
+import { catalog } from '../characters/catalog.js';
+import { characterPicker } from './picker.js';
 const directionLabels={R:'右向き R',L:'左向き L'};
 const actionLabels={idle:'待機',walk:'歩行',attack:'攻撃',cast:'詠唱・スキル',hurt:'被弾',dead:'戦闘不能'};
 const labelAction=a=>actionLabels[a]||a;
 const button=(text,data,value)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.dataset[data]=value;b.setAttribute('aria-pressed','false');return b;};
 
 export function mountViewer(root,entry) {
-  root.innerHTML=`<a class="back" href="#gallery">← キャラクター一覧へ</a><section class="detail-title"><p class="category"></p><h1></h1><p class="description"></p></section>
+  root.innerHTML=`<div class="viewer-top"><a class="back" href="#gallery">← キャラクター一覧へ</a></div><section class="detail-title"><p class="category"></p><h1></h1><p class="description"></p></section>
   <div class="viewer-shell"><div class="stage"><canvas id="hero" aria-label="キャラクターのプレビュー"></canvas></div><div class="stage-caption"><strong id="pose"></strong><span id="size-label"></span></div>
   <div class="playback"><button id="play" class="primary">一時停止</button><div class="phase-wrap"><label for="phase">動作の位相 <output id="phase-value">0.000</output></label><input id="phase" type="range" min="0" max="1000" value="0" step="1"></div><label for="speed">再生速度<br><select id="speed"><option value="1">通常 1×</option><option value="0.5">スロー 0.5×</option><option value="0.25">スロー 0.25×</option></select></label></div>
   <div class="mode-row"><fieldset><legend>表示サイズ</legend><div class="button-row" id="sizes"></div></fieldset><fieldset><legend>描画方式</legend><div class="button-row" id="modes"></div></fieldset></div></div>
@@ -15,6 +17,7 @@ export function mountViewer(root,entry) {
   <section class="sheet-section" id="sheet" hidden><div class="sheet-controls"><h2 id="sheet-title"></h2><button id="close-sheet">一覧を閉じる</button></div><p>上の再生・位相・描画方式と連動します。</p><div class="sheet-grid"></div></section>
   <details id="technical"><summary>開発者向け情報・ゲームへの持ち出し</summary><p>RGBA理論容量は画像の幅×高さ×4です。ブラウザーやGPUの実メモリ使用量ではありません。</p><p>Cached Framesは選択した1体の左右・全動作を初回に生成します。大きな表示ほど容量が増えます。</p><pre id="export-command"></pre><a href="./docs/EXPORT_GUIDE.md">持ち出し手順を読む</a><pre id="diagnostics"></pre></details>`;
   const $=id=>root.querySelector('#'+id),def=entry.definition;
+  root.querySelector('.viewer-top').append(characterPicker(catalog,entry.id));
   // Keep direction/action choices beside the artwork on wide screens; stack
   // without shrinking text when the viewport or browser zoom reduces space.
   root.querySelector('.viewer-shell').insertBefore(root.querySelector('.controls'),root.querySelector('.playback'));

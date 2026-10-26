@@ -1,6 +1,8 @@
 import { createCharacterView } from '../src/index.js';
+import { characterPicker } from './picker.js';
 export function mountGallery(root, catalog) {
   root.innerHTML = `<section class="intro"><div><h1>キャラクターギャラリー</h1><p>手描きの仲間たちを、じっくり眺める。<br>気になるキャラクターを選んで、向きや動きを確かめましょう。</p></div><span class="count">${catalog.length} 体のキャラクター</span></section><div class="gallery"></div><details><summary>制作・再利用について</summary><p>新しい仲間はコードから制作し、カタログへ登録します。ゲームへは必要なキャラクターと描画ライブラリを持ち出せます。</p><div class="dev-links"><a href="./docs/STUDIO_GUIDE.md">キャラクターを追加する</a><a href="./docs/EXPORT_GUIDE.md">ゲームへ持ち出す</a></div><p class="small" id="gallery-metrics"></p></details>`;
+  root.querySelector('.intro>div').append(characterPicker(catalog));
   const grid = root.querySelector('.gallery');let rendered = 0, drawMs = 0;
   const observer = new IntersectionObserver(entries => {
     for (const target of entries) {
