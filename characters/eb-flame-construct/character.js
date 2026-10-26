@@ -5,7 +5,7 @@
  * eyes and fire burning from its top, huge blocky fists in riveted iron cuffs with flames licking up from the
  * wrists, stacked stone legs, and a riveted iron belt with a hanging plate.
  * Actions (plan/EMBERBOUND_PRODUCTION.md): idle (heavy breathing, the fires flickering), attack (an overhead slam
- * of the near fist, impact at 0.15 s), `cast` = the Furnace Slam wind-up the game loops (both fists raised, the
+ * of the leading fist, impact at 0.15 s), `cast` = the Furnace Slam wind-up the game loops (both fists raised, the
  * furnace roaring, trembling — the game can interrupt it), and the shared hurt.
  */
 import { TAU, PAL, keyframes } from '../../src/authoring.js';
@@ -21,15 +21,15 @@ const IDLE_T = 3.2;
 export const CONSTRUCT_ATTACK_T = .3;   // slam: impact at u = .5
 export const CONSTRUCT_SLAM_T = .6;     // Furnace Slam wind-up: a loop
 // Arm joints (elbow, fist) per pose; the shoulders are fixed on the body.
-const NEAR_REST = [[62, -128], [68, -76]], FAR_REST = [[-56, -130], [-54, -80]];
+const LEAD_REST = [[62, -128], [68, -76]], REAR_REST = [[-56, -130], [-54, -80]];
 
 export function constructPose(action, t) {
   const s = Math.sin(TAU * phase(t, IDLE_T));
-  const P = { breathe: s, lean: 0, crouch: 0, near: NEAR_REST, far: FAR_REST, heat: .45 + .15 * s, dust: -1, shake: 0, t };
+  const P = { breathe: s, lean: 0, crouch: 0, lead: LEAD_REST, rear: REAR_REST, heat: .45 + .15 * s, dust: -1, shake: 0, t };
   if (action === 'attack') {
     const u = phase(t, CONSTRUCT_ATTACK_T);
-    const k = keyframes([[0, [...NEAR_REST[0], ...NEAR_REST[1]]], [.25, [56, -200, 44, -242]], [.5, [92, -112, 118, -48]], [.72, [90, -110, 114, -46]], [1, [...NEAR_REST[0], ...NEAR_REST[1]]]], u);
-    P.near = [[k[0], k[1]], [k[2], k[3]]];
+    const k = keyframes([[0, [...LEAD_REST[0], ...LEAD_REST[1]]], [.25, [56, -200, 44, -242]], [.5, [92, -112, 118, -48]], [.72, [90, -110, 114, -46]], [1, [...LEAD_REST[0], ...LEAD_REST[1]]]], u);
+    P.lead = [[k[0], k[1]], [k[2], k[3]]];
     P.lean = sample([[0, [0]], [.25, [-8]], [.5, [14]], [.72, [12]], [1, [0]]], u);
     P.crouch = sample([[0, [0]], [.25, [-4]], [.5, [10]], [.72, [8]], [1, [0]]], u);
     P.heat = sample([[0, [.45]], [.25, [.8]], [.5, [1]], [1, [.45]]], u);
@@ -37,7 +37,7 @@ export function constructPose(action, t) {
   } else if (action === 'cast') {
     // Furnace Slam wind-up: both fists raised high, the furnace roaring, the body trembling; periodic in u.
     const u = phase(t, CONSTRUCT_SLAM_T), w = Math.sin(TAU * u * 2);
-    P.near = [[66, -196], [62 + w, -250]]; P.far = [[-60, -198], [-52 - w, -248]];
+    P.lead = [[66, -196], [62 + w, -250]]; P.rear = [[-60, -198], [-52 - w, -248]];
     P.heat = .85 + .15 * Math.sin(TAU * u); P.shake = w * 1.2; P.lean = -4;
   }
   return P;
@@ -51,13 +51,13 @@ export function drawConstruct(ctx, x, y, direction, action, t, scale = 1, opts =
   const box = (cx, cy, w, hgt, col, o = {}) => blob(ctx, f, [[cx - w, cy - hgt], [cx + w, cy - hgt * 1.05], [cx + w * 1.04, cy + hgt], [cx - w * .98, cy + hgt * 1.02]], col, { w: 2, depth: 2.4, light: .2, speck: 1.4, amp: .12, ...o });
   const parts = [];
   // An arm: a stone upper arm and forearm, a huge blocky fist in a riveted iron cuff, fire licking up from the wrist.
-  const arm = (sh, [el, fi], col, near) => {
+  const arm = (sh, [el, fi], col, lead) => {
     const S = U(sh), E = U(el), F = U(fi), mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-    rock(ctx, f, ...mid(S, E), 28, 30, col, near ? 31 : 32, { depth: 2.4 });
+    rock(ctx, f, ...mid(S, E), 28, 30, col, lead ? 31 : 32, { depth: 2.4 });
     disc(ctx, f, ...E, 12, 12, C.iron, { w: 1.6, depth: 1, speck: .6 });
-    rock(ctx, f, ...mid(E, F), 26, 28, col, near ? 33 : 34, { depth: 2.2 });
+    rock(ctx, f, ...mid(E, F), 26, 28, col, lead ? 33 : 34, { depth: 2.2 });
     // Fire from the wrist (behind the fist), then the fist: the same shape and colours on both sides.
-    flame(ctx, f, F[0] - 4, F[1] - 26, 30, 44 + h * 14, P.t, -.1, near ? 1 : 2, FIRE);
+    flame(ctx, f, F[0] - 4, F[1] - 26, 30, 44 + h * 14, P.t, -.1, lead ? 1 : 2, FIRE);
     // The fist: a stone back, four knuckle blocks along its front and a thumb block, an iron cuff above.
     rock(ctx, f, F[0], F[1] - 2, 34, 28, C.stoneLight, 35, { depth: 2.4, n: 8 });
     for (const [dx, sd] of [[-21, 1], [-7, 2], [7, 3], [21, 4]]) rock(ctx, f, F[0] + dx, F[1] + 16, 9, 11, C.stone, 60 + sd, { depth: 1.6, n: 6 });
@@ -71,13 +71,15 @@ export function drawConstruct(ctx, x, y, direction, action, t, scale = 1, opts =
     rivet((hx + fx) / 2 + 12, -40, 4);
     box(fx + 6, -12, 34, 12, col, { depth: 2 });
   };
-  parts.push({ id: 'farLeg', d: -10, draw: () => leg(-30, -34, C.stoneDark) });
-  parts.push({ id: 'farArm', d: -8, draw: () => arm([-46, -170], P.far, C.stoneDark, false) });
-  parts.push({ id: 'farShoulder', d: -6, draw: () => {
-    box(...U([-42, -182]), 32, 26, C.stoneDark);
-    rivet(...U([-42, -190]), 4);
+  // Limb depth (plan §6.1): the leading limbs (+x, the facing side) pass behind the trunk; the rear arm and leg are
+  // the near ones, drawn over it in lighter stone.
+  parts.push({ id: 'leadLeg', d: -10, draw: () => leg(18, 22, C.stoneDark) });
+  parts.push({ id: 'leadArm', d: -8, draw: () => arm([52, -166], P.lead, C.stoneDark, true) });
+  parts.push({ id: 'leadShoulder', d: -6, draw: () => {
+    box(...U([54, -174]), 32, 26, C.stoneDark);
+    rivet(...U([54, -182]), 4);
   } });
-  parts.push({ id: 'nearLeg', d: -4, draw: () => leg(18, 22, C.stone) });
+  parts.push({ id: 'rearLeg', d: -4, draw: () => leg(-30, -34, C.stone) });
   parts.push({ id: 'body', d: 0, draw: () => {
     // The trunk of stone blocks, a riveted iron belt with a hanging plate.
     blob(ctx, f, [[-58, -96], [-64, -150], [-50, -198], [0, -208], [50, -198], [64, -150], [56, -96], [30, -80], [-30, -80]].map(U), C.stone, { w: 2.6, depth: 5, light: .2, speck: 2 });
@@ -107,21 +109,20 @@ export function drawConstruct(ctx, x, y, direction, action, t, scale = 1, opts =
       blob(ctx, f, [[ex - 2.4, hy - 8], [ex + 2.4, hy - 8], [ex + 2.4, hy + 1], [ex - 2.4, hy + 1]], C.fireLight, { w: 0, depth: 0, speck: 0, amp: .04 });
     }
   } });
-  parts.push({ id: 'nearShoulder', d: 8, draw: () => {
-    box(...U([54, -174]), 32, 26, C.stoneLight);
-    blob(ctx, f, [[28, -164], [80, -166], [79, -156], [28, -154]].map(U), C.iron, { w: 1.6, depth: .8, speck: .5 });
-    for (const px of [36, 54, 72]) rivet(...U([px, -160]), 3.2);
+  parts.push({ id: 'rearShoulder', d: 8, draw: () => {
+    box(...U([-42, -182]), 32, 26, C.stoneLight);
+    blob(ctx, f, [[-68, -172], [-16, -174], [-17, -164], [-68, -162]].map(U), C.iron, { w: 1.6, depth: .8, speck: .5 });
+    for (const px of [-60, -42, -24]) rivet(...U([px, -168]), 3.2);
   } });
-  parts.push({ id: 'nearArm', d: 9, draw: () => {
-    arm([52, -166], P.near, C.stone, true);
-    if (P.dust >= 0) {
-      // Dust, stone chips and sparks thrown up where the fist hits the ground.
-      const F = U(P.near[1]);
-      ctx.save(); ctx.globalAlpha = 1 - P.dust;
-      for (const [dx, k] of [[-28, .8], [0, 1], [28, .9], [46, .6]]) disc(ctx, f, F[0] + dx * (1 + P.dust), -6 - P.dust * 14 * k, 10 * k * (1 + P.dust * .6), 6 * k, '#b7a894', { w: 1, depth: 0, speck: 0 });
-      for (const [dx, k] of [[-16, 1], [10, 1.3], [30, .8]]) disc(ctx, f, F[0] + dx, -16 - P.dust * 30 * k, 2.2, 2.2, C.fireLight, { w: .6, depth: 0, speck: 0 });
-      ctx.restore();
-    }
+  parts.push({ id: 'rearArm', d: 9, draw: () => arm([-46, -170], P.rear, C.stone, false) });
+  parts.push({ id: 'dust', d: 12, draw: () => {
+    if (P.dust < 0) return;
+    // Dust, stone chips and sparks thrown up where the fist hits the ground.
+    const F = U(P.lead[1]);
+    ctx.save(); ctx.globalAlpha = 1 - P.dust;
+    for (const [dx, k] of [[-28, .8], [0, 1], [28, .9], [46, .6]]) disc(ctx, f, F[0] + dx * (1 + P.dust), -6 - P.dust * 14 * k, 10 * k * (1 + P.dust * .6), 6 * k, '#b7a894', { w: 1, depth: 0, speck: 0 });
+    for (const [dx, k] of [[-16, 1], [10, 1.3], [30, .8]]) disc(ctx, f, F[0] + dx, -16 - P.dust * 30 * k, 2.2, 2.2, C.fireLight, { w: .6, depth: 0, speck: 0 });
+    ctx.restore();
   } });
   drawCreature(ctx, x, y, f, scale, parts, 'eb-flame-construct', fallTilt(action, t), { pivot: 80, toe: 80, shift: 0 });
   return { pose: P, order: parts.map(p => p.id) };
