@@ -5,7 +5,7 @@
  * head, shoulders, fists and feet, and a cracked-open geode in the chest — a ring of violet crystals around a
  * glowing pale core.
  * Actions (plan/EMBERBOUND_PRODUCTION.md): idle (heavy breathing, the core pulsing), attack (an overhead slam of
- * the near fist, impact at 0.15 s), `cast` = the Shard Storm wind-up the game loops (both fists raised, the core
+ * the leading fist, impact at 0.15 s), `cast` = the Shard Storm wind-up the game loops (both fists raised, the core
  * flaring, trembling), and the shared hurt.
  */
 import { TAU, PAL, keyframes } from '../../src/authoring.js';
@@ -16,23 +16,23 @@ const C = { ...CRYSTAL, core: '#eaf8fc', coreGlow: '#c3ecf6', rim: '#b3a6b6', ey
 const IDLE_T = 3.2;
 export const COLOSSUS_ATTACK_T = .3;   // slam: impact at u = .5
 export const COLOSSUS_WINDUP_T = .6;   // Shard Storm wind-up: a loop
-// Near arm joints (elbow, fist) per pose; the shoulder is fixed on the body.
-const NEAR_REST = [[62, -128], [66, -78]], FAR_REST = [[-56, -130], [-54, -82]];
+// Arm joints (elbow, fist) per pose; the shoulder is fixed on the body.
+const LEAD_REST = [[62, -128], [66, -78]], REAR_REST = [[-56, -130], [-54, -82]];
 
 export function colossusPose(action, t) {
   const s = Math.sin(TAU * phase(t, IDLE_T));
-  const P = { breathe: s, lean: 0, crouch: 0, near: NEAR_REST, far: FAR_REST, glow: .45 + .15 * s, dust: -1, shake: 0 };
+  const P = { breathe: s, lean: 0, crouch: 0, lead: LEAD_REST, rear: REAR_REST, glow: .45 + .15 * s, dust: -1, shake: 0 };
   if (action === 'attack') {
     const u = phase(t, COLOSSUS_ATTACK_T);
-    const k = keyframes([[0, [...NEAR_REST[0], ...NEAR_REST[1]]], [.25, [56, -200, 44, -242]], [.5, [92, -112, 118, -48]], [.72, [90, -110, 114, -46]], [1, [...NEAR_REST[0], ...NEAR_REST[1]]]], u);
-    P.near = [[k[0], k[1]], [k[2], k[3]]];
+    const k = keyframes([[0, [...LEAD_REST[0], ...LEAD_REST[1]]], [.25, [56, -200, 44, -242]], [.5, [92, -112, 118, -48]], [.72, [90, -110, 114, -46]], [1, [...LEAD_REST[0], ...LEAD_REST[1]]]], u);
+    P.lead = [[k[0], k[1]], [k[2], k[3]]];
     P.lean = sample([[0, [0]], [.25, [-8]], [.5, [14]], [.72, [12]], [1, [0]]], u);
     P.crouch = sample([[0, [0]], [.25, [-4]], [.5, [10]], [.72, [8]], [1, [0]]], u);
     P.dust = u >= .5 && u < .9 ? (u - .5) / .4 : -1;
   } else if (action === 'cast') {
     // Shard Storm: both fists raised high, the core flaring, the whole body trembling; periodic in u.
     const u = phase(t, COLOSSUS_WINDUP_T), w = Math.sin(TAU * u * 2);
-    P.near = [[66, -196], [62 + w, -250]]; P.far = [[-60, -198], [-52 - w, -248]];
+    P.lead = [[66, -196], [62 + w, -250]]; P.rear = [[-60, -198], [-52 - w, -248]];
     P.glow = .85 + .15 * Math.sin(TAU * u); P.shake = w * 1.2; P.lean = -4;
   }
   return P;
@@ -44,39 +44,41 @@ export function drawColossus(ctx, x, y, direction, action, t, scale = 1, opts = 
   const U = ([px, py]) => { const k = Math.max(0, Math.min(1, (-py - 70) / 150)); return [px + (P.lean + P.shake) * k, py + P.crouch * k - b * k * 1.5]; };
   const parts = [];
   // An arm of three boulders (upper arm, forearm, fist) from the shoulder through the elbow to the fist.
-  const arm = (sh, [el, fi], col, near) => {
+  const arm = (sh, [el, fi], col, lead) => {
     const S = U(sh), E = U(el), F = U(fi), mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-    rock(ctx, f, ...mid(S, E), 30, 32, col, near ? 31 : 32, { depth: 2.6 });
-    rock(ctx, f, ...mid(E, F), 28, 30, col, near ? 33 : 34, { depth: 2.4 });
+    rock(ctx, f, ...mid(S, E), 30, 32, col, lead ? 31 : 32, { depth: 2.6 });
+    rock(ctx, f, ...mid(E, F), 28, 30, col, lead ? 33 : 34, { depth: 2.4 });
     // Both fists are the same stone (shape, color and crystals), whichever side they are on.
     rock(ctx, f, ...F, 40, 36, C.rockLight, 35, { depth: 2.8, n: 8 });
     for (const dx of [-16, -2, 12]) line(ctx, f, [[F[0] + dx + 2, F[1] + 6], [F[0] + dx + 4, F[1] + 24]], .8);
-    // The crystals lean outward from the body on either side, so the far fist shows them too.
-    const o = near ? 1 : -1;
-    for (const [dx, dy, a, l, c] of [[10, -30, -1.2, 28, C.blue], [24, -22, -.7, 20, C.lilac], [-4, -32, -1.7, 18, C.pink]]) crystal(ctx, f, F[0] + dx * o, F[1] + dy, near ? a : -Math.PI - a, l, l * .45, c, { w: 1.3, glow: P.glow * .4 });
+    // The crystals lean outward from the body on either side, so the rear fist shows them too.
+    const o = lead ? 1 : -1;
+    for (const [dx, dy, a, l, c] of [[10, -30, -1.2, 28, C.blue], [24, -22, -.7, 20, C.lilac], [-4, -32, -1.7, 18, C.pink]]) crystal(ctx, f, F[0] + dx * o, F[1] + dy, lead ? a : -Math.PI - a, l, l * .45, c, { w: 1.3, glow: P.glow * .4 });
   };
   const leg = (hx, fx, col, seed) => {
     rock(ctx, f, hx, -64, 26, 24, col, seed, { depth: 2.4 });
     rock(ctx, f, (hx + fx) / 2, -34, 24, 22, col, seed + 1, { depth: 2.2 });
     rock(ctx, f, fx + 6, -12, 36, 14, col, seed + 2, { depth: 2, n: 8 });
   };
-  parts.push({ id: 'farLeg', d: -10, draw: () => leg(-30, -34, C.rockDark, 11) });
-  parts.push({ id: 'farArm', d: -8, draw: () => arm([-46, -170], P.far, C.rockDark, false) });
-  parts.push({ id: 'farShoulder', d: -6, draw: () => {
-    rock(ctx, f, ...U([-42, -180]), 34, 30, C.rockDark, 21, { depth: 2.6 });
-    for (const [dx, a, l, c] of [[-46, -1.9, 30, C.lilac], [-36, -1.5, 22, C.pink], [-56, -2.3, 18, C.blue]]) crystal(ctx, f, ...U([dx, -204]), a, l, l * .45, c, { w: 1.3, glow: P.glow * .3 });
-  } });
-  parts.push({ id: 'nearLeg', d: -4, draw: () => {
-    leg(18, 22, C.rock, 14);
+  // Limb depth (plan §6.1): the leading limbs (+x, the facing side) pass behind the trunk; the rear arm and leg are
+  // the near ones, drawn over it in lighter stone.
+  parts.push({ id: 'leadLeg', d: -10, draw: () => {
+    leg(18, 22, C.rockDark, 14);
     crystal(ctx, f, 36, -22, -1.3, 18, 8, C.lilac, { w: 1.2 }); crystal(ctx, f, 44, -18, -.9, 12, 6, C.blue, { w: 1 });
   } });
+  parts.push({ id: 'leadArm', d: -8, draw: () => arm([52, -166], P.lead, C.rockDark, true) });
+  parts.push({ id: 'leadShoulder', d: -6, draw: () => {
+    rock(ctx, f, ...U([54, -172]), 34, 30, C.rockDark, 22, { depth: 2.8 });
+    for (const [dx, a, l, c] of [[58, -1.2, 32, C.blue], [70, -.8, 22, C.lilac], [44, -1.6, 18, C.pink]]) crystal(ctx, f, ...U([dx, -196]), a, l, l * .45, c, { w: 1.4, glow: P.glow * .3 });
+  } });
+  parts.push({ id: 'rearLeg', d: -4, draw: () => leg(-30, -34, C.rock, 11) });
   parts.push({ id: 'body', d: 0, draw: () => {
     // The trunk: a big rock mass, a lower belly stone, overlapping plates.
     blob(ctx, f, [[-58, -96], [-66, -150], [-50, -196], [0, -210], [50, -196], [66, -150], [56, -96], [30, -78], [-30, -78]].map(U), C.rock, { w: 2.6, depth: 5, light: .2, speck: 2 });
     rock(ctx, f, ...U([2, -92]), 50, 22, C.rockDark, 41, { depth: 2 });
     for (const [px, py, rx, ry, sd] of [[-36, -120, 22, 26, 42], [-30, -176, 24, 20, 43], [8, -192, 26, 16, 44]]) rock(ctx, f, ...U([px, py]), rx, ry, C.rock, sd, { depth: 2 });
     // The geode: a pale rim, a ring of violet crystals pointing inward, the glowing core.
-    const [gx, gy] = U([4, -138]);   // in the middle of the chest, clear of the near arm
+    const [gx, gy] = U([14, -138]);   // centred on the trunk left showing between the rear shoulder and the front edge
     rock(ctx, f, gx, gy, 40, 42, C.rim, 45, { depth: 1.8, n: 9 });
     disc(ctx, f, gx, gy, 31, 33, C.deep, { w: 1.6, depth: 1.2, speck: .4 });
     for (let i = 0; i < 12; i++) {
@@ -98,20 +100,19 @@ export function drawColossus(ctx, x, y, direction, action, t, scale = 1, opts = 
     ctx.save(); ctx.globalAlpha = .35; disc(ctx, f, hx + 20, hy + 5, 9, 6, C.eye, { w: 0, depth: 0, speck: 0 }); ctx.restore();
     disc(ctx, f, hx + 20, hy + 5, 4.6, 3, C.eye, { w: .8, depth: 0, speck: 0 });
   } });
-  parts.push({ id: 'nearShoulder', d: 8, draw: () => {
-    rock(ctx, f, ...U([54, -172]), 34, 30, C.rockLight, 22, { depth: 2.8 });
-    for (const [dx, a, l, c] of [[58, -1.2, 32, C.blue], [70, -.8, 22, C.lilac], [44, -1.6, 18, C.pink]]) crystal(ctx, f, ...U([dx, -196]), a, l, l * .45, c, { w: 1.4, glow: P.glow * .3 });
+  parts.push({ id: 'rearShoulder', d: 8, draw: () => {
+    rock(ctx, f, ...U([-42, -180]), 34, 30, C.rockLight, 21, { depth: 2.6 });
+    for (const [dx, a, l, c] of [[-46, -1.9, 30, C.lilac], [-36, -1.5, 22, C.pink], [-56, -2.3, 18, C.blue]]) crystal(ctx, f, ...U([dx, -204]), a, l, l * .45, c, { w: 1.3, glow: P.glow * .3 });
   } });
-  parts.push({ id: 'nearArm', d: 9, draw: () => {
-    arm([52, -166], P.near, C.rock, true);
-    if (P.dust >= 0) {
-      // Dust and crystal chips thrown up where the fist hits the ground.
-      const F = U(P.near[1]);
-      ctx.save(); ctx.globalAlpha = 1 - P.dust;
-      for (const [dx, k] of [[-28, .8], [0, 1], [28, .9], [46, .6]]) disc(ctx, f, F[0] + dx * (1 + P.dust), -6 - P.dust * 14 * k, 10 * k * (1 + P.dust * .6), 6 * k, '#b9adbd', { w: 1, depth: 0, speck: 0 });
-      for (const [dx, a] of [[-16, -2.2], [10, -1.2], [30, -.7]]) crystal(ctx, f, F[0] + dx, -16 - P.dust * 26, a, 8, 4, C.lilac, { w: .8 });
-      ctx.restore();
-    }
+  parts.push({ id: 'rearArm', d: 9, draw: () => arm([-46, -170], P.rear, C.rock, false) });
+  parts.push({ id: 'dust', d: 12, draw: () => {
+    if (P.dust < 0) return;
+    // Dust and crystal chips thrown up where the fist hits the ground.
+    const F = U(P.lead[1]);
+    ctx.save(); ctx.globalAlpha = 1 - P.dust;
+    for (const [dx, k] of [[-28, .8], [0, 1], [28, .9], [46, .6]]) disc(ctx, f, F[0] + dx * (1 + P.dust), -6 - P.dust * 14 * k, 10 * k * (1 + P.dust * .6), 6 * k, '#b9adbd', { w: 1, depth: 0, speck: 0 });
+    for (const [dx, a] of [[-16, -2.2], [10, -1.2], [30, -.7]]) crystal(ctx, f, F[0] + dx, -16 - P.dust * 26, a, 8, 4, C.lilac, { w: .8 });
+    ctx.restore();
   } });
   drawCreature(ctx, x, y, f, scale, parts, 'eb-geode-colossus', fallTilt(action, t), { pivot: 80, toe: 80, shift: 0 });
   return { pose: P, order: parts.map(p => p.id) };

@@ -28,12 +28,13 @@ export function drawArcherHead(ctx,c,sx,P) {
   elfShape(ctx,AH.hoodF,ARC.cape,{w:2.1,depth:2.1,speck:1.1});
   elfShape(ctx,[[-21,9],[-20,-5],[-10,-19],[5,-21],[20,-12],[20,12],[10,21],[-10,20]],ARC.capeDark,{w:1,depth:0});
   ear(-1);
+  // The far sideburn hangs behind the face; only its tip shows past the cheek.
+  elfShape(ctx,[[17,-3],[20,5],[20,16],[16,25],[12,27],[15,17],[13,8]],ARC.hair,{depth:1});
   elfShape(ctx,[[-17,-5],[-13,-15],[2,-18],[15,-11],[19,1],[18,11],[11,17],[1,19],[-11,15],[-16,8]],ARC.skin,{w:1.7,depth:1,speck:0});
   ear(1);
   elfShape(ctx,[[-17,-5],[-12,1],[-15,11],[-15,23],[-11,28],[-20,23],[-22,15],[-20,6]],ARC.hair,{depth:1});
-  elfShape(ctx,[[17,-3],[20,5],[20,16],[16,25],[12,27],[15,17],[13,8]],ARC.hair,{depth:1});
   elfShape(ctx,AH.fringe,ARC.hair,{w:1.4,depth:1.4,speck:.25});
-  for(const pts of [[[1,-18],[-4,-9],[-14,-1]],[[7,-17],[9,-9],[6,-1]],[[13,-13],[17,-4]],[[-18,10],[-18,20]],[[17,10],[17,18]]])line(pts,.6);
+  for(const pts of [[[1,-18],[-4,-9],[-14,-1]],[[7,-17],[9,-9],[6,-1]],[[13,-13],[17,-4]],[[-18,10],[-18,20]]])line(pts,.6);
   inkLine(ctx,[{x:-12,y:-9},{x:-5,y:-15},{x:1,y:-18}],{color:ARC.hairLight,w:1.4,amp:.2});
   for(const [ex,rx] of [[1,1.7],[13,1.5]]) {
     const x=ex+P.look*.5,y=5;

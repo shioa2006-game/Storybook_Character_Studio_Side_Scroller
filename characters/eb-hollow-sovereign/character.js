@@ -9,7 +9,7 @@
  * head. The staff is always in his left hand: facing left it is the near arm, at his back; facing right the far
  * arm, held out in front behind the body (see HANDS). Elbows bend down and back.
  * Actions (plan/EMBERBOUND_PRODUCTION.md): `attack` is the heavy strike (the staff lifted and slammed down at
- * u = .12, the orb flaring and a dark wave rolling forward along the ground), `cast` = the Eclipse wind-up the game
+ * u = .12, the orb flaring; no ground effect), `cast` = the Eclipse wind-up the game
  * loops (staff raised, a dark eclipse with a green corona swelling over the orb), and the shared hurt.
  */
 import { TAU, PAL, keyframes } from '../../src/authoring.js';
@@ -35,15 +35,14 @@ const STAFF_UP = 116, STAFF_DOWN = 104;   // staff length above and below the ha
 
 export function sovereignPose(action, t, direction = 'L') {
   const s = Math.sin(TAU * phase(t, IDLE_T)), Q = HANDS[direction === 'R' ? 'R' : 'L'];
-  const P = { sway: s * 1.4, staff: Q.staff.slice(), palm: Q.palm.slice(), glow: .4 + .15 * Math.sin(t * 2.2), wave: -1, eclipse: -1, lean: 0, blink: false };
+  const P = { sway: s * 1.4, staff: Q.staff.slice(), palm: Q.palm.slice(), glow: .4 + .15 * Math.sin(t * 2.2), eclipse: -1, lean: 0, blink: false };
   if (action === 'attack') {
-    // Heavy strike: the staff lifted, then slammed down; the orb flares and a dark wave rolls forward.
+    // Heavy strike: the staff lifted, then slammed down, the orb flaring (no ground effect: the user asked for none).
     const u = phase(t, SOVEREIGN_ATTACK_T);
     P.staff = keyframes([[0, Q.staff], [.06, Q.lift], [.12, Q.slam], [.45, Q.slam], [1, Q.staff]], u);
     P.palm = keyframes([[0, Q.palm], [.06, Q.palm], [.12, Q.slamPalm], [.45, Q.slamPalm], [1, Q.palm]], u);
     P.lean = sample([[0, [0]], [.06, [-2]], [.12, [4]], [.45, [3]], [1, [0]]], u);
     P.glow = sample([[0, [.4]], [.1, [1]], [.3, [.7]], [.6, [.3]], [1, [.4]]], u);
-    P.wave = u >= .12 && u < .7 ? (u - .12) / .58 : -1;
   } else if (action === 'cast') {
     // Eclipse wind-up: the staff raised, the palm up, a dark disc with a green corona over the orb; periodic in u.
     const u = phase(t, SOVEREIGN_ECLIPSE_T), w = Math.sin(TAU * u);
@@ -136,14 +135,6 @@ export function drawSovereign(ctx, x, y, direction, action, t, scale = 1, opts =
     for (const m of [m1, m2]) { disc(ctx, f, m[0], m[1], 4.6, 4.6, C.bronze, { w: 1.1, depth: .4, speck: 0 }); disc(ctx, f, m[0], m[1], 2.2, 2.2, C.glow, { w: .5, depth: 0, speck: 0 }); }
   } });
   parts.push({ id: 'head', d: 4, draw: () => {
-    // The tall crown: dark bronze spikes with bronze edges and green gems (behind the hood's top).
-    const base = -184;
-    for (const [cx, h, w] of [[-6, 26, 4.4], [2, 36, 5], [11, 48, 5.6], [20, 36, 5], [28, 26, 4.4]]) {
-      blob(ctx, f, [[cx - w, base], [cx - w * .5, base - h * .55], [cx - w * .25, base - h * .7], [cx, base - h], [cx + w * .25, base - h * .7], [cx + w * .5, base - h * .55], [cx + w, base]].map(U), C.iron, { w: 1.4, depth: .8, light: .25, speck: .4, amp: .05 });
-      line(ctx, f, [[cx, base - 3], [cx, base - h + 6]].map(U), .5);
-    }
-    blob(ctx, f, [[-12, base + 4], [34, base + 4], [34, base - 6], [-12, base - 6]].map(U), C.bronze, { w: 1.4, depth: .6, speck: .4 });
-    for (const gx of [0, 11, 22]) { const g = U([gx, base - 1]); blob(ctx, f, [[g[0], g[1] - 4], [g[0] + 2.6, g[1]], [g[0], g[1] + 4], [g[0] - 2.6, g[1]]], C.glow, { w: .7, depth: 0, speck: 0 }); }
     // The deep hood, the void inside, one huge eye with a slit pupil.
     blob(ctx, f, [[-16, -150], [-20, -168], [-14, -182], [2, -186], [18, -184], [28, -172], [30, -156], [22, -148], [0, -146]].map(U), C.hood, { w: 2, depth: 2, speck: .8 });
     blob(ctx, f, [[4, -152], [2, -166], [8, -178], [20, -180], [28, -170], [28, -156], [20, -150]].map(U), C.void, { w: 1.2, depth: 0, speck: 0 });
@@ -155,6 +146,14 @@ export function drawSovereign(ctx, x, y, direction, action, t, scale = 1, opts =
       blob(ctx, f, [[e[0], e[1] - 4.4], [e[0] + 1.3, e[1]], [e[0], e[1] + 4.4], [e[0] - 1.3, e[1]]], C.void, { w: 0, depth: 0, speck: 0, amp: .03 });
     }
     line(ctx, f, [[-12, -160], [-6, -176], [4, -182]].map(U), .6);
+    // The tall crown worn on the hood: dark bronze spikes rising from a bronze band across the hood's top, green gems.
+    const base = -180;
+    for (const [cx, h, w] of [[-6, 26, 4.4], [2, 36, 5], [11, 48, 5.6], [20, 36, 5], [28, 26, 4.4]]) {
+      blob(ctx, f, [[cx - w, base], [cx - w * .5, base - h * .55], [cx - w * .25, base - h * .7], [cx, base - h], [cx + w * .25, base - h * .7], [cx + w * .5, base - h * .55], [cx + w, base]].map(U), C.iron, { w: 1.4, depth: .8, light: .25, speck: .4, amp: .05 });
+      line(ctx, f, [[cx, base - 3], [cx, base - h + 6]].map(U), .5);
+    }
+    blob(ctx, f, [[-16, base + 3], [30, base + 1], [30, base - 8], [-16, base - 6]].map(U), C.bronze, { w: 1.4, depth: .6, speck: .4 });
+    for (const gx of [0, 11, 22]) { const g = U([gx, base - 2.5]); blob(ctx, f, [[g[0], g[1] - 3.6], [g[0] + 2.4, g[1]], [g[0], g[1] + 3.6], [g[0] - 2.4, g[1]]], C.glow, { w: .7, depth: 0, speck: 0 }); }
   } });
   parts.push({ id: 'staff', d: R ? -6 : 6, draw: () => {
     // The dark staff with bronze bands; its spiked bronze head cages the glowing eye-orb; ragged ribbons hang.
@@ -178,16 +177,6 @@ export function drawSovereign(ctx, x, y, direction, action, t, scale = 1, opts =
   } });
   parts.push({ id: 'magic', d: 12, draw: () => {
     const [hx, hy] = U(P.staff), a = P.staff[2], c = [hx + Math.cos(a) * STAFF_UP, hy + Math.sin(a) * STAFF_UP];
-    if (P.wave >= 0) {
-      // The orb flares; a dark wave with green sparks rolls forward from where the staff struck.
-      const u = P.wave, foot = [hx + Math.cos(a) * -STAFF_DOWN, 0];
-      ctx.save(); ctx.globalAlpha = (1 - u) * .8; disc(ctx, f, c[0], c[1], 16 + u * 14, 16 + u * 14, C.glowPale, { w: .8, depth: 0, speck: 0 }); ctx.restore();
-      ctx.save(); ctx.globalAlpha = 1 - u * .8;
-      const wx = foot[0] + 30 + u * 110;
-      blob(ctx, f, [[wx - 26, 0], [wx - 10, -12 - (1 - u) * 6], [wx + 4, -22 * (1 - u * .5)], [wx + 12, -10], [wx + 18, 0]], C.void, { w: 1.2, depth: 0, speck: 0 });
-      for (const [dx, dy] of [[-6, -18], [6, -26], [14, -14]]) disc(ctx, f, wx + dx, dy * (1 - u * .5), 1.8, 1.8, C.glow, { w: .5, depth: 0, speck: 0 });
-      ctx.restore();
-    }
     if (P.eclipse >= 0) {
       // Eclipse: a dark disc swelling over the orb inside a pulsing green corona (it cycles with the loop).
       const u = P.eclipse, k = .5 + .5 * Math.sin(TAU * u), e = [c[0], c[1] - 34];
