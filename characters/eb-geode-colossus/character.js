@@ -47,7 +47,10 @@ export function drawColossus(ctx, x, y, direction, action, t, scale = 1, opts = 
   const arm = (sh, [el, fi], col, lead) => {
     const S = U(sh), E = U(el), F = U(fi), mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
     rock(ctx, f, ...mid(S, E), 30, 32, col, lead ? 31 : 32, { depth: 2.6 });
+    // Joint stones at the elbow and wrist keep the arm whole when it stretches out (the ground punch).
+    rock(ctx, f, ...E, 22, 22, col, lead ? 37 : 38, { depth: 2.2 });
     rock(ctx, f, ...mid(E, F), 28, 30, col, lead ? 33 : 34, { depth: 2.4 });
+    rock(ctx, f, E[0] + (F[0] - E[0]) * .78, E[1] + (F[1] - E[1]) * .78, 22, 22, col, lead ? 39 : 40, { depth: 2.2 });
     // Both fists are the same stone (shape, color and crystals), whichever side they are on.
     rock(ctx, f, ...F, 40, 36, C.rockLight, 35, { depth: 2.8, n: 8 });
     for (const dx of [-16, -2, 12]) line(ctx, f, [[F[0] + dx + 2, F[1] + 6], [F[0] + dx + 4, F[1] + 24]], .8);
